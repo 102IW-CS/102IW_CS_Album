@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Photo Share</title>
+<style>
+:root{
+  --bg:#f6f5f2;--surface:#fff;--surface-2:#efede8;--text:#1d1c1a;--muted:#6b6862;--line:#dedbd4;
+  --accent:#2f6f5e;--accent-text:#fff;--accent-soft:#e3efe9;--danger:#b3261e;--warn:#9a6200;
+  --radius:12px;--shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141413;--surface:#1e1d1b;--surface-2:#282723;--text:#ecebe7;--muted:#a19e97;--line:#36342f;
+  --accent:#6fbfa6;--accent-text:#0e1f1a;--accent-soft:#1d322b;--danger:#f2a7a1;--warn:#e8b35a;--shadow:none;color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141413;--surface:#1e1d1b;--surface-2:#282723;--text:#ecebe7;--muted:#a19e97;--line:#36342f;
+  --accent:#6fbfa6;--accent-text:#0e1f1a;--accent-soft:#1d322b;--danger:#f2a7a1;--warn:#e8b35a;--shadow:none;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:12px;height:56px}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.01em;margin-right:auto;display:flex;align-items:center;gap:8px}
+.brand small{font-weight:400;color:var(--muted);font-size:13px}
+.me{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.me img{width:26px;height:26px;border-radius:50%}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:600}
+.btn.danger{color:var(--danger)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+#signin,#setup{max-width:460px;margin:48px auto;padding:28px}
+#signin h1,#setup h1{margin:0 0 6px;font-size:22px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 20px}
+label.field{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+input[type=password],input[type=search]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.err{color:var(--danger);font-size:14px;margin:12px 0 0}
+details{margin-top:20px;font-size:14px;color:var(--muted)}
+details summary{cursor:pointer;color:var(--text)}
+details ol{padding-left:20px;margin:10px 0 0}
+code{background:var(--surface-2);padding:1px 5px;border-radius:5px;font-size:13px}
+
+#app{padding:20px 0 60px}
+#drop{border:2px dashed var(--line);border-radius:var(--radius);padding:22px;text-align:center;background:var(--surface);transition:.15s}
+body.dragging #drop{border-color:var(--accent);background:var(--accent-soft)}
+#drop p{margin:0 0 12px;color:var(--muted)}
+#drop .row{justify-content:center}
+.hint{font-size:13px;color:var(--muted)}
+
+#queue{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+#queue li{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
+#queue .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#queue .qs{color:var(--muted);white-space:nowrap}
+#queue li.work .qs{color:var(--accent)}
+#queue li.done .qs{color:var(--accent);font-weight:600}
+#queue li.fail .qs{color:var(--danger);white-space:normal;text-align:right}
+#queueBar{margin-top:6px;text-align:right}
+
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:22px 0 14px}
+.toolbar .search{flex:1;min-width:180px}
+select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
+.meter{display:flex;align-items:center;gap:8px}
+.meter span.bar{width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.meter span.bar i{display:block;height:100%;background:var(--accent)}
+.meter.warn span.bar i{background:var(--warn)}
+
+@media (max-width:520px){.brand small,#login{display:none}.brand{font-size:16px}}
+#selbar{position:sticky;top:64px;z-index:4;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+#selbar strong{margin-right:auto}
+
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+@media (max-width:520px){#grid{grid-template-columns:repeat(2,1fr);gap:8px}}
+.tile{margin:0;position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.tile .thumb{display:block;width:100%;aspect-ratio:1;border:0;padding:0;background:var(--surface-2);position:relative}
+.tile img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s}
+.tile img.loaded{opacity:1}
+.tile .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase}
+.tile figcaption{padding:8px 10px;font-size:13px;line-height:1.35}
+.tile figcaption b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile figcaption span{color:var(--muted)}
+.tile .tick{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);display:none;place-items:center;color:#fff;font-size:14px;font-weight:700}
+body.selecting .tile .tick{display:grid}
+.tile.selected{outline:3px solid var(--accent);outline-offset:-3px}
+.tile.selected .tick{background:var(--accent);border-color:var(--accent)}
+#empty{text-align:center;color:var(--muted);padding:48px 0}
+
+#viewer{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#0d0d0c;color:#eee}
+#viewer::backdrop{background:#0d0d0c}
+#viewer[open]{display:flex;flex-direction:column}
+.v-top{display:flex;align-items:center;gap:10px;padding:10px 16px}
+.v-title{flex:1;min-width:0}
+.v-title strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v-title small{color:#a8a59f}
+#viewer .btn{background:#262523;border-color:#3a3935;color:#eee}
+#viewer .btn.danger{color:#f2a7a1}
+.v-stage{flex:1;position:relative;display:grid;place-items:center;min-height:0;padding:0 8px 16px}
+#vImg{max-width:100%;max-height:100%;object-fit:contain;user-select:none}
+#vMsg{position:absolute;color:#a8a59f;font-size:14px}
+.v-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:24px;line-height:1}
+.v-nav:hover{background:rgba(255,255,255,.22)}
+#vPrev{left:12px}#vNext{right:12px}
+
+#ask{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:22px;max-width:min(92vw,400px);box-shadow:var(--shadow)}
+#ask::backdrop{background:rgba(0,0,0,.45)}
+#ask p{margin:0 0 6px;font-weight:600}
+#ask small{display:block;color:var(--muted);margin-bottom:18px}
+#ask .row{justify-content:flex-end}
+.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:var(--surface);font-weight:600}
+#toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;gap:8px;z-index:20;width:min(92vw,440px)}
+.toast{background:var(--text);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;box-shadow:var(--shadow)}
+.toast.error{background:var(--danger);color:#fff}
+#status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);z-index:15}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand">📷 Photo Share <small id="repoLabel"></small></div>
+  <div class="me" id="me" hidden><img id="avatar" alt=""><span id="login"></span></div>
+  <button class="btn ghost" id="signOutBtn" hidden>Sign out</button>
+</div></header>
+
+<main class="wrap">
+  <section id="setup" class="card" hidden>
+    <h1>Almost there</h1>
+    <p class="lead">This page isn't pointed at a photo repository yet. Open <code>index.html</code>, edit the <code>CONFIG</code> block at the top of the script (<code>owner</code> and <code>repo</code>), and publish it again.</p>
+  </section>
+
+  <section id="signin" class="card" hidden>
+    <h1>Sign in to the album</h1>
+    <p class="lead">Paste your GitHub access token to view and add photos in <b id="repoName"></b>.</p>
+    <form id="signinForm">
+      <label class="field" for="token">Access token</label>
+      <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+      <div class="row" style="justify-content:space-between;margin-top:14px">
+        <label class="check"><input type="checkbox" id="remember"> Remember on this device</label>
+        <button class="btn primary" id="connectBtn">Connect</button>
+      </div>
+      <p class="err" id="signinErr" role="alert"></p>
+    </form>
+    <details>
+      <summary>How do I get a token?</summary>
+      <ol>
+        <li>On GitHub: <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+        <li><b>Resource owner:</b> <span id="ownerHint"></span></li>
+        <li><b>Repository access:</b> Only select repositories → <span id="repoHint"></span></li>
+        <li><b>Permissions → Contents:</b> Read and write (Read-only if you just want to view).</li>
+        <li>Generate, copy it, and paste it here. Your token is only sent to GitHub.</li>
+      </ol>
+    </details>
+  </section>
+
+  <section id="app" hidden>
+    <div id="drop">
+      <p>Drop photos anywhere on this page, paste them, or</p>
+      <div class="row">
+        <button class="btn primary" id="pickBtn">Choose photos</button>
+        <input type="file" id="fileInput" accept="image/*,.heic,.heif" multiple hidden>
+      </div>
+      <div class="row" style="justify-content:center;margin-top:12px">
+        <label class="check" title="Resizes to the size below and re-saves as JPEG, which also removes hidden location (GPS) data. GIFs are never changed."><input type="checkbox" id="optimize" checked><span>Optimize photos (max <span id="maxDimLbl"></span>px, removes location data)</span></label>
+      </div>
+    </div>
+    <p id="readOnly" class="hint" hidden>You have view-only access to this album.</p>
+    <ul id="queue" aria-live="polite"></ul>
+    <div id="queueBar" hidden><button class="btn ghost" id="clearQueue">Clear finished</button></div>
+
+    <div class="toolbar">
+      <input class="search" type="search" id="search" placeholder="Search by file name or person" aria-label="Search photos">
+      <select id="sort" aria-label="Sort order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+      <button class="btn" id="selectBtn">Select</button>
+      <button class="btn" id="dlAllBtn">Download all</button>
+      <button class="btn ghost" id="refreshBtn" title="Refresh" aria-label="Refresh">⟳</button>
+    </div>
+    <div class="meta"><span id="count"></span><span class="meter" id="meter" title="GitHub recommends keeping repositories under 1 GB"><span id="meterTxt"></span><span class="bar"><i id="meterBar"></i></span></span></div>
+
+    <div id="selbar" hidden>
+      <strong id="selCount">0 selected</strong>
+      <button class="btn ghost" id="selAll">Select all</button>
+      <button class="btn" id="selDl">Download</button>
+      <button class="btn danger" id="selDel">Delete</button>
+      <button class="btn primary" id="selDone">Done</button>
+    </div>
+
+    <div id="grid"></div>
+    <p id="empty" hidden></p>
+  </section>
+</main>
+
+<dialog id="viewer" aria-label="Photo viewer">
+  <div class="v-top">
+    <div class="v-title"><strong id="vName"></strong><small id="vMeta"></small></div>
+    <button class="btn" id="vDl">Download</button>
+    <button class="btn danger" id="vDel">Delete</button>
+    <button class="btn" id="vClose" aria-label="Close">✕</button>
+  </div>
+  <div class="v-stage">
+    <img id="vImg" alt="">
+    <span id="vMsg"></span>
+    <button class="v-nav" id="vPrev" aria-label="Previous photo">‹</button>
+    <button class="v-nav" id="vNext" aria-label="Next photo">›</button>
+  </div>
+</dialog>
+
+<dialog id="ask">
+  <form method="dialog">
+    <p id="askMsg"></p><small id="askSub"></small>
+    <div class="row"><button class="btn" value="no">Cancel</button><button class="btn danger-fill" id="askOk" value="yes">OK</button></div>
+  </form>
+</dialog>
+
+<div id="toasts" aria-live="assertive"></div>
+<div id="status" role="status" hidden></div>
+
+<script>
+'use strict';
+/* ================= CONFIG — edit owner and repo for your setup ================= */
+const CONFIG = {
+  owner: '102IW-CS',          // GitHub account or organization that owns the photo repo
+  repo: 'photo-share',        // the repo that stores the photos (keep it private)
+  branch: 'main',
+  photoDir: 'photos',         // full-size photos
+  thumbDir: 'thumbs',         // small previews, so the gallery loads fast
+  maxDim: 2560,               // "Optimize" resizes the long edge to this many pixels
+  jpegQuality: 0.85,
+  thumbDim: 480,
+  maxFileMB: 50,              // GitHub warns above 50 MB and rejects files over 100 MB
+  commitBatch: 10,            // photos saved per commit
+  pollSeconds: 60             // look for friends' new photos while the tab is open (0 = off)
+};
+/* =============================================================================== */
+
+// Optional overrides: index.html?owner=x&repo=y&branch=z
+const qs = new URLSearchParams(location.search);
+for (const k of ['owner', 'repo', 'branch']) if (qs.get(k)) CONFIG[k] = qs.get(k);
+
+const API = 'https://api.github.com';
+const REPO = `/repos/${encodeURIComponent(CONFIG.owner)}/${encodeURIComponent(CONFIG.repo)}`;
+const KEY = `photoshare:${CONFIG.owner}/${CONFIG.repo}`;
+const CACHE = 'photoshare-thumbs-v1';
+const IMG_EXT = /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp)$/i;
+const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/gif', webp:'image/webp',
+  avif:'image/avif', heic:'image/heic', heif:'image/heif', bmp:'image/bmp' };
+const RECOMMENDED_BYTES = 1024 ** 3;
+
+const $ = id => document.getElementById(id);
+const state = {
+  token: null, user: null, canWrite: false, repoEmpty: false, treeEtag: null,
+  photos: [], view: [], bytes: 0, selected: new Set(), selecting: false,
+  thumbUrls: new Map(), queue: [], uploading: false, busy: 0,
+  loading: false, reloadPending: false, pollTimer: null,
+  vi: -1, vToken: 0, vUrl: null
+};
+
+/* ---------- small helpers ---------- */
+const store = {
+  get(k) { try { return localStorage.getItem(k) ?? sessionStorage.getItem(k); } catch { return null; } },
+  set(k, v, persist) { try { (persist ? localStorage : sessionStorage).setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch {} }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const extOf = name => (name.match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+function fmtBytes(b) {
+  if (b < 1024) return `${b} B`;
+  const u = ['KB', 'MB', 'GB']; let i = -1;
+  do { b /= 1024; i++; } while (b >= 1024 && i < 2);
+  return `${b.toFixed(b < 10 ? 1 : 0)} ${u[i]}`;
+}
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function limiter(n) {
+  let active = 0; const q = [];
+  const next = () => {
+    if (active >= n || !q.length) return;
+    active++;
+    const { fn, res, rej } = q.shift();
+    Promise.resolve().then(fn).then(res, rej).finally(() => { active--; next(); });
+  };
+  return fn => new Promise((res, rej) => { q.push({ fn, res, rej }); next(); });
+}
+const net = limiter(4); // GitHub dislikes bursts of parallel requests
+
+function toast(msg, kind = '') {
+  const t = el('div', `toast ${kind}`, msg);
+  $('toasts').append(t);
+  setTimeout(() => t.remove(), kind === 'error' ? 7000 : 3500);
+}
+function setStatus(msg) { $('status').textContent = msg || ''; $('status').hidden = !msg; }
+// Styled confirm (window.confirm is blocked in some embedded views and looks out of place)
+function ask(msg, sub = '', ok = 'OK') {
+  const d = $('ask');
+  $('askMsg').textContent = msg; $('askSub').textContent = sub; $('askOk').textContent = ok;
+  d.returnValue = '';
+  d.showModal();
+  return new Promise(res => d.addEventListener('close', () => res(d.returnValue === 'yes'), { once: true }));
+}
+function busy(on) { state.busy += on ? 1 : -1; }
+
+/* ---------- GitHub API ---------- */
+class GhError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
+
+async function ghFetch(path, { method = 'GET', body, accept, headers = {} } = {}) {
+  let res;
+  try {
+    res = await fetch(API + path, {
+      method, cache: 'no-store',
+      headers: {
+        Authorization: `Bearer ${state.token}`,
+        Accept: accept || 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...headers
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch {
+    throw new GhError(0, 'Network error. Check your connection and try again.');
+  }
+  if (res.ok || res.status === 304) return res;
+  let msg = '';
+  try { msg = (await res.json()).message || ''; } catch {}
+  if (res.status === 401) throw new GhError(401, 'GitHub rejected the token. It may be expired, revoked or mistyped.');
+  if (res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0')
+    throw new GhError(403, 'GitHub rate limit reached. Try again in a few minutes.');
+  if (res.status === 403) throw new GhError(403, `GitHub refused this action (${msg || 'forbidden'}). Your token may be read-only.`);
+  if (res.status === 404) throw new GhError(404, 'Not found. Check the repository name and that your token has access to it.');
+  throw new GhError(res.status, `GitHub error ${res.status}${msg ? `: ${msg}` : ''}`);
+}
+async function gh(path, opts) {
+  const res = await ghFetch(path, opts);
+  return res.status === 204 ? null : res.json();
+}
+
+/* ---------- sign in / out ---------- */
+async function connect(token, remember, silent = false) {
+  state.token = token.trim();
+  $('connectBtn').disabled = true;
+  $('signinErr').textContent = '';
+  try {
+    const [user, repo] = await Promise.all([gh('/user'), gh(REPO)]);
+    state.user = user;
+    state.canWrite = !!(repo.permissions && repo.permissions.push);
+    if (!silent) store.set(KEY + ':token', state.token, remember);
+    showApp();
+    await loadPhotos();
+    startPolling();
+  } catch (e) {
+    state.token = null;
+    store.del(KEY + ':token');
+    showSignin(e.status === 404
+      ? `Can't open ${CONFIG.owner}/${CONFIG.repo}. Check that the repository exists and your token was given access to it.`
+      : e.message);
+  } finally {
+    $('connectBtn').disabled = false;
+  }
+}
+
+async function signOut(reason) {
+  if (state.uploading && !(await ask('Uploads are still running.', 'Signing out now stops them.', 'Sign out'))) return;
+  stopPolling();
+  store.del(KEY + ':token');
+  try { await caches.delete(CACHE); } catch {}  // don't leave private previews on a shared PC
+  state.thumbUrls.forEach(u => URL.revokeObjectURL(u));
+  Object.assign(state, { token: null, user: null, photos: [], view: [], treeEtag: null, loadedOnce: false,
+    thumbUrls: new Map(), queue: [], selected: new Set() });
+  $('grid').replaceChildren(); $('queue').replaceChildren();
+  showSignin(typeof reason === 'string' ? reason : '');
+}
+
+function showSignin(err = '') {
+  $('app').hidden = true; $('me').hidden = true; $('signOutBtn').hidden = true;
+  $('signin').hidden = false;
+  $('signinErr').textContent = err;
+  $('token').value = '';
+}
+function showApp() {
+  $('signin').hidden = true; $('app').hidden = false;
+  $('me').hidden = false; $('signOutBtn').hidden = false;
+  $('avatar').hidden = !state.user.avatar_url;
+  if (state.user.avatar_url) $('avatar').src = `${state.user.avatar_url}&s=64`;
+  $('login').textContent = state.user.login;
+  $('drop').hidden = !state.canWrite;
+  $('readOnly').hidden = state.canWrite;
+  $('selDel').hidden = $('vDel').hidden = !state.canWrite;
+}
+
+/* ---------- loading the album ---------- */
+// One request lists every file in the repo (the git tree), instead of one request per folder.
+async function fetchTree() {
+  const headers = state.treeEtag ? { 'If-None-Match': state.treeEtag } : {};
+  let res;
+  try {
+    res = await ghFetch(`${REPO}/git/trees/${encodeURIComponent(CONFIG.branch)}?recursive=1`, { headers });
+  } catch (e) {
+    if (e.status === 409) { state.repoEmpty = true; state.treeEtag = null; return { tree: [] }; } // brand-new empty repo
+    if (e.status === 404) throw new GhError(404, `Branch "${CONFIG.branch}" wasn't found in ${CONFIG.owner}/${CONFIG.repo}.`);
+    throw e;
+  }
+  if (res.status === 304) return null; // unchanged; 304s don't count against the rate limit
+  state.repoEmpty = false;
+  state.treeEtag = res.headers.get('etag');
+  return res.json();
+}
+
+function thumbNameFor(name) { return name.replace(/\.[^.]+$/, '') + '.jpg'; }
+
+function parsePhoto(t) {
+  const name = t.path.slice(CONFIG.photoDir.length + 1);
+  const ext = extOf(name);
+  const p = { path: t.path, name, sha: t.sha, size: t.size || 0, ext, type: MIME[ext] || 'application/octet-stream',
+    display: name, uploader: '', date: null };
+  // Names look like 20261029-172812-ab12__login__beach.jpg
+  const parts = name.split('__');
+  if (parts.length >= 3) {
+    const m = parts[0].match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})/);
+    if (m) {
+      p.date = new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+      p.uploader = parts[1];
+      p.display = parts.slice(2).join('__');
+    }
+  }
+  return p;
+}
+
+async function loadPhotos(quiet = false) {
+  if (state.loading) { state.reloadPending = true; return; }
+  state.loading = true;
+  if (!quiet) setStatus('Loading photos…');
+  try {
+    const tree = await fetchTree();
+    if (!tree) return;
+    if (tree.truncated) toast('This album is very large; some photos may not be listed.', 'error');
+    const thumbs = new Map(); const photos = []; let bytes = 0;
+    for (const t of tree.tree) {
+      if (t.type !== 'blob') continue;
+      bytes += t.size || 0;
+      const inPhotos = t.path.startsWith(CONFIG.photoDir + '/') && !t.path.slice(CONFIG.photoDir.length + 1).includes('/');
+      if (inPhotos && IMG_EXT.test(t.path)) photos.push(parsePhoto(t));
+      else if (t.path.startsWith(CONFIG.thumbDir + '/')) thumbs.set(t.path.slice(CONFIG.thumbDir.length + 1), t);
+    }
+    for (const p of photos) {
+      const th = thumbs.get(thumbNameFor(p.name));
+      if (th) { p.thumbSha = th.sha; p.thumbPath = th.path; }
+    }
+    photos.sort((a, b) => (b.date || 0) - (a.date || 0) || b.name.localeCompare(a.name));
+    if (state.loadedOnce) { // let people know when someone else added photos
+      const before = new Set(state.photos.map(p => p.path));
+      const fresh = photos.filter(p => !before.has(p.path) && p.uploader && p.uploader !== state.user.login);
+      if (fresh.length) toast(`${plural(fresh.length, 'new photo')} from ${[...new Set(fresh.map(p => p.uploader))].join(', ')}`);
+    }
+    state.loadedOnce = true;
+    state.photos = photos;
+    state.bytes = bytes;
+    render();
+  } catch (e) {
+    if (e.status === 401) return signOut(e.message);
+    if (!quiet) toast(e.message, 'error'); else console.warn(e);
+  } finally {
+    state.loading = false;
+    if (!quiet) setStatus('');
+    if (state.reloadPending) { state.reloadPending = false; loadPhotos(true); }
+  }
+}
+
+// Git blobs are addressed by content hash, so a cached copy can never be stale.
+async function getBlob(sha, type, persist) {
+  const key = `https://photoshare.cache/${CONFIG.owner}/${CONFIG.repo}/${sha}`;
+  if (persist && 'caches' in window) {
+    try { const hit = await (await caches.open(CACHE)).match(key); if (hit) return hit.blob(); } catch {}
+  }
+  const raw = await net(async () =>
+    (await ghFetch(`${REPO}/git/blobs/${sha}`, { accept: 'application/vnd.github.raw+json' })).blob());
+  const blob = new Blob([raw], { type });
+  if (persist && 'caches' in window) {
+    try { await (await caches.open(CACHE)).put(key, new Response(blob, { headers: { 'Content-Type': type } })); } catch {}
+  }
+  return blob;
+}
+
+async function previewUrl(p) {
+  const sha = p.thumbSha || p.sha;
+  if (state.thumbUrls.has(sha)) return state.thumbUrls.get(sha);
+  if (!p.thumbSha && p.size > 8 * 1024 * 1024) throw new Error('No preview'); // don't pull huge originals into the grid
+  const blob = await getBlob(sha, p.thumbSha ? 'image/jpeg' : p.type, true);
+  const url = URL.createObjectURL(blob);
+  state.thumbUrls.set(sha, url);
+  return url;
+}
+
+/* ---------- gallery ---------- */
+const lazy = new IntersectionObserver(entries => {
+  for (const en of entries) {
+    if (!en.isIntersecting) continue;
+    lazy.unobserve(en.target);
+    const { img, p, ph } = en.target._ps;
+    previewUrl(p).then(u => { img.src = u; }).catch(() => { ph.hidden = false; });
+  }
+}, { rootMargin: '400px' });
+
+function visiblePhotos() {
+  const q = $('search').value.trim().toLowerCase();
+  let list = state.photos.filter(p => !q || p.display.toLowerCase().includes(q) || p.uploader.toLowerCase().includes(q));
+  if ($('sort').value === 'oldest') list = list.slice().reverse();
+  return list;
+}
+
+function fmtDate(d) {
+  return d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+}
+
+function tile(p, i) {
+  const fig = el('figure', 'tile');
+  if (state.selected.has(p.path)) fig.classList.add('selected');
+  const btn = el('button', 'thumb');
+  btn.type = 'button';
+  btn.setAttribute('aria-label', `Open ${p.display}`);
+  const img = el('img'); img.alt = ''; img.decoding = 'async';
+  img.onload = () => img.classList.add('loaded');
+  const ph = el('span', 'ph', p.ext || 'file'); ph.hidden = true;
+  img.onerror = () => { ph.hidden = false; };
+  btn.append(img, ph, el('span', 'tick', '✓'));
+  btn.onclick = () => state.selecting ? toggleSelect(p, fig) : openViewer(i);
+  const cap = el('figcaption');
+  cap.append(el('b', '', p.display), el('span', '', [p.uploader, fmtDate(p.date)].filter(Boolean).join(' · ')));
+  fig.append(btn, cap);
+  btn._ps = { img, p, ph };
+  lazy.observe(btn);
+  return fig;
+}
+
+function render() {
+  const list = visiblePhotos();
+  state.view = list;
+  const paths = new Set(state.photos.map(p => p.path));
+  for (const s of state.selected) if (!paths.has(s)) state.selected.delete(s);
+  lazy.disconnect();
+  $('grid').replaceChildren(...list.map(tile));
+  $('empty').hidden = list.length > 0;
+  $('empty').textContent = state.photos.length ? 'No photos match your search.'
+    : state.canWrite ? 'No photos yet. Add the first ones above.' : 'No photos yet.';
+  $('count').textContent = plural(state.photos.length, 'photo');
+  const pct = Math.min(100, state.bytes / RECOMMENDED_BYTES * 100);
+  $('meterTxt').textContent = `${fmtBytes(state.bytes)} of 1 GB`;
+  $('meterBar').style.width = pct + '%';
+  $('meter').classList.toggle('warn', pct > 80);
+  $('dlAllBtn').disabled = !list.length;
+  updateSelBar();
+}
+
+/* ---------- selection ---------- */
+function setSelecting(on) {
+  state.selecting = on;
+  document.body.classList.toggle('selecting', on);
+  if (!on) { state.selected.clear(); document.querySelectorAll('.tile.selected').forEach(t => t.classList.remove('selected')); }
+  updateSelBar();
+}
+function toggleSelect(p, fig) {
+  if (state.selected.has(p.path)) state.selected.delete(p.path); else state.selected.add(p.path);
+  fig.classList.toggle('selected', state.selected.has(p.path));
+  updateSelBar();
+}
+function updateSelBar() {
+  $('selbar').hidden = !state.selecting;
+  $('selectBtn').hidden = state.selecting;
+  const n = state.selected.size;
+  $('selCount').textContent = `${n} selected`;
+  $('selDl').disabled = $('selDel').disabled = !n;
+}
+const selectedPhotos = () => state.photos.filter(p => state.selected.has(p.path));
+
+/* ---------- uploading ---------- */
+function isImage(f) {
+  if (f.type === 'image/svg+xml' || /\.svg$/i.test(f.name)) return false;
+  return f.type.startsWith('image/') || IMG_EXT.test(f.name);
+}
+
+async function decode(file) {
+  if ('createImageBitmap' in window) {
+    try {
+      const b = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return { image: b, width: b.width, height: b.height, close: () => b.close() };
+    } catch {}
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image(); img.src = url; await img.decode();
+    return { image: img, width: img.naturalWidth, height: img.naturalHeight, close: () => URL.revokeObjectURL(url) };
+  } catch {
+    URL.revokeObjectURL(url);
+    return null; // e.g. HEIC in Chrome: uploaded as-is, no preview
+  }
+}
+
+async function draw(src, scale, type, quality) {
+  const w = Math.max(1, Math.round(src.width * scale)), h = Math.max(1, Math.round(src.height * scale));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); } // transparent PNG → white, not black
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src.image, 0, 0, w, h);
+  const blob = await new Promise(r => c.toBlob(r, type, quality));
+  c.width = c.height = 0; // free canvas memory right away (matters on phones)
+  if (!blob) throw new Error('Could not process this image.');
+  return blob;
+}
+
+function safeName(s) {
+  const out = s.normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^A-Za-z0-9._-]+/g, '-').replace(/_{2,}/g, '_').replace(/-{2,}/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '').slice(0, 60);
+  return out || 'photo';
+}
+function stamp() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}-${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}-${Math.random().toString(16).slice(2, 6)}`;
+}
+
+async function prepare(file) {
+  let ext = extOf(file.name) || (file.type.split('/')[1] || 'jpg').toLowerCase();
+  const type = file.type || MIME[ext] || '';
+  let main = file;
+  let thumb = null;
+  const src = await decode(file);
+  if (src) {
+    try {
+      if ($('optimize').checked && type !== 'image/gif') {
+        const scale = Math.min(1, CONFIG.maxDim / Math.max(src.width, src.height));
+        if (type === 'image/png') { if (scale < 1) main = await draw(src, scale, 'image/png'); }
+        else { main = await draw(src, scale, 'image/jpeg', CONFIG.jpegQuality); ext = 'jpg'; }
+      }
+      thumb = await draw(src, Math.min(1, CONFIG.thumbDim / Math.max(src.width, src.height)), 'image/jpeg', 0.78);
+    } finally { src.close(); }
+  }
+  if (main.size > CONFIG.maxFileMB * 1024 * 1024)
+    throw new Error(`Too large (${fmtBytes(main.size)}). The limit is ${CONFIG.maxFileMB} MB; try with Optimize on.`);
+  if (ext === 'jpeg') ext = 'jpg';
+  const base = safeName(file.name.replace(/\.[^.]*$/, ''));
+  return { main, thumb, name: `${stamp()}__${state.user.login}__${base}.${ext}` };
+}
+
+function toBase64(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1] || '');
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+const createGitBlob = blob => net(async () =>
+  (await gh(`${REPO}/git/blobs`, { method: 'POST', body: { content: await toBase64(blob), encoding: 'base64' } })).sha);
+
+// Several files (adds and deletes) land in ONE commit. If a friend saved at the same moment,
+// the branch moved; we rebuild on top of their commit and try again instead of overwriting it.
+async function commitEntries(entries, message) {
+  for (let attempt = 0; ; attempt++) {
+    const ref = await gh(`${REPO}/git/ref/heads/${encodeURIComponent(CONFIG.branch)}`);
+    const head = ref.object.sha;
+    const parent = await gh(`${REPO}/git/commits/${head}`);
+    const tree = await gh(`${REPO}/git/trees`, { method: 'POST', body: { base_tree: parent.tree.sha, tree: entries } });
+    const commit = await gh(`${REPO}/git/commits`, { method: 'POST', body: { message, tree: tree.sha, parents: [head] } });
+    try {
+      await gh(`${REPO}/git/refs/heads/${encodeURIComponent(CONFIG.branch)}`, { method: 'PATCH', body: { sha: commit.sha, force: false } });
+      return;
+    } catch (e) {
+      if (e.status === 422 && attempt < 4) { await sleep(400 * (attempt + 1)); continue; }
+      throw e;
+    }
+  }
+}
+
+async function initRepo() {
+  // The git-data API can't write to a repo with zero commits, so create a first one.
+  await gh(`${REPO}/contents/README.md`, { method: 'PUT', body: {
+    message: 'Set up shared photo album',
+    content: btoa('# Shared photos\n\nManaged by the Photo Share page. Photos live in /photos.\n')
+  } });
+  state.repoEmpty = false;
+}
+
+function queueItem(file) {
+  const li = el('li');
+  const name = el('span', 'qn', file.name);
+  const size = el('span', 'hint', fmtBytes(file.size));
+  const st = el('span', 'qs', 'Waiting…');
+  li.append(name, size, st);
+  $('queue').append(li);
+  const it = {
+    file, li,
+    set(text, kind) { st.textContent = text; li.className = kind || ''; },
+    fail(msg) {
+      it.set(`Failed: ${msg}`, 'fail');
+      const retry = el('button', 'btn', 'Retry');
+      retry.onclick = () => { retry.remove(); it.set('Waiting…'); state.queue.push(it); runUploads(); };
+      li.append(retry);
+      updateQueueBar();
+    }
+  };
+  return it;
+}
+function updateQueueBar() {
+  $('queueBar').hidden = !$('queue').querySelector('li.done, li.fail');
+}
+
+function handleFiles(files) {
+  if (!state.token) return;
+  if (!state.canWrite) return toast('You have view-only access to this album.', 'error');
+  const all = [...files];
+  const picked = all.filter(isImage);
+  if (all.length > picked.length) toast(`${plural(all.length - picked.length, 'file')} skipped: only photos can be added.`);
+  if (!picked.length) return;
+  state.queue.push(...picked.map(queueItem));
+  runUploads();
+}
+
+async function runUploads() {
+  if (state.uploading) return;
+  state.uploading = true;
+  try {
+    if (state.repoEmpty) await initRepo();
+    while (state.queue.length) {
+      const batch = state.queue.splice(0, CONFIG.commitBatch);
+      const entries = [], ok = [];
+      for (const it of batch) {
+        try {
+          it.set('Preparing…', 'work');
+          const prep = await prepare(it.file);
+          it.set('Uploading…', 'work');
+          const [mainSha, thumbSha] = await Promise.all([createGitBlob(prep.main), prep.thumb ? createGitBlob(prep.thumb) : null]);
+          entries.push({ path: `${CONFIG.photoDir}/${prep.name}`, mode: '100644', type: 'blob', sha: mainSha });
+          if (thumbSha) entries.push({ path: `${CONFIG.thumbDir}/${thumbNameFor(prep.name)}`, mode: '100644', type: 'blob', sha: thumbSha });
+          it.set('Ready to save', 'work');
+          ok.push(it);
+        } catch (e) {
+          if (e.status === 401) { state.queue.length = 0; return signOut(e.message); }
+          it.fail(e.message);
+        }
+      }
+      if (!entries.length) continue;
+      try {
+        ok.forEach(it => it.set('Saving…', 'work'));
+        await commitEntries(entries, `Add ${plural(ok.length, 'photo')} (${state.user.login})`);
+        ok.forEach(it => it.set('Added ✓', 'done'));
+        await loadPhotos(true);
+      } catch (e) {
+        ok.forEach(it => it.fail(e.message));
+      }
+      updateQueueBar();
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+    state.queue.splice(0).forEach(it => it.fail(e.message));
+  } finally {
+    state.uploading = false;
+    updateQueueBar();
+  }
+}
+
+/* ---------- deleting ---------- */
+async function deletePhotos(list) {
+  if (!list.length || !state.canWrite) return;
+  const n = list.length;
+  if (!(await ask(`Delete ${plural(n, 'photo')} for everyone?`, 'The repository owner can still recover them from the history.', 'Delete'))) return;
+  const entries = [];
+  for (const p of list) {
+    entries.push({ path: p.path, mode: '100644', type: 'blob', sha: null });  // sha:null removes the file
+    if (p.thumbPath) entries.push({ path: p.thumbPath, mode: '100644', type: 'blob', sha: null });
+  }
+  busy(true); setStatus(`Deleting ${plural(n, 'photo')}…`);
+  try {
+    await commitEntries(entries, `Delete ${plural(n, 'photo')} (${state.user.login})`);
+    setSelecting(false);
+    if ($('viewer').open) $('viewer').close();
+    await loadPhotos(true);
+    toast(`Deleted ${plural(n, 'photo')}.`);
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally { busy(false); setStatus(''); }
+}
+
+/* ---------- downloading ---------- */
+function saveBlob(blob, name) {
+  const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+async function downloadOne(p) {
+  busy(true); setStatus('Downloading…');
+  try { saveBlob(await getBlob(p.sha, p.type, false), p.display); }
+  catch (e) { toast(e.message, 'error'); }
+  finally { busy(false); setStatus(''); }
+}
+
+let zipLib;
+function loadJSZip() {
+  return zipLib ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+    s.integrity = 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG';
+    s.crossOrigin = 'anonymous';
+    s.onload = () => res(window.JSZip);
+    s.onerror = () => { zipLib = null; rej(new Error('Could not load the ZIP helper. Download photos one at a time instead.')); };
+    document.head.append(s);
+  });
+}
+async function downloadMany(list) {
+  if (!list.length) return;
+  if (list.length === 1) return downloadOne(list[0]);
+  const total = list.reduce((s, p) => s + p.size, 0);
+  if (total > 1024 ** 3 && !(await ask(`That's ${fmtBytes(total)} of photos.`, 'Very large ZIPs can fail on phones.', 'Download'))) return;
+  busy(true);
+  try {
+    const JSZip = await loadJSZip();
+    const zip = new JSZip(); const used = new Set(); let done = 0;
+    setStatus(`Preparing ZIP… 0/${list.length}`);
+    await Promise.all(list.map(async p => {
+      const blob = await getBlob(p.sha, p.type, false);
+      let n = p.display, i = 2;
+      while (used.has(n.toLowerCase())) n = p.display.replace(/(\.[^.]+)?$/, ` (${i++})$1`);
+      used.add(n.toLowerCase());
+      zip.file(n, blob, { binary: true });
+      setStatus(`Preparing ZIP… ${++done}/${list.length}`);
+    }));
+    // Photos are already compressed; STORE skips pointless re-compression and is much faster.
+    const out = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+    saveBlob(out, `photos-${new Date().toISOString().slice(0, 10)}.zip`);
+  } catch (e) {
+    toast(e.message, 'error');
+  } finally { busy(false); setStatus(''); }
+}
+
+/* ---------- viewer ---------- */
+function openViewer(i) {
+  state.vi = i;
+  showInViewer();
+  if (!$('viewer').open) $('viewer').showModal();
+}
+function showInViewer() {
+  const p = state.view[state.vi]; if (!p) return;
+  const token = ++state.vToken;
+  $('vName').textContent = p.display;
+  $('vMeta').textContent = [p.uploader, fmtDate(p.date), fmtBytes(p.size)].filter(Boolean).join(' · ');
+  $('vPrev').hidden = state.vi <= 0;
+  $('vNext').hidden = state.vi >= state.view.length - 1;
+  const img = $('vImg');
+  const quick = state.thumbUrls.get(p.thumbSha || p.sha);
+  img.removeAttribute('src');
+  if (quick) img.src = quick; // show the small preview instantly, swap in full size when it arrives
+  $('vMsg').textContent = 'Loading…';
+  img.onerror = () => { if (token === state.vToken) $('vMsg').textContent = "This browser can't display this format. Use Download."; };
+  getBlob(p.sha, p.type, false).then(b => {
+    if (token !== state.vToken) return;
+    if (state.vUrl) URL.revokeObjectURL(state.vUrl);
+    state.vUrl = URL.createObjectURL(b);
+    img.onload = () => { if (token === state.vToken) $('vMsg').textContent = ''; };
+    img.src = state.vUrl;
+  }).catch(e => { if (token === state.vToken) $('vMsg').textContent = e.message; });
+}
+function step(d) {
+  const n = state.vi + d;
+  if (n >= 0 && n < state.view.length) { state.vi = n; showInViewer(); }
+}
+
+/* ---------- polling ---------- */
+function startPolling() {
+  stopPolling();
+  if (!CONFIG.pollSeconds) return;
+  state.pollTimer = setInterval(() => {
+    if (document.visibilityState === 'visible' && !state.uploading && !state.busy) loadPhotos(true);
+  }, CONFIG.pollSeconds * 1000);
+}
+function stopPolling() { clearInterval(state.pollTimer); state.pollTimer = null; }
+
+/* ---------- wiring ---------- */
+$('signinForm').onsubmit = e => { e.preventDefault(); connect($('token').value, $('remember').checked); };
+$('signOutBtn').onclick = () => signOut();
+$('pickBtn').onclick = () => $('fileInput').click();
+$('fileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
+$('clearQueue').onclick = () => { $('queue').querySelectorAll('li.done, li.fail').forEach(li => li.remove()); updateQueueBar(); };
+$('search').oninput = render;
+$('sort').onchange = render;
+$('refreshBtn').onclick = () => { state.treeEtag = null; loadPhotos(); };
+$('selectBtn').onclick = () => setSelecting(true);
+$('selDone').onclick = () => setSelecting(false);
+$('selAll').onclick = () => { state.view.forEach(p => state.selected.add(p.path)); render(); };
+$('selDl').onclick = () => downloadMany(selectedPhotos());
+$('selDel').onclick = () => deletePhotos(selectedPhotos());
+$('dlAllBtn').onclick = () => downloadMany(state.view);
+$('vClose').onclick = () => $('viewer').close();
+$('vPrev').onclick = () => step(-1);
+$('vNext').onclick = () => step(1);
+$('vDl').onclick = () => { const p = state.view[state.vi]; if (p) downloadOne(p); };
+$('vDel').onclick = () => { const p = state.view[state.vi]; if (p) deletePhotos([p]); };
+$('viewer').addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') step(-1);
+  if (e.key === 'ArrowRight') step(1);
+});
+$('viewer').addEventListener('close', () => {
+  state.vToken++;
+  if (state.vUrl) { URL.revokeObjectURL(state.vUrl); state.vUrl = null; }
+});
+let touchX = null;
+$('viewer').addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+$('viewer').addEventListener('touchend', e => {
+  if (touchX == null) return;
+  const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+  if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+});
+
+// Drag & drop anywhere, and Ctrl+V of screenshots / copied images
+const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { if (hasFiles(e)) { dragDepth++; document.body.classList.add('dragging'); } });
+window.addEventListener('dragleave', e => { if (hasFiles(e) && --dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('drop', e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging');
+  handleFiles(e.dataTransfer.files);
+});
+document.addEventListener('paste', e => {
+  if (!state.token || e.target.matches('input')) return;
+  const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
+  if (files.length) handleFiles(files);
+});
+
+window.addEventListener('beforeunload', e => {
+  if (state.uploading || state.queue.length) { e.preventDefault(); e.returnValue = ''; }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && state.token && !state.uploading) loadPhotos(true);
+});
+
+$('optimize').checked = store.get(KEY + ':optimize') !== '0';
+$('optimize').onchange = e => store.set(KEY + ':optimize', e.target.checked ? '1' : '0', true);
+
+/* ---------- start ---------- */
+(function start() {
+  $('repoLabel').textContent = `${CONFIG.owner}/${CONFIG.repo}`;
+  $('repoName').textContent = `${CONFIG.owner}/${CONFIG.repo}`;
+  $('ownerHint').textContent = CONFIG.owner;
+  $('repoHint').textContent = CONFIG.repo;
+  $('maxDimLbl').textContent = CONFIG.maxDim;
+  if (CONFIG.owner === 'YOUR-ORG-OR-USER') { $('setup').hidden = false; return; }
+  const saved = store.get(KEY + ':token');
+  if (saved) connect(saved, true, true); else showSignin();
+})();
+</script>
+</body>
+</html>
