@@ -25,6 +25,7 @@ body{background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-syste
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent);font-weight:600}
 [hidden]{display:none!important}
 .wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
@@ -156,15 +157,16 @@ body.selecting .tile .tick{display:grid}
       </div>
       <p class="err" id="signinErr" role="alert"></p>
     </form>
+    <p class="hint" style="margin:16px 0 0">New here? <a id="tokenLink" target="_blank" rel="noopener">Create your token on GitHub</a></p>
     <details>
       <summary>How do I get a token?</summary>
       <ol>
-        <li>On GitHub: <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
-        <li><b>Resource owner:</b> <span id="ownerHint"></span></li>
-        <li><b>Repository access:</b> Only select repositories → <span id="repoHint"></span></li>
-        <li><b>Permissions → Contents:</b> Read and write (Read-only if you just want to view).</li>
-        <li>Generate, copy it, and paste it here. Your token is only sent to GitHub.</li>
+        <li>Accept your invitation to <b><span id="ownerHint0"></span></b> on GitHub first (check your email).</li>
+        <li>Tap <b>Create your token on GitHub</b> above. The name, owner (<span id="ownerHint"></span>), 90-day expiry and photo permission are filled in for you.</li>
+        <li>Under <b>Repository access</b>, choose <b>Only select repositories</b> → <b><span id="repoHint"></span></b>. This is the one thing you pick yourself.</li>
+        <li>Tap <b>Generate token</b>, copy it, and paste it here. GitHub only shows it once. Your token is only sent to GitHub.</li>
       </ol>
+      <p>If the link doesn't fill anything in: GitHub → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>, then set Resource owner to <span id="ownerHint2"></span> and <b>Contents</b> to <b>Read and write</b>.</p>
     </details>
   </section>
 
@@ -960,8 +962,13 @@ $('optimize').onchange = e => store.set(KEY + ':optimize', e.target.checked ? '1
 (function start() {
   $('repoLabel').textContent = `${CONFIG.owner}/${CONFIG.repo}`;
   $('repoName').textContent = `${CONFIG.owner}/${CONFIG.repo}`;
-  $('ownerHint').textContent = CONFIG.owner;
+  for (const id of ['ownerHint0', 'ownerHint', 'ownerHint2']) $(id).textContent = CONFIG.owner;
   $('repoHint').textContent = CONFIG.repo;
+  // GitHub pre-fills the token form from these (it can't pre-select the repo)
+  $('tokenLink').href = 'https://github.com/settings/personal-access-tokens/new?' + new URLSearchParams({
+    name: 'Photo Share', description: `Upload and view photos on the ${CONFIG.owner} album site`,
+    target_name: CONFIG.owner, expires_in: '90', contents: 'write'
+  });
   $('maxDimLbl').textContent = CONFIG.maxDim;
   if (CONFIG.owner === 'YOUR-ORG-OR-USER') { $('setup').hidden = false; return; }
   const saved = store.get(KEY + ':token');
