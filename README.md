@@ -1,55 +1,34 @@
-# Photo Share — setup
+# Photo Share
 
-A single `index.html` that lets invited people upload, view and download photos. GitHub Pages hosts the page; a **private** GitHub repo stores the photos. There's no server: the page talks straight to the GitHub API with each person's own token.
+A private photo album for friends and colleagues. People create an account on the site, the owner approves them, and approved members can upload, view and download photos.
 
-## Why it's set up this way
+- **Page:** `index.html`, hosted on GitHub Pages at https://102iw-cs.github.io/102IW_CS_Album/
+- **Accounts, database and photo storage:** Supabase (free plan)
 
-- **GitHub Pages is static.** It can serve the page but can't accept uploads, so the page writes to a repo through the GitHub API instead.
-- **The page and the photos are separate repos.** The page has no secrets, so it can be public. The photos repo stays private, so only people with a token can see them.
-- **Each person uses their own token.** Never put a token in the HTML. Anyone could read it, and GitHub automatically revokes tokens it finds in public repos.
-- **Use an organization, not your personal account.** Fine-grained tokens can't reach another user's personal repo when you're only a collaborator. They *can* reach a repo owned by an organization you belong to, scoped to that one repo.
+## How it's put together
 
-## One-time setup (you)
+- The page is static, so it can't keep secrets. It only contains Supabase's **publishable** key, which is meant to be public.
+- What protects the photos is the set of **access rules in the database** (`supabase/setup.sql`). They're enforced on Supabase's servers, so editing the page can't get around them:
+  - New accounts start as **pending** and see nothing until an admin approves them.
+  - Only approved members can see photos. Files are in a private bucket and open only through short-lived signed links.
+  - People upload only into their own folder. They can delete their own photos; admins can delete any.
+  - Who uploaded a photo, and when, is stamped by the server, so it can't be faked.
+  - The first account ever created becomes the admin.
+- Passwords are stored and checked by Supabase Auth; the page never sees or stores them.
 
-1. **Create a free organization** on GitHub: profile menu → *Your organizations* → *New organization* → Free. Example name: `karki-photos`.
-2. **Create the photo repo** in that org: `photo-share`, **Private**. Leaving it empty is fine, since the page creates the first commit.
-3. **Invite people:** Org → *People* → *Invite member*. Then in the repo, go to *Settings → Collaborators and teams* and give them **Write** (or **Read** for view-only).
-4. **Allow fine-grained tokens:** Org → *Settings → Personal access tokens*. Allow fine-grained tokens. Either turn off "require approval" or approve each request under *Pending requests*. A pending token can't read the private repo yet.
-5. **Host the page:** create a **public** repo in the same org, for example `album`. Add `index.html`, then go to *Settings → Pages → Deploy from branch → main / root*. The site will be at `https://karki-photos.github.io/album/`.
-6. **Point the page at the photo repo:** edit `CONFIG` at the top of the script:
-   ```js
-   owner: 'karki-photos',
-   repo:  'photo-share',
-   ```
+## One-time setup
 
-> Hosting the page under the organization's `*.github.io` keeps saved tokens separate from pages on your personal `github.io` site. Every project site under one account shares a single browser origin.
+1. **Database:** Supabase → SQL Editor → New query → paste all of `supabase/setup.sql` → Run. It's safe to run again after changes.
+2. **Site address:** Authentication → URL Configuration → set **Site URL** to `https://102iw-cs.github.io/102IW_CS_Album/` and add the same address under **Redirect URLs**. Email links (confirm, reset password) come back here.
+3. **Email confirmation (recommended: off):** Authentication → Sign In / Providers → Email → turn off **Confirm email**. You approve every account anyway, and Supabase's built-in email sender only allows a few emails per hour. Password-reset emails still work.
+4. **Become the admin:** open the site and create your account **first**.
 
-## Each friend (once)
+## Everyday use
 
-1. Accept the org invite.
-2. GitHub → *Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token*
-   - **Resource owner:** the org (`karki-photos`)
-   - **Repository access:** Only select repositories → `photo-share`
-   - **Permissions → Contents:** Read and write (Read-only for viewers)
-   - **Expiration:** 90 days is a sensible default
-3. Open the site and paste the token. Tick "Remember on this device" only on their own phone or PC.
+- **Approving people:** tap **Members** (a red number shows how many are waiting) → **Approve** or **Decline**. **Turn off** removes someone's access later; **Restore** gives it back.
+- **Storage:** the free plan has 1 GB of files and 5 GB of downloads a month. With "Optimize" on, a phone photo is about 0.5–1.5 MB.
+- **Paused project:** Supabase pauses free projects after a week with no activity. If the site says it can't reach the album server, open the Supabase dashboard and resume the project.
 
-## What it does
+## Features
 
-- Drag and drop anywhere, use the file picker, or paste with Ctrl+V. Multiple files are supported, and non-images are skipped.
-- **Optimize** (on by default) resizes to 2560 px and re-saves as JPEG. This keeps the repo small and **removes GPS location data**. GIFs are left unchanged.
-- Generates a small thumbnail for each photo so the gallery loads fast. Thumbnails are cached on the device.
-- Saves up to 10 photos per commit. If two people save at the same moment, it rebuilds on top of the other person's commit instead of overwriting it.
-- Shows who uploaded each photo and when, using the file name `date__login__name.jpg`.
-- Search, newest/oldest sorting, and a full-screen viewer with arrow keys and swipe.
-- Download one photo, or select several (or all) and get a ZIP.
-- Checks for new photos every 60 s while the tab is open. It uses ETags, so unchanged checks don't count against the GitHub rate limit.
-- Read-only users see no upload or delete controls.
-- Signing out clears the token and the cached previews.
-
-## Limits to know
-
-- **Size:** GitHub recommends repos stay under **1 GB** (the page shows usage), and single files are capped at 100 MB (the page stops at 50 MB). With Optimize on, a typical phone photo is about 0.5–1.5 MB, so roughly 1,000+ photos.
-- **Deletes aren't permanent:** a deleted photo stays in the git history. Fully purging it means rewriting history, for example with `git filter-repo`.
-- **HEIC (iPhone):** Safari converts it to JPEG during Optimize. In Chrome/Edge on Windows, HEIC uploads as-is with no preview, but it can still be downloaded.
-- **Tokens expire.** When one does, the page sends that person back to the sign-in screen.
+Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.
