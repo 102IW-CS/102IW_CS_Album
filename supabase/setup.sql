@@ -244,7 +244,9 @@ create or replace function public.guard_share_link_update()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
   new.token := old.token; new.album_id := old.album_id; new.photo_id := old.photo_id;
-  new.created_by := old.created_by; new.created_by_name := old.created_by_name;
+  -- the creator may only become empty, when their account is deleted
+  new.created_by := case when new.created_by is null then null else old.created_by end;
+  new.created_by_name := old.created_by_name;
   new.created_at := old.created_at; new.expires_at := old.expires_at;
   new.revoked := old.revoked or new.revoked; -- a turned-off link stays off
   return new;
@@ -613,6 +615,20 @@ grant insert (name, email, phone, topic, message) on public.contact_messages to 
 grant select, delete on public.contact_messages to authenticated;
 grant update (read) on public.contact_messages to authenticated;
 
+-- ============ Admin: remove a member ============
+-- Deletes the sign-in account; the member record (and shares to them, their removal requests)
+-- go with it. Their photos and albums stay, owned by nobody, so only admins can manage them;
+-- the page deletes those first if the admin chooses. Invite links they made are turned off.
+create or replace function public.admin_remove_member(target uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not private.is_admin() then raise exception 'Only admins can remove members'; end if;
+  if target = auth.uid() then raise exception 'You can''t remove your own account'; end if;
+  if not exists (select 1 from public.profiles where id = target) then raise exception 'That member no longer exists'; end if;
+  update public.share_links set revoked = true where created_by = target;
+  delete from auth.users where id = target;
+end $$;
+
 -- ============ Album settings ============
 -- One row: the album owner's name and how people can reach them.
 -- Signed-in people (including those waiting for approval) can read it; only admins can change it.
@@ -654,9 +670,9 @@ grant execute on function private.is_approved(), private.is_admin(), private.is_
 revoke execute on function public.handle_new_user(), public.stamp_photo(), public.stamp_album(),
   public.stamp_share(), public.stamp_share_link(), public.guard_share_link_update(), public.stamp_removal_request(),
   public.stamp_contact_message() from public, anon, authenticated; -- triggers only
-revoke execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
+revoke execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(), public.admin_remove_member(uuid),
   public.redeem_share_link(text), public.list_members_for_sharing() from public, anon;
-grant execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
+grant execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(), public.admin_remove_member(uuid),
   public.redeem_share_link(text), public.list_members_for_sharing() to authenticated;
 
 -- Helpers from earlier versions of this script that are no longer used.
