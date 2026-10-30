@@ -1916,7 +1916,7 @@ const vPhoto = () => state.view[state.vi];
 
 /* ---------- members & settings (admin) ---------- */
 async function refreshPendingCount() {
-  const { data, error } = await sb.rpc('admin_list_members');
+  const { data, error } = await sb.rpc('list_members_admin');
   if (error) return;
   const n = data.filter(m => m.status === 'pending').length;
   $('pendingBadge').textContent = n; $('pendingBadge').hidden = !n;
@@ -1927,7 +1927,7 @@ async function openMembers() {
   $('memberList').replaceChildren(el('li', 'hint', 'Loading…'));
   $('setOk').textContent = ''; $('setErr').textContent = '';
   document.querySelectorAll('#members .admin-only').forEach(e => { e.hidden = !isAdmin(); });
-  const [{ data, error }, s] = await Promise.all([sb.rpc('admin_list_members'), loadSettings().catch(() => ({}))]);
+  const [{ data, error }, s] = await Promise.all([sb.rpc('list_members_admin'), loadSettings().catch(() => ({}))]);
   $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
   if (error) { $('memberList').replaceChildren(el('li', 'err', errMsg(error))); return; }
   const n = data.filter(m => m.status === 'pending').length;

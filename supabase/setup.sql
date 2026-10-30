@@ -239,6 +239,20 @@ drop trigger if exists stamp_share_link on public.share_links;
 create trigger stamp_share_link before insert on public.share_links
   for each row execute function public.stamp_share_link();
 
+-- Only "turn off" can change on a link; everything else stays as created.
+create or replace function public.guard_share_link_update()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.token := old.token; new.album_id := old.album_id; new.photo_id := old.photo_id;
+  new.created_by := old.created_by; new.created_by_name := old.created_by_name;
+  new.created_at := old.created_at; new.expires_at := old.expires_at;
+  new.revoked := old.revoked or new.revoked; -- a turned-off link stays off
+  return new;
+end $$;
+drop trigger if exists guard_share_link_update on public.share_links;
+create trigger guard_share_link_update before update on public.share_links
+  for each row execute function public.guard_share_link_update();
+
 -- ============ Visibility helpers ============
 -- Can the signed-in person see this album? (own, shared with everyone, shared with them, or admin)
 -- Anyone who can see an album can also add their own photos to it.
@@ -527,8 +541,8 @@ create policy "photos: delete allowed files" on storage.objects
 
 -- ============ Admin: member list ============
 -- "invited_by" shows who sent an invite link to someone, to help decide whether to approve them.
-drop function if exists public.admin_list_members();
-create function public.admin_list_members()
+drop function if exists public.list_members_admin(); -- older name
+create or replace function public.list_members_admin()
 returns table (id uuid, display_name text, email text, status text, is_admin boolean, is_moderator boolean, created_at timestamptz, invited_by text)
 language plpgsql stable security definer set search_path = '' as $$
 begin
@@ -579,10 +593,10 @@ grant execute on function private.is_approved(), private.is_admin(), private.is_
   private.can_view_file(text), private.can_delete_file(text), private.is_approved_member(uuid),
   private.can_request_removal(uuid, uuid) to authenticated;
 revoke execute on function public.handle_new_user(), public.stamp_photo(), public.stamp_album(),
-  public.stamp_share(), public.stamp_share_link(), public.stamp_removal_request() from public, anon, authenticated; -- triggers only
-revoke execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.admin_list_members(),
+  public.stamp_share(), public.stamp_share_link(), public.guard_share_link_update(), public.stamp_removal_request() from public, anon, authenticated; -- triggers only
+revoke execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
   public.redeem_share_link(text), public.list_members_for_sharing() from public, anon;
-grant execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.admin_list_members(),
+grant execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
   public.redeem_share_link(text), public.list_members_for_sharing() to authenticated;
 
 -- Helpers from earlier versions of this script that are no longer used.

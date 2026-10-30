@@ -10,16 +10,16 @@ A private photo album for friends and colleagues. People create an account on th
 - The page is static, so it can't keep secrets. It only contains Supabase's **publishable** key, which is meant to be public.
 - What protects the photos is the set of **access rules in the database** (`supabase/setup.sql`). They're enforced on Supabase's servers, so editing the page can't get around them:
   - New accounts start as **pending** and see nothing until an admin approves them.
-  - **Members see only their own photos and albums, plus albums the admin marks Shared.** Admins see everything.
+  - **Members see only their own photos and albums, plus whatever is shared with them.** Admins see everything.
   - Files are in a private bucket and open only through short-lived signed links, checked against the same rules.
-  - People upload only into their own folder. Members can delete any photo they can see, and move their own.
+  - People upload only into their own folder. Only the uploader or an admin can move or delete a photo.
   - Who uploaded a photo, and when, is stamped by the server, so it can't be faked.
   - The first account ever created becomes the admin.
 - Passwords are stored and checked by Supabase Auth; the page never sees or stores them.
 
 ## One-time setup
 
-1. **Database:** Supabase → SQL Editor → New query → paste all of `supabase/setup.sql` → Run. It's safe to run again after changes.
+1. **Database:** Supabase → SQL Editor → New query → paste all of `supabase/setup.sql` → Run. It's safe to run again after changes. (`supabase/migrations/` holds upgrade scripts that avoid drop statements, for applying changes without a confirmation prompt.)
 2. **Site address:** Authentication → URL Configuration → set **Site URL** to `https://102iw-cs.github.io/102IW_CS_Album/` and add the same address under **Redirect URLs**. Email links (confirm, reset password) come back here.
 3. **Email confirmation (recommended: off):** Authentication → Sign In / Providers → Email → turn off **Confirm email**. You approve every account anyway, and Supabase's built-in email sender only allows a few emails per hour. Password-reset emails still work.
 4. **Become the admin:** open the site and create your account **first**.
