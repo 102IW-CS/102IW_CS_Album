@@ -121,6 +121,11 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
 .agree.missing{border-color:var(--danger)}
 .agree a,.fine a{color:var(--accent)}
 .fine{font-size:12.5px;color:var(--muted);text-align:center;margin:4px 0 0;line-height:1.5}
+.email-hint{margin:6px 0 0}
+.email-hint:empty{display:none}
+.email-hint.bad{color:var(--danger)}
+.email-hint .linkish{font-size:inherit}
+#vfCode{font-family:var(--mono);font-size:20px;letter-spacing:.3em;text-align:center}
 .check input{accent-color:var(--accent);width:16px;height:16px}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .err{color:var(--danger);font-size:14px;margin:0}
@@ -558,7 +563,7 @@ body>main{flex:1 0 auto;width:100%}
 
       <form id="upForm" class="stack" novalidate hidden>
         <div><label class="field" for="upName">Your name</label><input id="upName" type="text" autocomplete="name" maxlength="60" required placeholder="Shown next to the photos you add"></div>
-        <div><label class="field" for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="email" required></div>
+        <div><label class="field" for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="email" required><p class="hint email-hint" id="upEmailHint" aria-live="polite"></p></div>
         <div>
           <label class="field" for="upPass">Password</label><input id="upPass" type="password" autocomplete="new-password" required>
           <ul class="rules" id="upRules" aria-live="polite"></ul>
@@ -572,6 +577,15 @@ body>main{flex:1 0 auto;width:100%}
         <div class="split" style="justify-content:flex-end"><button class="btn primary" id="upBtn">Create account</button></div>
         <p class="err" id="upErr" role="alert"></p>
         <p class="ok" id="upOk" role="status"></p>
+      </form>
+
+      <form id="verifyForm" class="stack" novalidate hidden>
+        <p style="margin:0">We sent a confirmation email to <b id="vfEmail"></b>. Open it and click the link, or type the code from the email here.</p>
+        <div><label class="field" for="vfCode">Confirmation code</label><input id="vfCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" spellcheck="false"></div>
+        <div class="split"><button type="button" class="linkish" id="vfBack">Use a different email</button><button class="btn primary" id="vfBtn">Confirm</button></div>
+        <p class="hint" style="margin:0">Nothing yet? Check your spam folder, or <button type="button" class="linkish" id="vfResend">send it again</button><span id="vfWait"></span>. If this email already has an account, <button type="button" class="linkish" id="vfSignIn">sign in</button> instead.</p>
+        <p class="err" id="vfErr" role="alert"></p>
+        <p class="ok" id="vfOk" role="status"></p>
       </form>
 
       <form id="forgotForm" class="stack" novalidate hidden>
@@ -1072,6 +1086,8 @@ function errMsg(e) {
     return "Can't reach the album server. Check your connection. If nobody has used the album for a week, the owner needs to resume it in Supabase.";
   if (code === 'invalid_credentials' || /invalid login credentials/i.test(m)) return 'Wrong email or password.';
   if (code === 'email_not_confirmed' || /email not confirmed/i.test(m)) return 'Confirm your email first. Check your inbox (and spam) for the link.';
+  if (/database error saving new user|permanent email/i.test(m)) return 'That email can\u2019t be used here. Please use your regular, permanent email address.';
+  if (code === 'otp_expired' || /token has expired|otp.*(expired|invalid)|invalid.*token/i.test(m)) return 'That code is wrong or has expired. Check the latest email, or send a new one.';
   if (code === 'user_already_exists' || /already registered/i.test(m)) return 'That email already has an account. Sign in instead.';
   if (code === 'same_password') return 'That is already your password. Choose a different one, or sign in with it.';
   if (code === 'weak_password' || /password should|password is known/i.test(m)) return 'Choose a stronger password that meets every rule below.';
@@ -1242,6 +1258,93 @@ $('termsOut').onclick = async () => {
   state.session = null; showAuth('in');
 };
 
+/* ---------- real email addresses ----------
+   The real proof is the confirmation email (Supabase "Confirm email"). These checks catch the
+   obvious problems instantly: throwaway inboxes, reserved test domains, and common typos.
+   The database refuses the same throwaway domains (private.is_blocked_email). */
+const BLOCKED_DOMAINS = new Set(['mailinator.com', 'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org', 'guerrillamailblock.com',
+  'sharklasers.com', 'grr.la', '10minutemail.com', '10minutemail.net', 'temp-mail.org', 'temp-mail.io', 'tempmail.com', 'tempmail.net',
+  'tempmailo.com', 'tempmail.dev', 'yopmail.com', 'yopmail.net', 'yopmail.fr', 'trashmail.com', 'trashmail.de', 'trashmail.net',
+  'getnada.com', 'nada.email', 'maildrop.cc', 'dispostable.com', 'throwawaymail.com', 'fakeinbox.com', 'mailnesia.com', 'emailondeck.com',
+  'mohmal.com', 'burnermail.io', 'mytemp.email', 'tempail.com', 'moakt.com', 'spamgourmet.com', 'mintemail.com', 'mailcatch.com',
+  'mailpoof.com', 'tempr.email', 'discard.email', 'getairmail.com', 'inboxkitten.com', 'emailfake.com', 'fakemail.net', 'tempinbox.com',
+  'spambox.us', 'mailtemp.net', 'example.com', 'example.org', 'example.net', 'test.com']);
+const DOMAIN_TYPOS = { 'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmaill.com': 'gmail.com',
+  'gmail.co': 'gmail.com', 'gmail.con': 'gmail.com', 'gmail.cm': 'gmail.com', 'gmail.om': 'gmail.com', 'gmal.com': 'gmail.com',
+  'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yahoo.co': 'yahoo.com', 'yahoo.con': 'yahoo.com', 'yhoo.com': 'yahoo.com',
+  'hotmial.com': 'hotmail.com', 'hotmal.com': 'hotmail.com', 'hotmail.co': 'hotmail.com', 'hotmail.con': 'hotmail.com',
+  'outlok.com': 'outlook.com', 'outlook.co': 'outlook.com', 'outlook.con': 'outlook.com', 'iclod.com': 'icloud.com', 'icloud.co': 'icloud.com',
+  'icloud.con': 'icloud.com', 'aol.co': 'aol.com', 'comcast.com': 'comcast.net', 'verizon.com': 'verizon.net' };
+function emailProblem(email) {
+  const [local, domain = ''] = email.trim().toLowerCase().split('@');
+  if (BLOCKED_DOMAINS.has(domain) || /\.(test|example|invalid|localhost|local)$/.test(domain))
+    return { blocked: 'Please use your regular, permanent email address. Temporary or test addresses can’t receive the confirmation email.' };
+  if (DOMAIN_TYPOS[domain]) return { suggest: `${local}@${DOMAIN_TYPOS[domain]}` };
+  return {};
+}
+function showEmailHint() {
+  const hint = $('upEmailHint'), email = $('upEmail').value.trim();
+  hint.replaceChildren(); hint.classList.remove('bad');
+  if (!email || !validEmail(email)) return;
+  const p = emailProblem(email);
+  if (p.blocked) { hint.textContent = p.blocked; hint.classList.add('bad'); return; }
+  if (p.suggest) {
+    const b = el('button', 'linkish', p.suggest); b.type = 'button';
+    b.onclick = () => { $('upEmail').value = p.suggest; showEmailHint(); $('upEmail').focus(); };
+    hint.append('Did you mean ', b, '?');
+  }
+}
+$('upEmail').addEventListener('blur', showEmailHint);
+$('upEmail').addEventListener('input', () => { if ($('upEmailHint').textContent) showEmailHint(); });
+
+/* Confirmation step: shown after Create account (when Supabase "Confirm email" is on), or when
+   someone tries to sign in before confirming. The email has a link, and can also carry a code. */
+const verify = { email: '', until: 0, timer: null };
+function startVerify(email, justSent) {
+  verify.email = email;
+  $('vfEmail').textContent = email; $('vfCode').value = '';
+  authMode('verify');
+  if (justSent) { verify.until = Date.now() + 60000; $('vfOk').textContent = 'Account created. Check your inbox.'; }
+  else $('vfErr').textContent = 'Please confirm your email address first. Use the link or code we sent, or send a new one.';
+  tickResend();
+  $('vfCode').focus();
+}
+function tickResend() {
+  clearInterval(verify.timer);
+  const draw = () => {
+    const left = Math.ceil((verify.until - Date.now()) / 1000);
+    $('vfResend').disabled = left > 0;
+    $('vfWait').textContent = left > 0 ? ` (in ${left}s)` : '';
+    if (left <= 0) clearInterval(verify.timer);
+  };
+  draw(); verify.timer = setInterval(draw, 1000);
+}
+$('verifyForm').onsubmit = async e => {
+  e.preventDefault();
+  const token = $('vfCode').value.replace(/\s+/g, '');
+  $('vfErr').textContent = ''; $('vfOk').textContent = '';
+  if (!/^\d{6,10}$/.test(token)) return void ($('vfErr').textContent = 'Enter the code from the email (numbers only), or click the link in it.');
+  $('vfBtn').disabled = true;
+  try {
+    let { error } = await sb.auth.verifyOtp({ email: verify.email, token, type: 'email' });
+    if (error) ({ error } = await sb.auth.verifyOtp({ email: verify.email, token, type: 'signup' })); // older servers
+    if (error) throw error;
+    clearInterval(verify.timer);
+    toast('Email confirmed.'); // signed in now; the normal flow continues (waiting for approval)
+  } catch (err) { $('vfErr').textContent = errMsg(err); }
+  finally { $('vfBtn').disabled = false; }
+};
+$('vfResend').onclick = async () => {
+  if (Date.now() < verify.until) return;
+  $('vfErr').textContent = ''; $('vfOk').textContent = '';
+  $('vfResend').disabled = true;
+  const { error } = await sb.auth.resend({ type: 'signup', email: verify.email, options: { emailRedirectTo: siteUrl() } });
+  verify.until = Date.now() + 60000; tickResend();
+  if (error) $('vfErr').textContent = errMsg(error); else $('vfOk').textContent = 'Sent again. It can take a minute to arrive.';
+};
+$('vfBack').onclick = () => { clearInterval(verify.timer); authMode('up'); $('upEmail').value = verify.email; $('upEmail').focus(); };
+$('vfSignIn').onclick = () => { clearInterval(verify.timer); authMode('in'); $('inEmail').value = verify.email; $('inPass').focus(); };
+
 /* ---------- My account: name, password, download everything, delete account ---------- */
 const acPwRules = rulesChecker('acNew', 'acNew2', 'acRules', 'acMatch');
 const myPhotos = () => state.photos.filter(p => p.uploaderId === uid());
@@ -1410,12 +1513,13 @@ function show(which) {
 function authMode(mode) {
   $('tabIn').setAttribute('aria-selected', mode === 'in');
   $('tabUp').setAttribute('aria-selected', mode === 'up');
-  $('tabs').hidden = mode === 'forgot' || mode === 'reset';
-  for (const [m, id] of [['in', 'inForm'], ['up', 'upForm'], ['forgot', 'forgotForm'], ['reset', 'resetForm']]) $(id).hidden = mode !== m;
-  $('authTitle').textContent = { in: 'Welcome back', up: 'Create your account', forgot: 'Reset your password', reset: 'Choose a new password' }[mode];
+  $('tabs').hidden = mode === 'forgot' || mode === 'reset' || mode === 'verify';
+  for (const [m, id] of [['in', 'inForm'], ['up', 'upForm'], ['forgot', 'forgotForm'], ['reset', 'resetForm'], ['verify', 'verifyForm']]) $(id).hidden = mode !== m;
+  $('authTitle').textContent = { in: 'Welcome back', up: 'Create your account', forgot: 'Reset your password', reset: 'Choose a new password', verify: 'Confirm your email' }[mode];
   $('authLead').textContent = { in: 'Sign in to see and share photos.', up: 'Join to see and share photos with the group.',
-    forgot: "Enter your email and we'll send you a reset link.", reset: 'Pick a new password, or sign in if you remember the old one.' }[mode];
-  for (const id of ['inErr', 'upErr', 'upOk', 'fgErr', 'fgOk', 'resetErr']) $(id).textContent = '';
+    forgot: "Enter your email and we'll send you a reset link.", reset: 'Pick a new password, or sign in if you remember the old one.',
+    verify: 'One quick step, so we know the address is really yours.' }[mode];
+  for (const id of ['inErr', 'upErr', 'upOk', 'fgErr', 'fgOk', 'resetErr', 'vfErr', 'vfOk']) $(id).textContent = '';
   upRules.reset(); resetRules.reset();
 }
 function showAuth(mode = 'in') {
@@ -1553,6 +1657,9 @@ $('inForm').onsubmit = async e => {
   $('inBtn').disabled = true; $('inErr').textContent = '';
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error && (error.code === 'email_not_confirmed' || /email not confirmed/i.test(error.message))) {
+      $('inPass').value = ''; startVerify(email, false); return;
+    }
     if (error) throw error;
     $('inPass').value = '';
   } catch (err) { $('inErr').textContent = errMsg(err); }
@@ -1566,6 +1673,8 @@ $('upForm').onsubmit = async e => {
   if (policy().remember === false) store.set(REMEMBER_KEY, '0', true);
   if (!name) return void ($('upErr').textContent = 'Enter your name.');
   if (!validEmail(email)) return void ($('upErr').textContent = 'Enter a valid email address.');
+  const ep = emailProblem(email);
+  if (ep.blocked) { showEmailHint(); return void ($('upErr').textContent = ep.blocked); }
   const pwProblem = upRules.check();
   if (pwProblem) return void ($('upErr').textContent = pwProblem);
   if (!$('upAgree').checked) {
@@ -1576,8 +1685,8 @@ $('upForm').onsubmit = async e => {
   try {
     const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, ...termsRecord() }, emailRedirectTo: siteUrl() } });
     if (error) throw error;
-    if (!data.session) $('upOk').textContent = 'Account created. Check your email for a confirmation link, then sign in.';
     $('upPass').value = ''; $('upPass2').value = ''; upRules.reset();
+    if (!data.session) startVerify(email, true); // email confirmation is on: prove the address is real
   } catch (err) { $('upErr').textContent = errMsg(err); }
   finally { $('upBtn').disabled = false; }
 };
@@ -2874,6 +2983,10 @@ async function reloadMembers() {
   let { data, error } = await sb.rpc('list_members_with_terms');
   mUI.hasTerms = !error;
   if (error && /list_members_with_terms|could not find the function|schema cache/i.test(String(error.message))) ({ data, error } = await sb.rpc('list_members_admin'));
+  if (!error) { // who has confirmed their email (skipped quietly if the database doesn't have it)
+    const { data: es, error: ee } = await sb.rpc('member_email_status');
+    if (!ee) { const by = new Map(es.map(r => [r.id, r])); data = data.map(m => ({ ...m, email_confirmed: by.get(m.id)?.email_confirmed, last_sign_in_at: by.get(m.id)?.last_sign_in_at })); }
+  }
   if (error) { $('memberList').replaceChildren(el('li', 'm-empty err', errMsg(error))); return; }
   mUI.data = data || [];
   const n = mUI.data.filter(m => m.status === 'pending').length;
@@ -2915,7 +3028,7 @@ function renderMembers() {
   const list = memberMatches();
   const shown = list.slice(0, mUI.limit);
   // Bulk approve when looking at waiting people.
-  const waiting = list.filter(m => m.status === 'pending');
+  const waiting = list.filter(m => m.status === 'pending' && m.email_confirmed !== false);
   const bulk = mUI.filter === 'pending' && waiting.length > 1;
   $('mBulk').hidden = !bulk;
   if (bulk) { $('mBulkText').textContent = `${plural(waiting.length, 'account')} waiting${mUI.q ? ' match your search' : ''}.`; $('mBulkGo').textContent = `Approve all ${waiting.length}`; }
@@ -2968,12 +3081,14 @@ function memberRow(m, nPhotos, nAlbums) {
   const name = highlighted('b', m.display_name); if (me) name.append(' (you)');
   who.append(name, highlighted('small', (m.email || '') + (m.status === 'pending' && m.invited_by ? ` · invited by ${m.invited_by}` : '')));
   const chipKind = role !== 'member' && m.status === 'approved' ? role : m.status;
-  const chipText = chipKind === 'blocked' ? 'turned off' : chipKind === 'pending' ? 'waiting' : chipKind === 'approved' ? 'active' : chipKind;
+  const chipText = chipKind === 'blocked' ? 'turned off' : chipKind === 'pending' ? (m.email_confirmed === false ? 'unconfirmed' : 'waiting') : chipKind === 'approved' ? 'active' : chipKind;
   row.append(av, who, el('span', `chip ${chipKind}`, chipText));
   // Waiting people get Approve/Decline right on the row: the most common job.
   if (m.status === 'pending' && canManage) {
     const q = el('div', 'm-quick');
-    q.append(statusBtn(m, 'Approve', 'approved', 'primary'), statusBtn(m, 'Decline', 'blocked', 'danger'));
+    const ok = statusBtn(m, 'Approve', 'approved', 'primary');
+    if (m.email_confirmed === false) { ok.disabled = true; ok.title = 'They need to confirm their email address first'; }
+    q.append(ok, statusBtn(m, 'Decline', 'blocked', 'danger'));
     row.append(q);
   }
   const chev = el('button', 'btn ghost icon m-chev'); chev.type = 'button';
@@ -2989,6 +3104,8 @@ function memberRow(m, nPhotos, nAlbums) {
   const panel = el('div', 'm-panel');
   const meta = el('p', 'm-meta');
   const bits = [`Joined ${fmtDate(new Date(m.created_at))}`];
+  if (m.email_confirmed !== undefined) bits.push(m.email_confirmed ? 'email confirmed \u2713' : 'email not confirmed yet');
+  if (m.last_sign_in_at) bits.push(`last signed in ${fmtDate(new Date(m.last_sign_in_at))}`);
   if (m.invited_by) bits.push(`invited by ${m.invited_by}`);
   if (isAdmin()) bits.push(`${plural(nPhotos, 'photo')} · ${plural(nAlbums, 'album')}`);
   meta.textContent = bits.join(' · ');
@@ -3073,7 +3190,7 @@ document.addEventListener('keydown', e => {
   if (box) { e.preventDefault(); $(box).focus(); }
 });
 $('mBulkGo').onclick = async () => {
-  const list = memberMatches().filter(m => m.status === 'pending');
+  const list = memberMatches().filter(m => m.status === 'pending' && m.email_confirmed !== false);
   if (!list.length) return;
   if (!(await ask(`Approve ${plural(list.length, 'account')}?`, list.slice(0, 8).map(m => m.display_name).join(', ') + (list.length > 8 ? ` and ${list.length - 8} more` : '') + ' will be able to use the album.', 'Approve all'))) return;
   $('mBulkGo').disabled = true;
