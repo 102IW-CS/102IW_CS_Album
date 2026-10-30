@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
 <title>Photo Share</title>
+<meta name="description" content="A private photo album for friends and colleagues. Members only.">
+<meta name="author" content="Mohan Karki">
+<meta name="theme-color" content="#1d1c19" id="themeColor">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>var t='dark';try{if(localStorage.getItem('photoshare:theme')==='light')t='light'}catch(e){}document.documentElement.setAttribute('data-theme',t)</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -97,7 +102,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
 .rules.show-missing li:not(.met){color:var(--danger)}
 
 /* ---------- sign in ---------- */
-#auth{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;min-height:calc(100vh - 62px);padding-block:40px}
+#auth{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;min-height:calc(100vh - 62px - 58px);padding-block:40px}
 @media (max-width:860px){#auth{grid-template-columns:1fr;gap:28px;min-height:0;padding-block:28px}}
 .intro h1{font-size:clamp(46px,7vw,92px);font-weight:500;margin:14px 0 18px}
 .intro h1 em{font-style:italic;color:var(--accent)}
@@ -132,7 +137,7 @@ form.stack{display:grid;gap:16px}
 .contact-row a:hover{text-decoration:underline}
 
 /* ---------- album index ---------- */
-#app{padding-block:28px 80px}
+#app{padding-block:28px 56px}
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 26px}
 .page-head h1{font-size:clamp(40px,6vw,64px)}
 .page-head .desc{color:var(--muted);max-width:60ch;margin:8px 0 0}
@@ -297,12 +302,19 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 #toasts{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;gap:8px;z-index:30;width:min(92vw,440px)}
 .toast{background:var(--ink);color:var(--bg);padding:11px 15px;border-radius:10px;font-size:14px;box-shadow:var(--shadow)}
 .toast.error{background:var(--danger);color:#fff}
+body{display:flex;flex-direction:column}
+body>main{flex:1 0 auto;width:100%}
+.site-foot{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+.site-foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:6px 16px;flex-wrap:wrap;padding-block:18px calc(18px + env(safe-area-inset-bottom,0px))}
+.site-foot .credit{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.site-foot .credit b{color:var(--accent);font-weight:500}
+@media (max-width:560px){.site-foot .wrap{justify-content:center;text-align:center}}
 #status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-family:var(--mono);font-size:12px;color:var(--muted);z-index:25}
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-aperture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M14.3 2.3 8.5 12.4M21.7 9.6H10M17.7 19.7 11.9 9.6M9.7 21.7l5.8-10.1M2.3 14.4H14M6.3 4.3l5.8 10.1"/></symbol>
+  <symbol id="i-aperture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12.00 8.25L21.81 13.92M15.25 10.12L15.25 21.46M15.25 13.88L5.43 19.54M12.00 15.75L2.19 10.08M8.75 13.88L8.75 2.54M8.75 10.12L18.57 4.46"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7c1.8 0 3.3-.5 4.6-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></symbol>
@@ -489,6 +501,13 @@ dialog.sheet[open]{display:flex;flex-direction:column}
     </div>
   </section>
 </main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Mohan Karki &middot; All rights reserved</span>
+    <span class="credit">Designed &amp; developed by <b>Mohan Karki</b></span>
+  </div>
+</footer>
 
 <dialog id="viewer" aria-label="Photo viewer">
   <div class="v-top">
@@ -2130,6 +2149,7 @@ const currentTheme = () => store.get(THEME_KEY) === 'light' ? 'light' : 'dark';
 function applyTheme() {
   const t = currentTheme();
   document.documentElement.setAttribute('data-theme', t);
+  $('themeColor').setAttribute('content', t === 'dark' ? '#1d1c19' : '#f4f2ee');
   const label = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   $('themeBtn').replaceChildren(svgIcon(t === 'dark' ? 'i-sun' : 'i-moon')); // icon shows where a tap takes you
   $('themeBtn').setAttribute('aria-label', label); $('themeBtn').title = label;

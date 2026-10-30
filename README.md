@@ -52,3 +52,7 @@ A private photo album for friends and colleagues. People create an account on th
 ## Features
 
 Private albums with sharing to everyone, named members or invite links · removal requests · moderator and admin roles · light/dark theme (dark by default) · justified gallery layout · Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.
+
+---
+
+© 2026 Mohan Karki. All rights reserved. Designed and developed by Mohan Karki.
