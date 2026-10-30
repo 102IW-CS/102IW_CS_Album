@@ -659,6 +659,17 @@ body>main{flex:1 0 auto;width:100%}
   </div>
 </dialog>
 
+<dialog id="removeDlg" class="sheet" aria-labelledby="removeTitle">
+  <div class="sheet-head"><h2 id="removeTitle">Remove member</h2></div>
+  <div class="sheet-body">
+    <p id="removeText" style="margin:0"></p>
+    <label class="check" id="removePhotosRow" style="align-items:flex-start"><input type="checkbox" id="removePhotos" style="margin-top:3px"><span id="removePhotosLbl"></span></label>
+    <p class="hint" style="margin:0">Prefer to just block them? <b>Turn off</b> keeps the account so they can't sign up again with this email. After <b>Remove</b>, they could sign up again, but would need approval.</p>
+    <p class="err" id="removeErr" role="alert"></p>
+  </div>
+  <div class="sheet-foot"><button type="button" class="btn ghost" id="removeCancel">Cancel</button><button type="button" class="btn danger-fill" id="removeGo">Remove member</button></div>
+</dialog>
+
 <dialog id="ask" class="sheet">
   <form method="dialog" style="display:contents">
     <div class="sheet-body" style="padding-top:22px"><p id="askMsg"></p><small id="askSub"></small></div>
@@ -2092,8 +2103,54 @@ function memberRow(m) {
   if (m.status === 'pending') li.append(act('Approve', 'approved', 'primary'), act('Decline', 'blocked', 'danger'));
   else if (m.status === 'approved') li.append(act('Turn off', 'blocked', 'danger'));
   else li.append(act('Restore', 'approved'));
+  if (isAdmin()) {
+    const rm = el('button', 'btn ghost danger', 'Remove'); rm.type = 'button';
+    rm.onclick = () => openRemoveMember(m);
+    li.append(rm);
+  }
   return li;
 }
+
+/* ---------- remove a member (admins) ---------- */
+let removeTarget = null;
+function openRemoveMember(m) {
+  removeTarget = m;
+  const photos = state.photos.filter(p => p.uploaderId === m.id);
+  const albums = state.albums.filter(a => a.created_by === m.id);
+  $('removeTitle').textContent = `Remove ${m.display_name}?`;
+  $('removeText').textContent = `This deletes ${m.display_name}'s account (${m.email || 'no email'}). They lose access right away, and any invite links they made stop working.`
+    + (photos.length || albums.length ? ` Unless you tick the box, their ${[photos.length ? plural(photos.length, 'photo') : '', albums.length ? plural(albums.length, 'album') : ''].filter(Boolean).join(' and ')} stay, and only admins can manage them.` : '');
+  $('removePhotosRow').hidden = !(photos.length || albums.length);
+  $('removePhotos').checked = false;
+  $('removePhotosLbl').textContent = `Also delete their ${[photos.length ? plural(photos.length, 'photo') : '', albums.length ? plural(albums.length, 'album') : ''].filter(Boolean).join(' and ')}. Frees up space; can\u2019t be undone.`
+    + (albums.length ? ' Photos others added to those albums are kept and go to Unsorted.' : '');
+  $('removeGo').textContent = 'Remove member';
+  $('removeErr').textContent = '';
+  $('members').close();
+  $('removeDlg').showModal();
+}
+$('removePhotos').onchange = () => { $('removeGo').textContent = $('removePhotos').checked ? 'Remove member and delete content' : 'Remove member'; };
+$('removeCancel').onclick = () => { $('removeDlg').close(); openMembers(); };
+$('removeGo').onclick = async () => {
+  const m = removeTarget; if (!m) return;
+  $('removeGo').disabled = true; $('removeErr').textContent = '';
+  try {
+    let gone = 0;
+    if ($('removePhotos').checked) {
+      gone = await removePhotos(state.photos.filter(p => p.uploaderId === m.id));
+      const ids = state.albums.filter(a => a.created_by === m.id).map(a => a.id);
+      if (ids.length) { const { error } = await sb.from('albums').delete().in('id', ids); if (error) throw error; }
+    }
+    const { error } = await sb.rpc('admin_remove_member', { target: m.id });
+    if (error) throw error;
+    $('removeDlg').close();
+    toast(`${m.display_name} was removed${gone ? ` and ${plural(gone, 'photo')} deleted` : ''}.`);
+    await loadAll(true);
+    openMembers();
+  } catch (err) {
+    $('removeErr').textContent = /admin_remove_member|could not find the function/i.test(String(err?.message)) ? 'Removing members isn\u2019t switched on in the database yet.' : errMsg(err);
+  } finally { $('removeGo').disabled = false; }
+};
 $('settingsForm').onsubmit = async e => {
   e.preventDefault();
   $('setOk').textContent = ''; $('setErr').textContent = '';
