@@ -583,7 +583,7 @@ body>main{flex:1 0 auto;width:100%}
         <p style="margin:0">We sent a confirmation email to <b id="vfEmail"></b>. Open it and click the link, or type the code from the email here.</p>
         <div><label class="field" for="vfCode">Confirmation code</label><input id="vfCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" spellcheck="false"></div>
         <div class="split"><button type="button" class="linkish" id="vfBack">Use a different email</button><button class="btn primary" id="vfBtn">Confirm</button></div>
-        <p class="hint" style="margin:0">Nothing yet? Check your spam folder, or <button type="button" class="linkish" id="vfResend">send it again</button><span id="vfWait"></span>. If this email already has an account, <button type="button" class="linkish" id="vfSignIn">sign in</button> instead.</p>
+        <p class="hint" style="margin:0">It comes from <b>photo.share.102cs@gmail.com</b>. Nothing yet? Check your <b>Junk or Spam</b> folder (and mark it “Not junk” so later emails arrive normally), or <button type="button" class="linkish" id="vfResend">send it again</button><span id="vfWait"></span>. If this email already has an account, <button type="button" class="linkish" id="vfSignIn">sign in</button> instead.</p>
         <p class="err" id="vfErr" role="alert"></p>
         <p class="ok" id="vfOk" role="status"></p>
       </form>
@@ -1700,7 +1700,7 @@ $('forgotForm').onsubmit = async e => {
   try {
     const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: siteUrl() });
     if (error) throw error;
-    $('fgOk').textContent = 'If that email has an account, a reset link is on its way. Check spam too.';
+    $('fgOk').textContent = 'If that email has an account, a reset link is on its way from photo.share.102cs@gmail.com. Check Junk or Spam too.';
   } catch (err) { $('fgErr').textContent = errMsg(err); }
   finally { $('fgBtn').disabled = false; }
 };
