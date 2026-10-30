@@ -55,7 +55,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background
 header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 .brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:var(--ink)}
 .brand svg{width:26px;height:26px;color:var(--accent);flex:none}
-.brand{min-width:0}
+.brand{flex:none} /* never squeeze the name; fitHeader() makes room instead */
 .brand span{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1;white-space:nowrap}
 .who{font-size:13px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* header buttons: text on wide screens, icons (with badges) on phones */
@@ -66,6 +66,12 @@ header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
   .btn.nav .lbl{display:none}
   .btn.nav svg{display:block;width:21px;height:21px}
   .btn.nav .badge{position:absolute;top:1px;right:0;min-width:16px;line-height:16px;font-size:10px;padding:0 4px}
+  /* 'Sign out' stays a word whenever it fits (always for members); see fitHeader() */
+  .btn.nav.word{padding:8px 12px}
+  .btn.nav.word .lbl{display:inline}
+  .btn.nav.word svg{display:none}
+  header.top.tight .btn.nav,header.top.tight #themeBtn{padding:8px 5px}
+  header.top.tight .wrap{gap:0}
 }
 @media (max-width:560px){.brand span{font-size:21px}header.top .wrap{gap:2px}}
 @media (max-width:360px){.brand span{font-size:19px}.brand{gap:7px}}
@@ -2247,6 +2253,17 @@ function applyTheme() {
 }
 applyTheme();
 $('themeBtn').onclick = () => { store.set(THEME_KEY, currentTheme() === 'dark' ? 'light' : 'dark', true); applyTheme(); };
+
+/* ---------- header: show the word "Sign out" when there's room, the icon only when there isn't ---------- */
+function fitHeader() {
+  const wrap = document.querySelector('header.top .wrap'), btn = $('signOutBtn'), header = wrap.parentElement;
+  const tooWide = () => wrap.scrollWidth > wrap.clientWidth + 1;
+  header.classList.remove('tight'); btn.classList.add('word');
+  if (tooWide()) btn.classList.remove('word');   // 1st: icon instead of the word
+  if (tooWide()) header.classList.add('tight');  // 2nd: tighter spacing (very small phones)
+}
+new ResizeObserver(fitHeader).observe(document.querySelector('header.top .wrap'));
+new MutationObserver(fitHeader).observe(document.querySelector('header.top .wrap'), { subtree: true, attributes: true, attributeFilter: ['hidden'], childList: true, characterData: true });
 
 $('optimize').checked = store.get('photoshare:optimize') !== '0';
 $('optimize').onchange = e => store.set('photoshare:optimize', e.target.checked ? '1' : '0', true);
