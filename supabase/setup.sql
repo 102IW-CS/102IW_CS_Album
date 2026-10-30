@@ -558,6 +558,61 @@ begin
     from public.profiles p order by (p.status = 'pending') desc, p.created_at desc;
 end $$;
 
+-- ============ Contact inbox ============
+-- Messages from the public contact page. Anyone (signed in or not) can send one;
+-- only admins can read, mark or delete them. Validation and a flood limit run on the server.
+create table if not exists public.contact_messages (
+  id         uuid primary key default gen_random_uuid(),
+  name       text not null check (char_length(trim(name)) between 1 and 80),
+  email      text not null check (char_length(email) between 5 and 160 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  phone      text check (char_length(phone) <= 40),
+  topic      text not null default 'other' check (topic in ('photo-site', 'website', 'app', 'other')),
+  message    text not null check (char_length(trim(message)) between 10 and 4000),
+  read       boolean not null default false,
+  created_at timestamptz not null default now()
+);
+create index if not exists contact_messages_created_idx on public.contact_messages (created_at desc);
+alter table public.contact_messages enable row level security;
+
+create or replace function public.stamp_contact_message()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.id := gen_random_uuid();
+  new.created_at := now();
+  new.read := false;
+  new.email := lower(trim(new.email));
+  new.name := trim(new.name);
+  if (select count(*) from public.contact_messages where created_at > now() - interval '1 hour') >= 30 then
+    raise exception 'The inbox is busy right now. Please email instead.';
+  end if;
+  if (select count(*) from public.contact_messages
+      where email = new.email and created_at > now() - interval '1 day') >= 3 then
+    raise exception 'You have already sent a few messages today. Please email instead.';
+  end if;
+  return new;
+end $$;
+drop trigger if exists stamp_contact_message on public.contact_messages;
+create trigger stamp_contact_message before insert on public.contact_messages
+  for each row execute function public.stamp_contact_message();
+
+drop policy if exists "contact: anyone can send" on public.contact_messages;
+create policy "contact: anyone can send" on public.contact_messages
+  for insert to anon, authenticated with check (true);
+drop policy if exists "contact: admins read" on public.contact_messages;
+create policy "contact: admins read" on public.contact_messages
+  for select to authenticated using (private.is_admin());
+drop policy if exists "contact: admins mark read" on public.contact_messages;
+create policy "contact: admins mark read" on public.contact_messages
+  for update to authenticated using (private.is_admin()) with check (private.is_admin());
+drop policy if exists "contact: admins delete" on public.contact_messages;
+create policy "contact: admins delete" on public.contact_messages
+  for delete to authenticated using (private.is_admin());
+
+revoke all on public.contact_messages from anon, authenticated;
+grant insert (name, email, phone, topic, message) on public.contact_messages to anon, authenticated;
+grant select, delete on public.contact_messages to authenticated;
+grant update (read) on public.contact_messages to authenticated;
+
 -- ============ Album settings ============
 -- One row: the album owner's name and how people can reach them.
 -- Signed-in people (including those waiting for approval) can read it; only admins can change it.
@@ -597,7 +652,8 @@ grant execute on function private.is_approved(), private.is_admin(), private.is_
   private.can_view_file(text), private.can_delete_file(text), private.is_approved_member(uuid),
   private.can_request_removal(uuid, uuid) to authenticated;
 revoke execute on function public.handle_new_user(), public.stamp_photo(), public.stamp_album(),
-  public.stamp_share(), public.stamp_share_link(), public.guard_share_link_update(), public.stamp_removal_request() from public, anon, authenticated; -- triggers only
+  public.stamp_share(), public.stamp_share_link(), public.guard_share_link_update(), public.stamp_removal_request(),
+  public.stamp_contact_message() from public, anon, authenticated; -- triggers only
 revoke execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
   public.redeem_share_link(text), public.list_members_for_sharing() from public, anon;
 grant execute on function public.set_member_status(uuid, text), public.set_member_role(uuid, text), public.list_members_admin(),
@@ -628,7 +684,7 @@ where id = (select u.id from auth.users u join public.profiles p on p.id = u.id 
 do $$
 declare t text;
 begin
-  foreach t in array array['photos', 'albums', 'shares', 'removal_requests'] loop
+  foreach t in array array['photos', 'albums', 'shares', 'removal_requests', 'contact_messages'] loop
     if not exists (select 1 from pg_publication_tables
                    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
       execute format('alter publication supabase_realtime add table public.%I', t);

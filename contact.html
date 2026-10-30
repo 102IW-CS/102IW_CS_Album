@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>Contact · Photo Share</title>
+<script>var t='dark';try{if(localStorage.getItem('photoshare:theme')==='light')t='light'}catch(e){}document.documentElement.setAttribute('data-theme',t)</script>
+<meta name="description" content="Want a private photo site like this one? Design & development by Mohan Karki, plus how Photo Share keeps photos private.">
+<meta name="author" content="Mohan Karki">
+<meta name="theme-color" content="#1d1c19" id="themeColor">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<style>
+/* Same visual language as the album: gallery-label type, warm neutrals, brass accent. */
+:root{
+  --bg:#f4f2ee;--surface:#fffefc;--surface-2:#e9e6df;--ink:#171614;--muted:#6c675f;--line:#dbd6cd;
+  --accent:#86652a;--accent-ink:#fffaf0;--accent-soft:#efe5d0;--danger:#b1281f;--ok:#2d6b4b;
+  --display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --shadow:0 1px 2px rgba(23,22,20,.05),0 10px 30px rgba(23,22,20,.08);
+}
+:root[data-theme="dark"]{
+  --bg:#1d1c19;--surface:#262420;--surface-2:#312e29;--ink:#f2eee6;--muted:#aaa397;--line:#3d3933;
+  --accent:#d6b679;--accent-ink:#1a1408;--accent-soft:#3a3122;--danger:#f0a198;--ok:#8ccdaa;
+  --shadow:0 1px 0 rgba(255,255,255,.03);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--ui);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;line-height:1.08;text-wrap:balance;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+@media (max-width:560px){.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+section{scroll-margin-top:80px}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:var(--ink)}
+.brand svg{width:26px;height:26px;color:var(--accent);flex:none}
+.brand span{font-family:var(--display);font-size:24px;font-weight:600}
+@media (max-width:560px){.brand span{font-size:21px}}
+
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 18px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;text-decoration:none;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn.icon{padding:9px 11px}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* hero */
+.hero{padding-block:64px 40px;display:grid;grid-template-columns:1.25fr .9fr;gap:48px;align-items:end}
+@media (max-width:860px){.hero{grid-template-columns:1fr;gap:28px;padding-block:40px 24px}}
+.hero h1{font-size:clamp(42px,6.4vw,82px);margin:14px 0 18px}
+.hero h1 em{color:var(--accent)}
+.hero p.lead{font-size:17px;max-width:52ch;margin:0 0 26px;color:var(--muted)}
+.hero .ctas{display:flex;gap:10px;flex-wrap:wrap}
+.signature{border-left:2px solid var(--accent);padding:4px 0 4px 18px}
+.signature b{display:block;font-family:var(--display);font-size:30px;font-weight:500}
+.signature span{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.signature p{margin:14px 0 0;color:var(--muted);font-size:14px}
+
+.band{border-top:1px solid var(--line);padding-block:56px}
+.band h2{font-size:clamp(32px,4.2vw,48px);margin:8px 0 10px}
+.band .intro{max-width:62ch;color:var(--muted);margin:0 0 30px}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+@media (max-width:860px){.features{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.features{grid-template-columns:1fr}}
+.feature{background:var(--surface);padding:24px 22px;min-width:0}
+.feature svg{width:24px;height:24px;color:var(--accent)}
+.feature h3{font-size:24px;margin:12px 0 6px}
+.feature p{margin:0;color:var(--muted);font-size:14px}
+
+.steps{list-style:none;margin:28px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.steps li{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:baseline}
+.steps .n{font-family:var(--display);font-size:40px;color:var(--accent);line-height:1;grid-row:span 2}
+.steps b{font-size:15px}
+.steps span{color:var(--muted);font-size:14px}
+
+/* contact */
+.contact-grid{display:grid;grid-template-columns:.9fr 1.3fr;gap:28px;align-items:start}
+@media (max-width:860px){.contact-grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;box-shadow:var(--shadow)}
+@media (max-width:560px){.card{padding:20px}}
+.card h3{font-size:28px;margin-bottom:4px}
+.reach{display:grid;gap:10px;margin-top:18px}
+.reach-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.reach-row svg{width:20px;height:20px;color:var(--accent);flex:none}
+.reach-row div{flex:1;min-width:0}
+.reach-row small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.reach-row a{color:var(--ink);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.reach-row a:hover{text-decoration:underline}
+form.stack{display:grid;gap:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.two{grid-template-columns:1fr}}
+label.field{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+.opt{font-weight:400;color:var(--muted)}
+input[type=text],input[type=email],input[type=tel],textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:130px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.hp{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.err{color:var(--danger);font-size:14px;margin:0}
+.err:empty{display:none}
+.form-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.form-foot small{color:var(--muted);font-size:12.5px;max-width:44ch}
+.sent{text-align:center;padding:28px 10px}
+.sent svg{width:40px;height:40px;color:var(--ok)}
+.sent h3{font-size:32px;margin:10px 0 6px}
+.sent p{color:var(--muted);margin:0 0 18px}
+
+/* how it works */
+.how-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+@media (max-width:860px){.how-grid{grid-template-columns:1fr}}
+.how{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 22px 18px;min-width:0}
+.how .eyebrow{display:block;margin-bottom:6px}
+.how h3{font-size:26px;margin-bottom:10px}
+.how p,.how li{color:var(--muted);font-size:14.5px}
+.how p{margin:0 0 10px}
+.how ul{margin:0 0 6px;padding-left:18px}
+.how li{margin-bottom:6px}
+.how b{color:var(--ink);font-weight:600}
+.how.wide{grid-column:1/-1}
+
+/* two-services diagram */
+.flow{display:grid;grid-template-columns:minmax(0,.7fr) auto minmax(0,1.3fr);gap:14px;align-items:center;margin:14px 0 6px}
+@media (max-width:700px){.flow{grid-template-columns:1fr}}
+.node{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg);min-width:0}
+.node b{display:block;font-family:var(--display);font-size:22px;font-weight:500;color:var(--ink)}
+.node small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.node ul{margin:8px 0 0;padding-left:18px}
+.node li{font-size:13.5px;margin-bottom:3px}
+.node.you{text-align:center;padding:26px 16px}
+.arrows{display:grid;align-content:center;gap:10px;color:var(--muted);font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.arrows span{white-space:nowrap}
+@media (max-width:700px){.arrows{grid-auto-flow:column;justify-content:center;gap:18px}}
+.services{display:grid;gap:12px}
+
+/* who can see */
+.table-wrap{overflow-x:auto;margin:6px 0 4px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:600;white-space:nowrap}
+.yes{color:var(--ok);font-weight:600}
+.no{color:var(--muted)}
+
+.site-foot{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px;margin-top:20px}
+.site-foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:6px 16px;flex-wrap:wrap;padding-block:18px calc(18px + env(safe-area-inset-bottom,0px))}
+.site-foot .credit{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.site-foot .credit a{color:var(--accent);text-decoration:none}
+.site-foot .credit a:hover{text-decoration:underline}
+@media (max-width:560px){.site-foot .wrap{justify-content:center;text-align:center}}
+#toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 15px;border-radius:10px;font-size:14px;z-index:20}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-aperture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12.00 8.25L21.81 13.92M15.25 10.12L15.25 21.46M15.25 13.88L5.43 19.54M12.00 15.75L2.19 10.08M8.75 13.88L8.75 2.54M8.75 10.12L18.57 4.46"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.6 3.5 5.2"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-phone-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.7 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6.5v11"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="m7.5 12.5 3 3 6-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+</svg>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="./" aria-label="Photo Share, open the album"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
+  <button class="btn ghost icon" id="themeBtn" type="button"></button>
+  <a class="btn" href="./">Open the album</a>
+</div></header>
+
+<main>
+  <div class="wrap">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div>
+        <div class="eyebrow">Design &amp; development</div>
+        <h1 id="heroTitle">Want a private photo site <em>like this one?</em></h1>
+        <p class="lead">Photo Share was designed and built by Mohan Karki. If you'd like something similar for your family, team or event, or a different website or app altogether, let's talk about it.</p>
+        <div class="ctas">
+          <a class="btn accent" href="#contact">Start a conversation</a>
+          <a class="btn" href="#how-it-works">See how it works</a>
+        </div>
+      </div>
+      <div class="signature">
+        <b>Mohan Karki</b>
+        <span>Designer &amp; developer</span>
+        <p>Every part of this site, from the gallery layout to the privacy rules in its database, was built from scratch.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="band" aria-labelledby="getTitle"><div class="wrap">
+    <div class="eyebrow">What you'd get</div>
+    <h2 id="getTitle">A photo site your people actually trust</h2>
+    <p class="intro">Everything you see here can be part of yours, shaped around how your group shares photos.</p>
+    <div class="features">
+      <div class="feature"><svg><use href="#i-lock"/></svg><h3>Private by default</h3><p>Every account is approved by you, and each photo stays visible only to the person who added it until they choose to share it.</p></div>
+      <div class="feature"><svg><use href="#i-users"/></svg><h3>Sharing, your way</h3><p>Share an album or a single photo with everyone, with specific people, or by an invite link for someone who isn't a member yet.</p></div>
+      <div class="feature"><svg><use href="#i-image"/></svg><h3>Albums that stay tidy</h3><p>Albums with covers, a full-screen viewer, search, and one-tap downloads of a whole album as a ZIP.</p></div>
+      <div class="feature"><svg><use href="#i-phone-d"/></svg><h3>Made for phones</h3><p>Upload straight from the camera roll. Photos are resized automatically and their hidden location data is removed.</p></div>
+      <div class="feature"><svg><use href="#i-shield"/></svg><h3>You stay in control</h3><p>Approve new people, appoint moderators and admins, and handle requests to take a photo down.</p></div>
+      <div class="feature"><svg><use href="#i-coin"/></svg><h3>Low running cost</h3><p>Runs on GitHub Pages and Supabase. Their free plans cover a typical group album (up to 1 GB of photos).</p></div>
+    </div>
+    <ol class="steps" aria-label="How a project goes">
+      <li><span class="n">1</span><b>Tell me what you need</b><span>A short message is enough to start.</span></li>
+      <li><span class="n">2</span><b>Design and build</b><span>You try it out as it comes together.</span></li>
+      <li><span class="n">3</span><b>Launch</b><span>Set up and handed over with a walkthrough.</span></li>
+    </ol>
+  </div></section>
+
+  <section class="band" id="contact" aria-labelledby="contactTitle"><div class="wrap">
+    <div class="eyebrow">Contact</div>
+    <h2 id="contactTitle">Let's build yours</h2>
+    <p class="intro">Send a message below, or reach out directly. Questions about this site's privacy are welcome too.</p>
+    <div class="contact-grid">
+      <div class="card">
+        <h3>Mohan Karki</h3>
+        <span class="eyebrow">Designer &amp; developer</span>
+        <div class="reach">
+          <div class="reach-row"><svg><use href="#i-mail"/></svg><div><small>Email</small><a id="emailLink"></a></div><button type="button" class="btn ghost" data-copy="emailLink">Copy</button></div>
+          <div class="reach-row"><svg><use href="#i-phone"/></svg><div><small>Phone</small><a id="phoneLink"></a></div><button type="button" class="btn ghost" data-copy="phoneLink">Copy</button></div>
+        </div>
+        <noscript><p class="muted">Turn on JavaScript to see the email address and phone number.</p></noscript>
+      </div>
+
+      <div class="card">
+        <form id="contactForm" class="stack" novalidate>
+          <div class="two">
+            <div><label class="field" for="cName">Your name</label><input id="cName" type="text" autocomplete="name" maxlength="80" required></div>
+            <div><label class="field" for="cEmail">Email</label><input id="cEmail" type="email" autocomplete="email" maxlength="160" required></div>
+          </div>
+          <div class="two">
+            <div><label class="field" for="cPhone">Phone <span class="opt">(optional)</span></label><input id="cPhone" type="tel" autocomplete="tel" maxlength="40"></div>
+            <div><label class="field" for="cTopic">I'm interested in</label>
+              <select id="cTopic">
+                <option value="photo-site">A private photo site like this</option>
+                <option value="website">A website</option>
+                <option value="app">An app or tool</option>
+                <option value="other">Something else</option>
+              </select></div>
+          </div>
+          <div><label class="field" for="cMessage">Message</label><textarea id="cMessage" maxlength="4000" required placeholder="What would you like to build? Who is it for?"></textarea></div>
+          <div class="hp" aria-hidden="true"><label for="cWebsite">Leave this empty</label><input id="cWebsite" type="text" tabindex="-1" autocomplete="off"></div>
+          <p class="err" id="cErr" role="alert"></p>
+          <div class="form-foot">
+            <small>Your message is stored privately in this site's database, and only Mohan can read it.</small>
+            <button class="btn primary" id="cSend">Send message</button>
+          </div>
+        </form>
+        <div class="sent" id="sent" hidden>
+          <svg><use href="#i-check"/></svg>
+          <h3>Message sent</h3>
+          <p>Thanks for reaching out. Mohan will get back to you at the email you gave.</p>
+          <button type="button" class="btn" id="sendAnother">Send another</button>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="band" id="how-it-works" aria-labelledby="howTitle"><div class="wrap">
+    <div class="eyebrow">Privacy &amp; security</div>
+    <h2 id="howTitle">How this site works, and how it keeps photos private</h2>
+    <p class="intro">A plain explanation of where things live, who can see what, and what protects it.</p>
+
+    <div class="how-grid">
+      <div class="how wide">
+        <span class="eyebrow">Two services, two jobs</span>
+        <h3>GitHub shows the page. Supabase keeps everything else.</h3>
+        <div class="flow" role="img" aria-label="Your browser gets the page from GitHub Pages, and signs in and loads photos from Supabase.">
+          <div class="node you"><div><small>You</small><b>Your browser</b></div></div>
+          <div class="arrows" aria-hidden="true"><span>page ↑</span><span>photos ↕</span></div>
+          <div class="services">
+            <div class="node"><small>GitHub Pages</small><b>The web page</b>
+              <ul><li>Only the site's code: layout, buttons, styles</li><li>No photos, accounts or messages</li><li>Public, like any website</li></ul></div>
+            <div class="node"><small>Supabase</small><b>Accounts, photos &amp; the rules</b>
+              <ul><li>Sign-in and passwords</li><li>The photos and their details</li><li>The rules deciding who can see each one</li></ul></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how">
+        <span class="eyebrow">Where photos are stored</span>
+        <h3>In a private storage area, never on GitHub</h3>
+        <ul>
+          <li>Photos and their small previews are kept in <b>Supabase Storage</b>, in a <b>private</b> area on servers in the <b>US East (N. Virginia)</b> region.</li>
+          <li>Each person's uploads go into their own folder.</li>
+          <li>Nothing is public: a photo can only be opened through a <b>temporary link</b> that expires within an hour, created just for someone who is allowed to see it.</li>
+        </ul>
+      </div>
+
+      <div class="how">
+        <span class="eyebrow">Accounts</span>
+        <h3>Nobody gets in without approval</h3>
+        <ul>
+          <li>New accounts see nothing until the album owner (or a moderator) <b>approves</b> them.</li>
+          <li>Passwords are handled by <b>Supabase Auth</b> and stored only as one-way <b>bcrypt</b> hashes. Nobody can read them, the admin included.</li>
+          <li>Passwords must be 8+ characters with upper and lower case, a number and a symbol.</li>
+        </ul>
+      </div>
+
+      <div class="how wide">
+        <span class="eyebrow">Who can see a photo</span>
+        <h3>Members don't see each other's photos unless they're shared</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Who</th><th>Can see the photo?</th></tr></thead>
+            <tbody>
+              <tr><td>The person who added it</td><td><span class="yes">Yes, always.</span> Only they (or an admin) can share, move or delete it.</td></tr>
+              <tr><td>People it's shared with</td><td><span class="yes">Yes.</span> Shared by name, through a shared album, or with an invite link once they're approved.</td></tr>
+              <tr><td>All members</td><td>Only if it's shared with everyone.</td></tr>
+              <tr><td>Other members</td><td><span class="no">No.</span> It doesn't appear for them at all.</td></tr>
+              <tr><td>Moderators</td><td><span class="no">No.</span> They manage memberships, not photos.</td></tr>
+              <tr><td>Admins</td><td>Yes. Admins can see every photo so they can look after the album.</td></tr>
+              <tr><td>Pending, turned-off or signed-out visitors</td><td><span class="no">No.</span> Nothing at all.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:12px">Anyone who can see a photo can ask for it to be taken down. The request goes to the person who added it and to the admins.</p>
+      </div>
+
+      <div class="how">
+        <span class="eyebrow">Why it holds up</span>
+        <h3>The rules live in the database, not the page</h3>
+        <p>The web page only asks for photos; Supabase's database decides, row by row, what each signed-in person is allowed to get back. This is called <b>row-level security</b>.</p>
+        <p>So even if someone copied or changed the page, or talked to the database directly, they would still only get what the rules allow. Uploads, sharing and deleting are checked the same way.</p>
+      </div>
+
+      <div class="how">
+        <span class="eyebrow">Protection</span>
+        <h3>Encrypted on the way and at rest</h3>
+        <ul>
+          <li>Every connection uses <b>HTTPS</b> (TLS).</li>
+          <li>Supabase encrypts stored data with <b>AES-256</b>.</li>
+          <li>Who uploaded a photo, and when, is recorded by the server, so it can't be faked.</li>
+          <li>With "Optimize" on, photos are resized in your browser before upload, which also <b>removes GPS location</b> data.</li>
+        </ul>
+      </div>
+
+      <div class="how wide">
+        <span class="eyebrow">What this site doesn't do</span>
+        <h3>No ads, no tracking</h3>
+        <ul>
+          <li>No ads, analytics or tracking cookies. Fonts and code are served from this site itself; the only other service your browser talks to is Supabase.</li>
+          <li>The site remembers a few things in your own browser only: your sign-in (if you choose "Keep me signed in"), your light/dark choice, and the Optimize setting.</li>
+          <li>Like any web host, GitHub logs visitors' IP addresses for security purposes.</li>
+          <li>Deleting a photo removes it from storage right away. There's no undo, so the site always asks first.</li>
+        </ul>
+        <p>Questions about privacy, or want something removed? <a href="#contact">Get in touch</a>.</p>
+      </div>
+    </div>
+  </div></section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Mohan Karki &middot; All rights reserved</span>
+    <span class="credit">Design &amp; development: <a href="contact.html">Contact</a></span>
+  </div>
+</footer>
+<div id="toast" role="status" hidden></div>
+
+<script src="vendor/js/supabase-2.117.3.min.js"
+        integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+};
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 2500); }
+function icon(id) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'), u = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  u.setAttribute('href', '#' + id); s.append(u); return s;
+}
+
+/* ---------- theme: same setting as the album (dark unless light was chosen) ---------- */
+function applyTheme() {
+  const t = store.get('photoshare:theme') === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  $('themeColor').setAttribute('content', t === 'dark' ? '#1d1c19' : '#f4f2ee');
+  const label = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  $('themeBtn').replaceChildren(icon(t === 'dark' ? 'i-sun' : 'i-moon'));
+  $('themeBtn').setAttribute('aria-label', label); $('themeBtn').title = label;
+}
+applyTheme();
+$('themeBtn').onclick = () => { store.set('photoshare:theme', store.get('photoshare:theme') === 'light' ? 'dark' : 'light'); applyTheme(); };
+
+/* ---------- contact details (assembled here so simple scrapers reading the source don't pick them up) ---------- */
+const EMAIL = ['b4anjan', 'gmail.com'].join('@');
+const PHONE = ['774', '327', '5925'];
+$('emailLink').href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent('Website inquiry');
+$('emailLink').textContent = EMAIL;
+$('phoneLink').href = 'tel:+1' + PHONE.join('');
+$('phoneLink').textContent = PHONE.join('-');
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+  const el = $(b.dataset.copy);
+  try { await navigator.clipboard.writeText(el.textContent); b.textContent = 'Copied'; }
+  catch { const r = document.createRange(); r.selectNodeContents(el); getSelection().removeAllRanges(); getSelection().addRange(r); b.textContent = 'Selected'; }
+  setTimeout(() => { b.textContent = 'Copy'; }, 1800);
+});
+
+/* ---------- inquiry form → private inbox in Supabase ---------- */
+const sb = window.supabase?.createClient('https://khslwzgcdyvpqcswqpil.supabase.co', 'sb_publishable_K0d5DE_434O6K7ehulboBQ_uBt5L14H',
+  { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+const params = new URLSearchParams(location.search);
+if (['photo-site', 'website', 'app', 'other'].includes(params.get('topic'))) $('cTopic').value = params.get('topic');
+
+function friendly(e) {
+  const m = String(e?.message || e || '');
+  if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(m))
+    return `Couldn't send right now. Please email ${EMAIL} instead.`;
+  if (/email_check/.test(m)) return 'Enter a valid email address.';
+  if (/message_check/.test(m)) return 'Write a little more in your message (at least 10 characters).';
+  if (/name_check/.test(m)) return 'Enter your name.';
+  if (/busy|already sent/i.test(m)) return m.replace('email instead', `email ${EMAIL} instead`);
+  return `Something went wrong. Please email ${EMAIL} instead.`;
+}
+$('contactForm').onsubmit = async e => {
+  e.preventDefault();
+  $('cErr').textContent = '';
+  const name = $('cName').value.trim(), email = $('cEmail').value.trim(), phone = $('cPhone').value.trim();
+  const topic = $('cTopic').value, message = $('cMessage').value.trim();
+  if (!name) return void ($('cErr').textContent = 'Enter your name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return void ($('cErr').textContent = 'Enter a valid email address.');
+  if (message.length < 10) return void ($('cErr').textContent = 'Write a little more in your message (at least 10 characters).');
+  if ($('cWebsite').value) { $('contactForm').hidden = true; $('sent').hidden = false; return; } // likely a bot: quietly drop
+  if (!sb) return void ($('cErr').textContent = `Couldn't load the form. Please email ${EMAIL} instead.`);
+  $('cSend').disabled = true; $('cSend').textContent = 'Sending…';
+  try {
+    const { error } = await sb.from('contact_messages').insert({ name, email, phone: phone || null, topic, message });
+    if (error) throw error;
+    $('contactForm').reset(); $('contactForm').hidden = true; $('sent').hidden = false;
+  } catch (err) { $('cErr').textContent = friendly(err); }
+  finally { $('cSend').disabled = false; $('cSend').textContent = 'Send message'; }
+};
+$('sendAnother').onclick = () => { $('sent').hidden = true; $('contactForm').hidden = false; $('cName').focus(); };
+</script>
+</body>
+</html>

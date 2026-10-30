@@ -4,6 +4,7 @@ A private photo album for friends and colleagues. People create an account on th
 
 - **Page:** `index.html`, hosted on GitHub Pages at https://102iw-cs.github.io/102IW_CS_Album/
 - **Accounts, database and photo storage:** Supabase (free plan)
+- **Contact page:** `contact.html` — design & development inquiries, plus a plain-language explanation of how the site works and keeps photos private
 
 ## How it's put together
 
@@ -16,6 +17,7 @@ A private photo album for friends and colleagues. People create an account on th
   - Who uploaded a photo, and when, is stamped by the server, so it can't be faked.
   - The first account ever created becomes the admin.
 - Passwords are stored and checked by Supabase Auth; the page never sees or stores them.
+- Fonts and code libraries are served from `vendor/` on this site, so the only outside service a visitor's browser talks to is Supabase.
 
 ## One-time setup
 
@@ -45,6 +47,7 @@ A private photo album for friends and colleagues. People create an account on th
 
 - **Owner contact:** Members → **Album settings** sets the name, phone and email shown to people waiting for approval. They're stored in the database (visible only to signed-in people), not in this public repo.
 - **Password rules:** the sign-up form requires 8+ characters with upper and lower case, a number and a symbol. To enforce the same rules on the server too: Authentication → Sign In / Providers → Email → set minimum length 8 and require lowercase, uppercase, digits and symbols.
+- **Inbox:** messages sent from the contact page show under **Inbox** (admins only), with Reply by email, Mark read and Delete. Anyone can send; only admins can read. The server rejects malformed messages and limits floods (3 per email per day, 30 per hour overall).
 - **Approving people:** tap **Members** (a red number shows how many are waiting) → **Approve** or **Decline**. **Turn off** removes someone's access later; **Restore** gives it back.
 - **Storage:** the free plan has 1 GB of files and 5 GB of downloads a month. With "Optimize" on, a phone photo is about 0.5–1.5 MB.
 - **Paused project:** Supabase pauses free projects after a week with no activity. If the site says it can't reach the album server, open the Supabase dashboard and resume the project.

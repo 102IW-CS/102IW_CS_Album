@@ -11,9 +11,7 @@
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>var t='dark';try{if(localStorage.getItem('photoshare:theme')==='light')t='light'}catch(e){}document.documentElement.setAttribute('data-theme',t)</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
 <style>
 /* Gallery wall: photos run edge to edge in justified rows; type is set like exhibition labels
    (serif titles, small mono captions with real photo data). */
@@ -62,7 +60,7 @@ header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 @media (max-width:560px){.who{display:none}.brand span{font-size:21px}}
 
 /* ---------- buttons & fields ---------- */
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
+.btn{text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
 .btn:hover{border-color:var(--muted)}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -107,6 +105,9 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
 .intro h1{font-size:clamp(46px,7vw,92px);font-weight:500;margin:14px 0 18px}
 .intro h1 em{font-style:italic;color:var(--accent)}
 .intro p{max-width:46ch;color:var(--muted);font-size:16px;margin:0}
+.intro p.privacy-link{margin-top:14px;font-size:14px}
+.privacy-link a{font-weight:600;text-decoration:none}
+.privacy-link a:hover{text-decoration:underline}
 .frames{display:flex;gap:12px;margin-top:34px;align-items:flex-start}
 .frames figure{margin:0;flex:1;max-width:150px}
 .frames figure:nth-child(2){margin-top:26px}
@@ -250,6 +251,17 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .linkbox{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
 .linkbox input{font-family:var(--mono);font-size:12px;padding:8px 10px}
 .linkbox .row{justify-content:space-between}
+#inboxList{list-style:none;margin:0;padding:0}
+#inboxList li{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:6px}
+#inboxList li:last-child{border-bottom:0}
+#inboxList .ib-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+#inboxList .ib-head b{font-size:15px}
+#inboxList .ib-head small{color:var(--muted);font-size:12.5px}
+#inboxList li.unread .ib-head b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+#inboxList .ib-meta{font-size:13px;color:var(--muted);display:flex;gap:4px 14px;flex-wrap:wrap}
+#inboxList .ib-meta a{color:var(--ink);overflow-wrap:anywhere}
+#inboxList .ib-msg{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0;font-size:14.5px}
+#inboxList .ib-actions{display:flex;gap:8px;flex-wrap:wrap}
 #reqList{list-style:none;margin:0;padding:0}
 #reqList li{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
 #reqList li:last-child{border-bottom:0}
@@ -307,7 +319,8 @@ body>main{flex:1 0 auto;width:100%}
 .site-foot{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
 .site-foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:6px 16px;flex-wrap:wrap;padding-block:18px calc(18px + env(safe-area-inset-bottom,0px))}
 .site-foot .credit{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
-.site-foot .credit b{color:var(--accent);font-weight:500}
+.site-foot .credit a{color:var(--accent);text-decoration:none}
+.site-foot .credit a:hover{text-decoration:underline}
 @media (max-width:560px){.site-foot .wrap{justify-content:center;text-align:center}}
 #status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-family:var(--mono);font-size:12px;color:var(--muted);z-index:25}
 </style>
@@ -334,6 +347,7 @@ body>main{flex:1 0 auto;width:100%}
 <header class="top"><div class="wrap">
   <a class="brand" href="#albums" aria-label="Photo Share, all albums"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost icon" id="themeBtn" type="button"></button>
+  <button class="btn ghost" id="inboxBtn" hidden>Inbox <span class="badge" id="inboxBadge" hidden></span></button>
   <button class="btn ghost" id="requestsBtn" hidden>Requests <span class="badge" id="requestsBadge"></span></button>
   <button class="btn ghost" id="membersBtn" hidden>Members <span class="badge" id="pendingBadge" hidden></span></button>
   <span class="who" id="meName" hidden></span>
@@ -349,6 +363,7 @@ body>main{flex:1 0 auto;width:100%}
       <div class="eyebrow">Private album · members only</div>
       <h1>Photo <em>Share</em></h1>
       <p>A private collection for friends and colleagues. Every account is approved by the album owner before it can see a single frame.</p>
+      <p class="privacy-link"><a href="contact.html#how-it-works">How your photos are kept private &rarr;</a></p>
       <div class="frames" aria-hidden="true">
         <figure><canvas data-scene="0"></canvas><figcaption>Ridge, 18:42</figcaption></figure>
         <figure><canvas data-scene="1"></canvas><figcaption>Lake, 6:10 am</figcaption></figure>
@@ -505,7 +520,7 @@ body>main{flex:1 0 auto;width:100%}
 <footer class="site-foot">
   <div class="wrap">
     <span>&copy; 2026 Mohan Karki &middot; All rights reserved</span>
-    <span class="credit">Designed &amp; developed by <b>Mohan Karki</b></span>
+    <span class="credit">Design &amp; development: <a href="contact.html">Contact</a></span>
   </div>
 </footer>
 
@@ -584,6 +599,14 @@ body>main{flex:1 0 auto;width:100%}
   </form>
 </dialog>
 
+<dialog id="inboxDlg" class="sheet" aria-labelledby="inboxTitle" style="width:min(94vw,640px)">
+  <div class="sheet-head"><h2 id="inboxTitle">Inbox</h2><button type="button" class="btn" id="inboxClose">Close</button></div>
+  <div class="sheet-body">
+    <p class="hint" style="margin:0">Messages from the <a href="contact.html">contact page</a>. Only admins can see these.</p>
+    <ul id="inboxList"></ul>
+  </div>
+</dialog>
+
 <dialog id="requestsDlg" class="sheet" aria-labelledby="requestsTitle" style="width:min(94vw,600px)">
   <div class="sheet-head"><h2 id="requestsTitle">Removal requests</h2><button type="button" class="btn" id="requestsClose">Close</button></div>
   <div class="sheet-body"><ul id="reqList"></ul></div>
@@ -627,7 +650,7 @@ body>main{flex:1 0 auto;width:100%}
 <div id="toasts" aria-live="assertive"></div>
 <div id="status" role="status" hidden></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"
+<script src="vendor/js/supabase-2.117.3.min.js"
         integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <script>
 'use strict';
@@ -941,6 +964,7 @@ function teardown() {
   clearInterval(state.pollTimer); state.pollTimer = null;
   Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map(), shares: [], requests: [] });
   $('requestsBtn').hidden = true;
+  $('inboxBtn').hidden = true; state.inbox = [];
   $('grid').replaceChildren(); $('albumGrid').replaceChildren();
   $('queue').replaceChildren(); $('queueBar').hidden = true;
   setSelecting(false);
@@ -1076,6 +1100,12 @@ async function loadAll(quiet = false) {
       sb.rpc('list_members_for_sharing')]);
     for (const r of [sh, rq, names]) if (r.error) throw r.error;
     state.shares = sh.data; state.requests = rq.data;
+    if (isAdmin()) {
+      const { data: inbox, error: ie } = await sb.from('contact_messages')
+        .select('id,name,email,phone,topic,message,read,created_at').order('created_at', { ascending: false }).limit(200);
+      state.inbox = ie ? [] : inbox;
+    } else state.inbox = [];
+    updateInboxBadge();
     state.names = new Map(names.data.map(m => [m.id, m.display_name]));
     const photos = rows.map(toPhoto);
     if (state.loadedOnce) { // tell people when someone else added photos
@@ -1108,6 +1138,7 @@ function startLive() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'albums' }, kick)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shares' }, kick)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'removal_requests' }, kick)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_messages' }, kick)
     .subscribe();
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(() => {
@@ -1623,6 +1654,53 @@ function renderRequests() {
   }));
 }
 $('requestsBtn').onclick = () => { renderRequests(); $('requestsDlg').showModal(); };
+
+/* ---------- inbox: messages from the contact page (admins only) ---------- */
+const TOPICS = { 'photo-site': 'Photo site like this', website: 'Website', app: 'App or tool', other: 'Something else' };
+function updateInboxBadge() {
+  const unread = (state.inbox || []).filter(m => !m.read).length;
+  $('inboxBtn').hidden = !isAdmin() || !(state.inbox || []).length;
+  $('inboxBadge').textContent = unread; $('inboxBadge').hidden = !unread;
+  if ($('inboxDlg').open) renderInbox();
+}
+function renderInbox() {
+  const list = state.inbox || [];
+  if (!list.length) { $('inboxList').replaceChildren(el('li', 'hint', 'No messages yet.')); return; }
+  $('inboxList').replaceChildren(...list.map(m => {
+    const li = el('li', m.read ? '' : 'unread');
+    const head = el('div', 'ib-head');
+    head.append(el('b', '', m.name), el('small', '', `${TOPICS[m.topic] || m.topic} · ${new Date(m.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`));
+    const meta = el('div', 'ib-meta');
+    const mail = el('a', '', m.email); mail.href = `mailto:${m.email}?subject=${encodeURIComponent('Re: your message about ' + (TOPICS[m.topic] || 'a project').toLowerCase())}`;
+    meta.append(mail);
+    if (m.phone) { const tel = el('a', '', m.phone); tel.href = 'tel:' + m.phone.replace(/[^\d+]/g, ''); meta.append(tel); }
+    const actions = el('div', 'ib-actions');
+    const reply = el('a', 'btn primary', 'Reply by email'); reply.href = mail.href;
+    const toggle = el('button', 'btn', m.read ? 'Mark unread' : 'Mark read'); toggle.type = 'button';
+    toggle.onclick = async () => {
+      toggle.disabled = true;
+      const { error } = await sb.from('contact_messages').update({ read: !m.read }).eq('id', m.id);
+      if (error) { toast(errMsg(error), 'error'); toggle.disabled = false; return; }
+      m.read = !m.read; updateInboxBadge();
+    };
+    const del = el('button', 'btn danger', 'Delete'); del.type = 'button';
+    del.onclick = async () => {
+      $('inboxDlg').close();
+      const ok = await ask(`Delete the message from ${m.name}?`, 'This can\u2019t be undone.', 'Delete');
+      if (ok) {
+        const { error } = await sb.from('contact_messages').delete().eq('id', m.id);
+        if (error) toast(errMsg(error), 'error');
+        else { state.inbox = state.inbox.filter(x => x.id !== m.id); toast('Message deleted.'); }
+      }
+      updateInboxBadge(); renderInbox(); $('inboxDlg').showModal();
+    };
+    actions.append(reply, toggle, del);
+    li.append(head, meta, el('div', 'ib-msg', m.message), actions);
+    return li;
+  }));
+}
+$('inboxBtn').onclick = () => { renderInbox(); $('inboxDlg').showModal(); };
+$('inboxClose').onclick = () => $('inboxDlg').close();
 $('requestsClose').onclick = () => $('requestsDlg').close();
 
 function openMove(ids) {
@@ -1854,7 +1932,7 @@ let zipLib;
 function loadJSZip() {
   return zipLib ||= new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+    s.src = 'vendor/js/jszip-3.10.1.min.js';
     s.integrity = 'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG';
     s.crossOrigin = 'anonymous';
     s.onload = () => res(window.JSZip);
