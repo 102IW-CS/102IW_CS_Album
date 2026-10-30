@@ -473,6 +473,7 @@ body>main{flex:1 0 auto;width:100%}
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
@@ -734,7 +735,7 @@ body>main{flex:1 0 auto;width:100%}
 </dialog>
 
 <dialog id="inboxDlg" class="sheet" aria-labelledby="inboxTitle">
-  <div class="sheet-head"><h2 id="inboxTitle">Inbox</h2><span class="m-total" id="ibTotal"></span><button type="button" class="btn ghost icon" id="ibRefresh" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button><button type="button" class="btn" id="inboxClose">Close</button></div>
+  <div class="sheet-head"><h2 id="inboxTitle">Inbox</h2><span class="m-total" id="ibTotal"></span><button type="button" class="btn ghost icon" id="ibSetBtn" aria-label="Inbox settings" title="Inbox settings: auto-delete"><svg><use href="#i-sliders"/></svg></button><button type="button" class="btn ghost icon" id="ibRefresh" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button><button type="button" class="btn" id="inboxClose">Close</button></div>
   <div class="m-pane">
     <div class="ib-tools">
       <div class="m-search"><svg><use href="#i-search"/></svg><input type="search" id="ibSearch" placeholder="Search name, email or message" autocomplete="off" spellcheck="false" aria-label="Search messages"><kbd title="Press / to search">/</kbd><button type="button" class="m-clear" id="ibClear" aria-label="Clear search">&times;</button></div>
@@ -757,6 +758,27 @@ body>main{flex:1 0 auto;width:100%}
     <ul id="inboxList" aria-live="polite"></ul>
     <div class="m-foot"><span id="ibShowing"></span><div class="row"><button type="button" class="btn ghost" id="ibCsv" title="Download every message that matches the current search and filters">Download CSV</button><button type="button" class="btn" id="ibMore" hidden>Load more</button></div></div>
   </div>
+</dialog>
+
+<dialog id="ibSetDlg" class="sheet" aria-labelledby="ibSetTitle">
+  <form method="dialog" id="ibSetForm" novalidate>
+    <div class="sheet-head"><h2 id="ibSetTitle">Inbox settings</h2></div>
+    <div class="sheet-body">
+      <div><label class="field" for="ibKeep">Automatically delete read messages</label>
+        <select id="ibKeep">
+          <option value="">Never</option>
+          <option value="30">After 30 days</option>
+          <option value="60">After 60 days</option>
+          <option value="90">After 90 days</option>
+          <option value="180">After 6 months</option>
+          <option value="365">After 1 year</option>
+        </select></div>
+      <p class="hint" style="margin:0">Counted from when the message arrived. <b>Unread messages are never deleted automatically</b>, so nothing goes before you've seen it. Download a CSV first if you want a copy.</p>
+      <p id="ibKeepPreview" role="status" style="margin:0;font-size:14px;color:var(--warn)"></p>
+      <p class="err" id="ibSetErr" role="alert"></p>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn ghost" id="ibSetCancel">Cancel</button><button type="submit" class="btn primary" id="ibSetSave">Save</button></div>
+  </form>
 </dialog>
 
 <dialog id="requestsDlg" class="sheet" aria-labelledby="requestsTitle" style="width:min(94vw,600px)">
@@ -1060,7 +1082,7 @@ async function onAuth(event, session) {
 }
 
 async function loadSettings() {
-  const { data } = await sb.from('album_settings').select('owner_name,contact_phone,contact_email').eq('id', 1).maybeSingle();
+  const { data } = await sb.from('album_settings').select('*').eq('id', 1).maybeSingle(); // '*' so older databases without newer columns still load
   state.settings = data || {};
   return state.settings;
 }
@@ -1919,7 +1941,8 @@ function renderInbox() {
     }
     $('inboxList').replaceChildren(li);
   } else $('inboxList').replaceChildren(...rows.map(ibRow));
-  $('ibShowing').textContent = rows.length ? `Showing ${rows.length} of ${ibUI.total}` : '';
+  const keep = state.settings?.inbox_retention_days;
+  $('ibShowing').textContent = (rows.length ? `Showing ${rows.length} of ${ibUI.total}` : '') + (keep ? `${rows.length ? ' \u00b7 ' : ''}read messages auto-delete after ${keepLabel(keep)}` : '');
   $('ibMore').hidden = rows.length >= ibUI.total;
   $('ibMore').textContent = `Load ${Math.min(IB_PAGE, ibUI.total - rows.length)} more`;
   $('ibCsv').hidden = !rows.length;
@@ -2024,7 +2047,10 @@ function openInbox() {
   renderIbChrome();
   if (!$('inboxDlg').open) $('inboxDlg').showModal();
   if (matchMedia('(pointer:fine)').matches) $('ibSearch').focus();
-  loadInbox();
+  // Apply the auto-delete setting first, so expired messages never flash up. Ignored if the
+  // database doesn't have the feature yet.
+  sb.rpc('purge_read_messages').then(() => loadInbox(), () => loadInbox());
+  loadSettings().then(() => renderInbox()).catch(() => {});
 }
 let ibTimer;
 $('ibSearch').oninput = () => {
@@ -2076,6 +2102,45 @@ $('ibCsv').onclick = async () => {
   } catch (err) { toast(errMsg(err), 'error'); } finally { $('ibCsv').disabled = false; }
 };
 $('inboxBtn').onclick = openInbox;
+
+/* Inbox auto-delete setting (admins). The database does the deleting; see purge_read_messages. */
+const keepLabel = d => ({ 30: '30 days', 60: '60 days', 90: '90 days', 180: '6 months', 365: '1 year' })[d] || `${d} days`;
+async function keepPreview() {
+  const d = +$('ibKeep').value;
+  if (!d) { $('ibKeepPreview').textContent = ''; return 0; }
+  const cutoff = new Date(Date.now() - d * 864e5).toISOString();
+  const { count, error } = await sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('read', true).lt('created_at', cutoff);
+  if (error || +$('ibKeep').value !== d) return 0;
+  $('ibKeepPreview').textContent = count ? `${plural(count, 'read message')} ${count === 1 ? 'is' : 'are'} already older than that and will be deleted when you save.` : 'Nothing is old enough to delete yet.';
+  return count || 0;
+}
+$('ibSetBtn').onclick = async () => {
+  await loadSettings().catch(() => {});
+  $('ibKeep').value = String(state.settings?.inbox_retention_days || '');
+  $('ibSetErr').textContent = ''; $('ibKeepPreview').textContent = '';
+  $('ibSetDlg').showModal(); keepPreview();
+};
+$('ibKeep').onchange = keepPreview;
+$('ibSetCancel').onclick = () => $('ibSetDlg').close();
+$('ibSetForm').onsubmit = async e => {
+  e.preventDefault();
+  const days = $('ibKeep').value ? +$('ibKeep').value : null;
+  const n = await keepPreview();
+  if (n && !(await ask(`Delete ${plural(n, 'old read message')} now?`, `From now on, read messages are deleted ${keepLabel(days)} after they arrive. This can\u2019t be undone.`, 'Save and delete'))) return;
+  $('ibSetSave').disabled = true; $('ibSetErr').textContent = '';
+  try {
+    const { error } = await sb.from('album_settings').update({ inbox_retention_days: days }).eq('id', 1);
+    if (error) throw error;
+    const { data: gone, error: pe } = await sb.rpc('purge_read_messages');
+    if (pe) throw pe;
+    state.settings = { ...state.settings, inbox_retention_days: days };
+    $('ibSetDlg').close();
+    toast(days ? `Read messages will auto-delete after ${keepLabel(days)}.${gone ? ` Deleted ${plural(gone, 'old message')}.` : ''}` : 'Auto-delete is off.');
+    loadInbox();
+  } catch (err) {
+    $('ibSetErr').textContent = /inbox_retention_days|purge_read_messages|schema cache/i.test(String(err?.message)) ? 'Auto-delete isn\u2019t switched on in the database yet.' : errMsg(err);
+  } finally { $('ibSetSave').disabled = false; }
+};
 $('inboxClose').onclick = () => $('inboxDlg').close();
 $('requestsClose').onclick = () => $('requestsDlg').close();
 

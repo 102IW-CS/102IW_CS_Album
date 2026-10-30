@@ -591,6 +591,7 @@ begin
       where email = new.email and created_at > now() - interval '1 day') >= 3 then
     raise exception 'You have already sent a few messages today. Please email instead.';
   end if;
+  perform private.purge_read_messages(); -- inbox auto-delete (defined with album settings below)
   return new;
 end $$;
 drop trigger if exists stamp_contact_message on public.contact_messages;
@@ -654,6 +655,35 @@ create policy "admin can edit settings" on public.album_settings
 revoke insert, update, delete on public.album_settings from authenticated, anon;
 revoke select on public.album_settings from anon;
 grant update (owner_name, contact_phone, contact_email) on public.album_settings to authenticated;
+
+-- Inbox auto-delete: the admin chooses how long to keep READ contact messages (unread are never auto-deleted).
+alter table public.album_settings add column if not exists inbox_retention_days int
+  constraint album_settings_inbox_retention_check check (inbox_retention_days in (30, 60, 90, 180, 365));
+grant update (inbox_retention_days) on public.album_settings to authenticated;
+
+-- Does the actual cleanup; returns how many messages were removed. Not callable by visitors directly.
+create or replace function private.purge_read_messages()
+returns integer language plpgsql security definer set search_path = '' as $$
+declare keep_days int; gone int;
+begin
+  select inbox_retention_days into keep_days from public.album_settings where id = 1;
+  if keep_days is null then return 0; end if; -- "Never"
+  delete from public.contact_messages
+   where read and created_at < now() - make_interval(days => keep_days);
+  get diagnostics gone = row_count;
+  return gone;
+end $$;
+revoke execute on function private.purge_read_messages() from public, anon, authenticated;
+
+-- What the site calls when an admin opens the Inbox or changes the setting.
+create or replace function public.purge_read_messages()
+returns integer language plpgsql security definer set search_path = '' as $$
+begin
+  if not private.is_admin() then raise exception 'Only admins can clean up the inbox'; end if;
+  return private.purge_read_messages();
+end $$;
+revoke execute on function public.purge_read_messages() from public, anon;
+grant execute on function public.purge_read_messages() to authenticated;
 
 -- ============ Who may run what ============
 -- Postgres lets everyone run new functions by default; narrow that down.
