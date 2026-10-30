@@ -608,7 +608,7 @@ body>main{flex:1 0 auto;width:100%}
         <p class="err" id="resetErr" role="alert"></p>
         <div class="split" style="border-top:1px solid var(--line);padding-top:14px">
           <button type="button" class="linkish" id="resetBack">Back to sign in</button>
-          <button type="button" class="btn" id="resetSkip">I remember it, sign me in</button>
+          <button type="button" class="btn" id="resetSkip" title="The link in your email already signed you in">Keep my old password</button>
         </div>
       </form>
     </div>
@@ -1517,7 +1517,7 @@ function authMode(mode) {
   for (const [m, id] of [['in', 'inForm'], ['up', 'upForm'], ['forgot', 'forgotForm'], ['reset', 'resetForm'], ['verify', 'verifyForm']]) $(id).hidden = mode !== m;
   $('authTitle').textContent = { in: 'Welcome back', up: 'Create your account', forgot: 'Reset your password', reset: 'Choose a new password', verify: 'Confirm your email' }[mode];
   $('authLead').textContent = { in: 'Sign in to see and share photos.', up: 'Join to see and share photos with the group.',
-    forgot: "Enter your email and we'll send you a reset link.", reset: 'Pick a new password, or sign in if you remember the old one.',
+    forgot: "Enter your email and we'll send you a reset link.", reset: 'The link in your email signed you in. Choose a new password, or keep your old one.',
     verify: 'One quick step, so we know the address is really yours.' }[mode];
   for (const id of ['inErr', 'upErr', 'upOk', 'fgErr', 'fgOk', 'resetErr', 'vfErr', 'vfOk']) $(id).textContent = '';
   upRules.reset(); resetRules.reset();
