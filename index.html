@@ -289,12 +289,66 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 #ask p{margin:0;font-weight:700;font-size:16px}
 #ask small{color:var(--muted);font-size:14px}
 .section-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 -4px}
-#memberList{list-style:none;margin:0;padding:0}
-#memberList li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
-#memberList li:last-child{border-bottom:0}
-.m-who{flex:1;min-width:140px}
+/* Members manager: search + filters + its own scrolling list, so it stays usable with hundreds of people */
+#members{width:min(96vw,720px);height:min(90vh,860px)}
+#members .sheet-head{padding-bottom:8px}
+.m-total{font-size:13px;color:var(--muted);white-space:nowrap}
+#members .tabs{margin:0 20px 12px}
+.m-pane{display:flex;flex-direction:column;flex:1;min-height:0}
+.m-tools{display:flex;gap:8px;padding:0 20px}
+.m-search{position:relative;flex:1;min-width:0}
+.m-search svg{position:absolute;left:12px;top:50%;width:17px;height:17px;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.m-search input{padding-left:38px;padding-right:38px}
+.m-search input::-webkit-search-cancel-button{display:none}
+.m-search kbd,.m-search .m-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%)}
+.m-search kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--muted);pointer-events:none}
+.m-search input:focus~kbd,.m-search input:not(:placeholder-shown)~kbd{display:none}
+.m-search .m-clear{border:0;background:var(--surface-2);color:var(--muted);border-radius:50%;width:24px;height:24px;font-size:15px;line-height:1;cursor:pointer}
+.m-search input:placeholder-shown~.m-clear{display:none}
+@media (pointer:coarse){.m-search kbd{display:none}}
+#mSort{width:auto;flex:none}
+.m-filters{display:flex;gap:6px;padding:10px 20px;overflow-x:auto;scrollbar-width:none}
+.m-filters::-webkit-scrollbar{display:none}
+.m-filters button{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.m-filters button:hover{color:var(--ink)}
+.m-filters button .n{font-family:var(--mono);font-size:11px}
+.m-filters button.zero{opacity:.45}
+.m-filters button.attn:not([aria-checked=true]){border-color:color-mix(in srgb,var(--warn) 55%,transparent);color:var(--warn)}
+.m-filters button[aria-checked=true]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.m-bulk{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 20px 10px;padding:8px 8px 8px 14px;border-radius:8px;background:color-mix(in srgb,var(--warn) 12%,transparent);font-size:13px}
+#memberList{list-style:none;margin:0;padding:0 20px;flex:1;min-height:0;overflow:auto;border-top:1px solid var(--line);overscroll-behavior:contain}
+#memberList>li{border-bottom:1px solid var(--line)}
+#memberList>li:last-child{border-bottom:0}
+#memberList>li.m-empty{border:0;padding:40px 0;text-align:center;color:var(--muted)}
+.m-row{display:flex;align-items:center;gap:12px;padding:10px 0;cursor:pointer}
+.m-av{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--surface-2);color:var(--ink);letter-spacing:.02em}
+.m-who{flex:1;min-width:0}
 .m-who b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m-who small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-who mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.m-quick{display:flex;gap:6px;flex:none}
+.m-quick .btn{padding:6px 12px;font-size:13px}
+.m-chev{flex:none;padding:6px}
+.m-chev svg{width:18px;height:18px;transition:transform .15s}
+#memberList>li.open .m-chev svg{transform:rotate(180deg)}
+#memberList>li.open{background:color-mix(in srgb,var(--surface-2) 45%,transparent);margin:0 -20px;padding:0 20px}
+.m-panel{display:grid;gap:12px;padding:2px 0 16px 48px}
+.m-meta{font-size:13px;color:var(--muted);margin:0}
+.m-meta b{color:var(--ink);font-weight:600}
+.m-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.m-line>.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:64px}
+.m-line .hint{flex-basis:100%;margin:0}
+.m-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);min-height:52px}
+#mSettings{flex:1}
+@media (max-width:560px){
+  .m-row{flex-wrap:wrap;row-gap:8px}
+  .m-quick{order:5;width:100%;padding-left:48px}
+  .m-quick .btn{flex:1}
+  .m-panel{padding-left:0}
+  #members .sheet-head{flex-wrap:wrap;row-gap:0}
+  .m-total{order:9;flex-basis:100%;margin-top:-2px}
+  #members .sheet-head h2{font-size:26px}
+}
 .chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:var(--surface-2);color:var(--muted)}
 .chip.pending{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
 .chip.approved{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
@@ -302,7 +356,6 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .chip.admin{background:var(--accent-soft);color:var(--accent)}
 .chip.moderator{background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
 .role{width:auto;padding:7px 10px;font-size:13px}
-.m-legend{font-size:13px;color:var(--muted);margin:0}
 #moveList{display:grid;gap:6px}
 #moveList label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
 #moveList label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
@@ -360,6 +413,8 @@ body>main{flex:1 0 auto;width:100%}
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
 </svg>
 
@@ -642,13 +697,27 @@ body>main{flex:1 0 auto;width:100%}
   <div class="sheet-foot"><button type="button" class="btn ghost" id="moveCancel">Cancel</button><button type="button" class="btn primary" id="moveGo">Move</button></div>
 </dialog>
 
-<dialog id="members" class="sheet" aria-labelledby="membersTitle" style="width:min(94vw,600px)">
-  <div class="sheet-head"><h2 id="membersTitle">Members</h2><button class="btn ghost icon" id="mRefresh" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" id="mClose">Close</button></div>
-  <div class="sheet-body">
-    <p class="m-legend admin-only"><b>Moderators</b> approve and manage member accounts. <b>Admins</b> also see every photo and can change roles.</p>
-    <ul id="memberList"></ul>
-    <div class="section-label admin-only">Album settings · shown to people waiting for approval</div>
-    <form id="settingsForm" class="stack admin-only" novalidate>
+<dialog id="members" class="sheet" aria-labelledby="membersTitle">
+  <div class="sheet-head"><h2 id="membersTitle">Members</h2><span class="m-total" id="mTotal"></span><button class="btn ghost icon" id="mRefresh" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" id="mClose">Close</button></div>
+  <div class="tabs admin-only" role="tablist" aria-label="Members sections">
+    <button type="button" role="tab" id="mTabPeople" aria-selected="true" aria-controls="mPeople">People</button>
+    <button type="button" role="tab" id="mTabSettings" aria-selected="false" aria-controls="mSettings">Album settings</button>
+  </div>
+  <div class="m-pane" id="mPeople" role="tabpanel" aria-labelledby="mTabPeople">
+    <div class="m-tools">
+      <div class="m-search"><svg><use href="#i-search"/></svg><input type="search" id="mSearch" placeholder="Name or email" autocomplete="off" spellcheck="false" aria-label="Search members by name or email"><kbd title="Press / to search">/</kbd><button type="button" class="m-clear" id="mClear" aria-label="Clear search">&times;</button></div>
+      <select id="mSort" class="role" aria-label="Sort members">
+        <option value="waiting">Waiting first</option><option value="newest">Newest</option><option value="oldest">Oldest</option><option value="name">Name A–Z</option>
+      </select>
+    </div>
+    <div class="m-filters" id="mFilters" role="radiogroup" aria-label="Show"></div>
+    <div class="m-bulk" id="mBulk" hidden><span id="mBulkText"></span><button type="button" class="btn primary" id="mBulkGo">Approve all</button></div>
+    <ul id="memberList" aria-live="polite"></ul>
+    <div class="m-foot"><span id="mShowing"></span><button type="button" class="btn" id="mMore" hidden>Show more</button></div>
+  </div>
+  <div class="sheet-body" id="mSettings" role="tabpanel" aria-labelledby="mTabSettings" hidden>
+    <p class="hint" style="margin:0">Shown to people whose account is waiting for approval, so they know who to contact.</p>
+    <form id="settingsForm" class="stack" novalidate>
       <div><label class="field" for="setOwner">Owner name</label><input id="setOwner" type="text" maxlength="80"></div>
       <div class="row" style="align-items:flex-start">
         <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
@@ -2049,67 +2118,243 @@ async function refreshPendingCount() {
   $('pendingBadge').textContent = n; $('pendingBadge').hidden = !n;
   return data;
 }
+/* Members manager. Built for long lists: search by name or email, filter by status/role, sort,
+   and only the first PAGE matches are drawn (more on demand). Search, filter and the open row
+   survive approve/role/turn-off actions, so working through a long list doesn't lose your place. */
+const M_PAGE = 50;
+const mUI = { data: [], q: '', filter: 'all', sort: 'waiting', limit: M_PAGE, open: null, tab: 'people' };
+const M_FILTERS = [
+  ['all', 'All', () => true],
+  ['pending', 'Waiting', m => m.status === 'pending'],
+  ['approved', 'Active', m => m.status === 'approved'],
+  ['moderator', 'Moderators', m => m.is_moderator && !m.is_admin],
+  ['admin', 'Admins', m => m.is_admin],
+  ['blocked', 'Turned off', m => m.status === 'blocked']
+];
+const fold = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const roleOf = m => m.is_admin ? 'admin' : m.is_moderator ? 'moderator' : 'member';
+const initials = n => (String(n || '?').trim().split(/\s+/).map(w => [...w][0] || '').slice(0, 2).join('') || '?').toUpperCase();
+
 async function openMembers() {
-  if (!$('members').open) $('members').showModal();
-  $('memberList').replaceChildren(el('li', 'hint', 'Loading…'));
-  $('setOk').textContent = ''; $('setErr').textContent = '';
+  // Fresh open from the header: start from a clean view.
+  Object.assign(mUI, { q: '', filter: 'all', limit: M_PAGE, open: null });
+  $('mSearch').value = '';
+  setMembersTab('people');
   document.querySelectorAll('#members .admin-only').forEach(e => { e.hidden = !isAdmin(); });
-  const [{ data, error }, s] = await Promise.all([sb.rpc('list_members_admin'), loadSettings().catch(() => ({}))]);
-  $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
-  if (error) { $('memberList').replaceChildren(el('li', 'err', errMsg(error))); return; }
-  const n = data.filter(m => m.status === 'pending').length;
-  $('pendingBadge').textContent = n; $('pendingBadge').hidden = !n;
-  $('memberList').replaceChildren(...data.map(memberRow));
+  $('setOk').textContent = ''; $('setErr').textContent = '';
+  if (!$('members').open) $('members').showModal();
+  if (matchMedia('(pointer:fine)').matches) $('mSearch').focus();
+  $('memberList').replaceChildren(el('li', 'm-empty', 'Loading…'));
+  loadSettings().then(s => {
+    $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
+  }).catch(() => {});
+  await reloadMembers();
 }
-function memberRow(m) {
-  const li = el('li');
-  const who = el('div', 'm-who');
+async function reloadMembers() {
+  const { data, error } = await sb.rpc('list_members_admin');
+  if (error) { $('memberList').replaceChildren(el('li', 'm-empty err', errMsg(error))); return; }
+  mUI.data = data || [];
+  const n = mUI.data.filter(m => m.status === 'pending').length;
+  $('pendingBadge').textContent = n; $('pendingBadge').hidden = !n;
+  renderMembers();
+}
+function setMembersTab(t) {
+  mUI.tab = isAdmin() ? t : 'people';
+  $('mTabPeople').setAttribute('aria-selected', mUI.tab === 'people');
+  $('mTabSettings').setAttribute('aria-selected', mUI.tab === 'settings');
+  $('mPeople').hidden = mUI.tab !== 'people';
+  $('mSettings').hidden = mUI.tab !== 'settings';
+}
+function memberMatches() {
+  const words = fold(mUI.q).split(/\s+/).filter(Boolean);
+  const f = M_FILTERS.find(x => x[0] === mUI.filter)[2];
+  const list = mUI.data.filter(m => f(m) && words.every(w => fold(m.display_name).includes(w) || fold(m.email).includes(w)));
+  const by = {
+    waiting: (a, b) => (b.status === 'pending') - (a.status === 'pending') || new Date(b.created_at) - new Date(a.created_at),
+    newest: (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    oldest: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+    name: (a, b) => String(a.display_name).localeCompare(String(b.display_name), undefined, { sensitivity: 'base' })
+  }[mUI.sort];
+  return list.sort(by);
+}
+function renderMembers() {
+  const all = mUI.data;
+  const pending = all.filter(m => m.status === 'pending').length;
+  $('mTotal').textContent = `${plural(all.length, 'person').replace('persons', 'people')}${pending ? ` · ${pending} waiting` : ''}`;
+  // Filter chips with live counts.
+  $('mFilters').replaceChildren(...M_FILTERS.map(([key, label, f]) => {
+    const n = all.filter(f).length;
+    const b = el('button', (n ? '' : 'zero') + (key === 'pending' && n ? ' attn' : ''));
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', mUI.filter === key);
+    b.append(document.createTextNode(label), el('span', 'n', n));
+    b.onclick = () => { mUI.filter = key; mUI.limit = M_PAGE; mUI.open = null; renderMembers(); $('mFilters').querySelector('[aria-checked=true]')?.focus(); };
+    return b;
+  }));
+  const list = memberMatches();
+  const shown = list.slice(0, mUI.limit);
+  // Bulk approve when looking at waiting people.
+  const waiting = list.filter(m => m.status === 'pending');
+  const bulk = mUI.filter === 'pending' && waiting.length > 1;
+  $('mBulk').hidden = !bulk;
+  if (bulk) { $('mBulkText').textContent = `${plural(waiting.length, 'account')} waiting${mUI.q ? ' match your search' : ''}.`; $('mBulkGo').textContent = `Approve all ${waiting.length}`; }
+  if (!list.length) {
+    const li = el('li', 'm-empty');
+    li.append(el('div', '', mUI.q ? `No one matches “${mUI.q.trim()}”${mUI.filter !== 'all' ? ' in this view' : ''}.` : 'No one here.'));
+    if (mUI.q || mUI.filter !== 'all') {
+      const c = el('button', 'btn', 'Show everyone'); c.type = 'button'; c.style.marginTop = '12px';
+      c.onclick = () => { mUI.q = ''; $('mSearch').value = ''; mUI.filter = 'all'; renderMembers(); };
+      li.append(c);
+    }
+    $('memberList').replaceChildren(li);
+  } else {
+    const photos = new Map(), albums = new Map();
+    if (isAdmin()) {
+      for (const p of state.photos) photos.set(p.uploaderId, (photos.get(p.uploaderId) || 0) + 1);
+      for (const a of state.albums) albums.set(a.created_by, (albums.get(a.created_by) || 0) + 1);
+    }
+    $('memberList').replaceChildren(...shown.map(m => memberRow(m, photos.get(m.id) || 0, albums.get(m.id) || 0)));
+  }
+  $('mShowing').textContent = list.length ? `Showing ${shown.length} of ${list.length}${list.length !== all.length ? ` (${all.length} total)` : ''}` : '';
+  $('mMore').hidden = shown.length >= list.length;
+  $('mMore').textContent = `Show ${Math.min(M_PAGE, list.length - shown.length)} more`;
+}
+// Name/email with the search words highlighted (built with text nodes, never innerHTML).
+function highlighted(tag, text) {
+  const out = el(tag); text = String(text || '');
+  const words = fold(mUI.q).split(/\s+/).filter(Boolean);
+  const f = fold(text);
+  if (!words.length || f.length !== text.length) { out.textContent = text; return out; }
+  const hit = new Array(text.length).fill(false);
+  for (const w of words) { let i = f.indexOf(w); while (i !== -1) { for (let k = i; k < i + w.length; k++) hit[k] = true; i = f.indexOf(w, i + 1); } }
+  let i = 0;
+  while (i < text.length) {
+    let j = i; while (j < text.length && hit[j] === hit[i]) j++;
+    out.append(hit[i] ? el('mark', '', text.slice(i, j)) : document.createTextNode(text.slice(i, j)));
+    i = j;
+  }
+  return out;
+}
+function memberRow(m, nPhotos, nAlbums) {
+  const li = el('li'); li.dataset.id = m.id;
   const me = m.id === uid();
-  const role = m.is_admin ? 'admin' : m.is_moderator ? 'moderator' : 'member';
-  who.append(el('b', '', m.display_name + (me ? ' (you)' : '')), el('small', '', `${m.email || ''} · joined ${fmtDate(new Date(m.created_at))}${m.invited_by && m.status === 'pending' ? ` · invited by ${m.invited_by}` : ''}`));
-  li.append(who, el('span', `chip ${role !== 'member' ? role : m.status}`, role !== 'member' ? role : m.status));
-  if (me) return li;
-  // Moderators can manage regular members only; admins can manage everyone.
-  if (!isAdmin() && role !== 'member') return li;
+  const role = roleOf(m);
+  const canManage = !me && (isAdmin() || role === 'member'); // moderators manage regular members only
+  const row = el('div', 'm-row');
+  const av = el('span', 'm-av', initials(m.display_name)); av.setAttribute('aria-hidden', 'true');
+  const who = el('div', 'm-who');
+  const name = highlighted('b', m.display_name); if (me) name.append(' (you)');
+  who.append(name, highlighted('small', (m.email || '') + (m.status === 'pending' && m.invited_by ? ` · invited by ${m.invited_by}` : '')));
+  const chipKind = role !== 'member' && m.status === 'approved' ? role : m.status;
+  const chipText = chipKind === 'blocked' ? 'turned off' : chipKind === 'pending' ? 'waiting' : chipKind === 'approved' ? 'active' : chipKind;
+  row.append(av, who, el('span', `chip ${chipKind}`, chipText));
+  // Waiting people get Approve/Decline right on the row: the most common job.
+  if (m.status === 'pending' && canManage) {
+    const q = el('div', 'm-quick');
+    q.append(statusBtn(m, 'Approve', 'approved', 'primary'), statusBtn(m, 'Decline', 'blocked', 'danger'));
+    row.append(q);
+  }
+  const chev = el('button', 'btn ghost icon m-chev'); chev.type = 'button';
+  chev.setAttribute('aria-label', `Details for ${m.display_name}`); chev.setAttribute('aria-expanded', mUI.open === m.id);
+  chev.append(svgIcon('i-chev'));
+  row.append(chev);
+  li.append(row);
+  const toggle = () => { mUI.open = mUI.open === m.id ? null : m.id; renderMembers(); };
+  row.onclick = e => { if (e.target.closest('button,select,a,input') && e.target.closest('button') !== chev) return; toggle(); };
+  if (mUI.open !== m.id) return li;
+
+  li.classList.add('open');
+  const panel = el('div', 'm-panel');
+  const meta = el('p', 'm-meta');
+  const bits = [`Joined ${fmtDate(new Date(m.created_at))}`];
+  if (m.invited_by) bits.push(`invited by ${m.invited_by}`);
+  if (isAdmin()) bits.push(`${plural(nPhotos, 'photo')} · ${plural(nAlbums, 'album')}`);
+  meta.textContent = bits.join(' · ');
+  panel.append(meta);
+  if (!canManage) {
+    panel.append(el('p', 'm-meta', me ? 'This is you. Nobody can change their own role or remove themselves, so there’s always an admin.' : 'Only admins can manage admins and moderators.'));
+    li.append(panel); return li;
+  }
   if (isAdmin() && m.status === 'approved') {
+    const line = el('div', 'm-line'); line.append(el('span', 'lbl', 'Role'));
     const sel = el('select', 'role'); sel.setAttribute('aria-label', `Role for ${m.display_name}`);
     for (const [v, t] of [['member', 'Member'], ['moderator', 'Moderator'], ['admin', 'Admin']]) { const o = el('option', '', t); o.value = v; o.selected = v === role; sel.append(o); }
     sel.onchange = async () => {
       const next = sel.value;
       const sub = next === 'admin' ? 'Admins see every photo, manage all albums and members, and can change roles, including yours.'
-        : next === 'moderator' ? 'Moderators can approve, decline and turn off member accounts. They don\u2019t see other people\u2019s private photos.'
-        : 'They\u2019ll go back to being a regular member.';
+        : next === 'moderator' ? 'Moderators can approve, decline and turn off member accounts. They don’t see other people’s private photos.'
+        : 'They’ll go back to being a regular member.';
       if (!(await ask(`Make ${m.display_name} ${next === 'member' ? 'a member' : next === 'admin' ? 'an admin' : 'a moderator'}?`, sub, 'Change role'))) { sel.value = role; return; }
       sel.disabled = true;
       const { error } = await sb.rpc('set_member_role', { target: m.id, new_role: next });
       if (error) { toast(errMsg(error), 'error'); sel.value = role; sel.disabled = false; return; }
       toast(`${m.display_name} is now ${next === 'member' ? 'a member' : next === 'admin' ? 'an admin' : 'a moderator'}.`);
-      openMembers();
+      reloadMembers();
     };
-    li.append(sel);
+    line.append(sel, el('p', 'hint', role === 'admin' ? 'Admins see every photo and can change roles.' : role === 'moderator' ? 'Moderators approve and manage member accounts, but don’t see others’ private photos.' : 'Members see their own photos and what’s shared with them.'));
+    panel.append(line);
   }
-  const act = (label, status, cls = '') => {
-    const b = el('button', `btn ${cls}`, label);
-    b.onclick = async () => {
-      if (status === 'blocked' && !(await ask(`Turn off access for ${m.display_name}?`, 'They will no longer see or add photos. You can turn it back on later.', 'Turn off'))) return;
-      b.disabled = true;
-      const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: status });
-      if (error) { toast(errMsg(error), 'error'); b.disabled = false; return; }
-      toast(status === 'approved' ? `${m.display_name} can now use the album.` : `Access turned off for ${m.display_name}.`);
-      openMembers();
-    };
-    return b;
-  };
-  if (m.status === 'pending') li.append(act('Approve', 'approved', 'primary'), act('Decline', 'blocked', 'danger'));
-  else if (m.status === 'approved') li.append(act('Turn off', 'blocked', 'danger'));
-  else li.append(act('Restore', 'approved'));
+  const access = el('div', 'm-line'); access.append(el('span', 'lbl', 'Access'));
+  if (m.status === 'approved') access.append(statusBtn(m, 'Turn off', 'blocked', 'danger'));
+  else if (m.status === 'blocked') access.append(statusBtn(m, 'Restore', 'approved'));
+  else access.append(el('span', 'm-meta', 'Waiting for approval'));
   if (isAdmin()) {
     const rm = el('button', 'btn ghost danger', 'Remove'); rm.type = 'button';
     rm.onclick = () => openRemoveMember(m);
-    li.append(rm);
+    access.append(rm);
   }
+  panel.append(access);
+  li.append(panel);
   return li;
 }
+function statusBtn(m, label, status, cls = '') {
+  const b = el('button', `btn ${cls}`, label); b.type = 'button';
+  b.onclick = async () => {
+    if (status === 'blocked' && !(await ask(m.status === 'pending' ? `Decline ${m.display_name}?` : `Turn off access for ${m.display_name}?`,
+      m.status === 'pending' ? 'They won’t get in. You can restore them later from Turned off.' : 'They will no longer see or add photos. You can turn it back on later.',
+      m.status === 'pending' ? 'Decline' : 'Turn off'))) return;
+    b.disabled = true;
+    const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: status });
+    if (error) { toast(errMsg(error), 'error'); b.disabled = false; return; }
+    toast(status === 'approved' ? `${m.display_name} can now use the album.` : m.status === 'pending' ? `${m.display_name} was declined.` : `Access turned off for ${m.display_name}.`);
+    reloadMembers();
+  };
+  return b;
+}
+let mSearchTimer;
+$('mSearch').oninput = () => {
+  clearTimeout(mSearchTimer);
+  mSearchTimer = setTimeout(() => { mUI.q = $('mSearch').value; mUI.limit = M_PAGE; mUI.open = null; renderMembers(); }, 120);
+};
+$('mSearch').onkeydown = e => {
+  // Esc clears the search first; a second Esc closes the box.
+  if (e.key === 'Escape' && $('mSearch').value) { e.preventDefault(); $('mSearch').value = ''; mUI.q = ''; renderMembers(); }
+};
+$('mClear').onclick = () => { $('mSearch').value = ''; mUI.q = ''; mUI.open = null; renderMembers(); $('mSearch').focus(); };
+$('mSort').onchange = () => { mUI.sort = $('mSort').value; mUI.limit = M_PAGE; renderMembers(); };
+$('mMore').onclick = () => { mUI.limit += M_PAGE; renderMembers(); };
+$('mTabPeople').onclick = () => setMembersTab('people');
+$('mTabSettings').onclick = () => setMembersTab('settings');
+// '/' jumps to the search box (like many sites). Listens on the document because a click can
+// leave focus on the page body after the list is redrawn.
+document.addEventListener('keydown', e => {
+  if (e.key !== '/' || !$('members').open || mUI.tab !== 'people' || $('ask').open) return;
+  if (e.target.closest?.('input,select,textarea,[contenteditable]')) return;
+  e.preventDefault(); $('mSearch').focus();
+});
+$('mBulkGo').onclick = async () => {
+  const list = memberMatches().filter(m => m.status === 'pending');
+  if (!list.length) return;
+  if (!(await ask(`Approve ${plural(list.length, 'account')}?`, list.slice(0, 8).map(m => m.display_name).join(', ') + (list.length > 8 ? ` and ${list.length - 8} more` : '') + ' will be able to use the album.', 'Approve all'))) return;
+  $('mBulkGo').disabled = true;
+  const run = limiter(4); let ok = 0, bad = 0;
+  await Promise.all(list.map(m => run(async () => {
+    const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: 'approved' });
+    error ? bad++ : ok++;
+  })));
+  $('mBulkGo').disabled = false;
+  toast(bad ? `Approved ${ok}; ${bad} couldn’t be approved.` : `Approved ${plural(ok, 'account')}.`, bad ? 'error' : '');
+  reloadMembers();
+};
 
 /* ---------- remove a member (admins) ---------- */
 let removeTarget = null;
@@ -2130,7 +2375,7 @@ function openRemoveMember(m) {
   $('removeDlg').showModal();
 }
 $('removePhotos').onchange = () => { $('removeGo').textContent = $('removePhotos').checked ? 'Remove member and delete content' : 'Remove member'; };
-$('removeCancel').onclick = () => { $('removeDlg').close(); openMembers(); };
+$('removeCancel').onclick = () => { $('removeDlg').close(); $('members').showModal(); };
 $('removeGo').onclick = async () => {
   const m = removeTarget; if (!m) return;
   $('removeGo').disabled = true; $('removeErr').textContent = '';
@@ -2145,8 +2390,10 @@ $('removeGo').onclick = async () => {
     if (error) throw error;
     $('removeDlg').close();
     toast(`${m.display_name} was removed${gone ? ` and ${plural(gone, 'photo')} deleted` : ''}.`);
+    if (mUI.open === m.id) mUI.open = null;
     await loadAll(true);
-    openMembers();
+    $('members').showModal();
+    reloadMembers();
   } catch (err) {
     $('removeErr').textContent = /admin_remove_member|could not find the function/i.test(String(err?.message)) ? 'Removing members isn\u2019t switched on in the database yet.' : errMsg(err);
   } finally { $('removeGo').disabled = false; }
@@ -2166,7 +2413,7 @@ $('settingsForm').onsubmit = async e => {
   toast('Album settings saved.');
 };
 $('membersBtn').onclick = openMembers;
-$('mRefresh').onclick = openMembers;
+$('mRefresh').onclick = () => reloadMembers();
 $('mClose').onclick = () => $('members').close();
 
 /* ---------- wiring ---------- */
