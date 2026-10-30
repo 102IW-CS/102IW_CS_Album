@@ -268,17 +268,74 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .linkbox{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
 .linkbox input{font-family:var(--mono);font-size:12px;padding:8px 10px}
 .linkbox .row{justify-content:space-between}
-#inboxList{list-style:none;margin:0;padding:0}
-#inboxList li{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:6px}
-#inboxList li:last-child{border-bottom:0}
-#inboxList .ib-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-#inboxList .ib-head b{font-size:15px}
-#inboxList .ib-head small{color:var(--muted);font-size:12.5px}
-#inboxList li.unread .ib-head b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
-#inboxList .ib-meta{font-size:13px;color:var(--muted);display:flex;gap:4px 14px;flex-wrap:wrap}
-#inboxList .ib-meta a{color:var(--ink);overflow-wrap:anywhere}
-#inboxList .ib-msg{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0;font-size:14.5px}
-#inboxList .ib-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* Inbox: server-side search/filter/paging so it stays quick with hundreds of messages */
+#inboxDlg{width:min(96vw,760px);height:min(90vh,880px)}
+#inboxDlg .sheet-head{padding-bottom:8px}
+.ib-tools{display:flex;gap:8px;padding:0 20px}
+.ib-tools select{width:auto;flex:none}
+.ib-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 20px;min-height:38px}
+.ib-bar .m-filters{padding:0;flex:1 1 auto;min-width:max-content}
+.ib-bar>.btn{margin-left:auto}
+.ib-bar>.btn{padding:6px 12px;font-size:13px;flex:none}
+.ib-sel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 20px 10px;padding:6px 6px 6px 12px;border-radius:8px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);font-size:13px}
+.ib-sel b{margin-right:auto}
+.ib-sel .btn{padding:5px 11px;font-size:13px;background:transparent;border-color:transparent}
+.ib-sel .btn:hover{background:var(--surface)}
+.ib-new{margin:0 20px 10px;align-self:center;padding:6px 14px;font-size:13px}
+#inboxList{list-style:none;margin:0;padding:0 20px;flex:1;min-height:0;overflow:auto;border-top:1px solid var(--line);overscroll-behavior:contain}
+#inboxList>li{border-bottom:1px solid var(--line)}
+#inboxList>li:last-child{border-bottom:0}
+#inboxList>li.m-empty{border:0;padding:40px 0;text-align:center;color:var(--muted)}
+.ib-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;grid-template-areas:"ck who topic when chev" "ck prev prev prev chev";column-gap:12px;row-gap:2px;align-items:center;padding:10px 0;cursor:pointer}
+.ib-ck{grid-area:ck;width:18px;height:18px;margin:3px 0 0;accent-color:var(--accent);cursor:pointer;align-self:start}
+.ib-who{grid-area:who;min-width:0;display:flex;align-items:baseline;gap:8px}
+.ib-who b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;flex:none;max-width:60%}
+.ib-who small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#inboxList li.unread .ib-who b{font-weight:800}
+#inboxList li.unread .ib-who b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle}
+.ib-topic{grid-area:topic;white-space:nowrap}
+.ib-when{grid-area:when;font-size:12.5px;color:var(--muted);white-space:nowrap}
+#inboxList li.unread .ib-when{color:var(--ink);font-weight:700}
+.ib-prev{grid-area:prev;font-size:13.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ib-row .m-chev{grid-area:chev}
+#inboxList>li.open .m-chev svg{transform:rotate(180deg)}
+#inboxList>li.open,#inboxList>li.sel{margin:0 -20px;padding:0 20px}
+#inboxList>li.open{background:color-mix(in srgb,var(--surface-2) 45%,transparent)}
+#inboxList>li.sel{background:color-mix(in srgb,var(--accent-soft) 70%,transparent)}
+#inboxList>li.open .ib-prev{display:none}
+.ib-body{display:grid;gap:12px;padding:0 0 16px 30px}
+.ib-meta{font-size:13px;color:var(--muted);display:flex;gap:4px 16px;flex-wrap:wrap}
+.ib-meta a{color:var(--ink);overflow-wrap:anywhere}
+.ib-msg{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-size:14.5px;line-height:1.55}
+.ib-msg mark,.ib-who mark,.ib-prev mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.ib-actions{display:flex;gap:8px;flex-wrap:wrap}
+#inboxDlg .m-foot .row{display:flex;gap:8px}
+#inboxDlg .sm{display:none}
+@media (max-width:560px){
+  #inboxDlg .sheet-head{flex-wrap:wrap;row-gap:0}
+  #inboxDlg .m-total{order:9;flex-basis:100%;margin-top:-2px}
+  #inboxDlg .sheet-head h2{font-size:26px}
+  .ib-tools{flex-wrap:wrap}
+  .ib-tools .m-search{flex-basis:100%}
+  .ib-tools select{flex:1}
+  .ib-row{grid-template-areas:"ck who when chev" "ck prev prev chev";grid-template-columns:auto minmax(0,1fr) auto auto}
+  .ib-topic{display:none}
+  .ib-who{display:block}
+  .ib-who b{display:block;max-width:none}
+  .ib-who small{display:block}
+  .ib-body{padding-left:0}
+  #inboxDlg .m-foot{flex-wrap:wrap}
+  /* selection bar: count and close on top, short action buttons on one line below */
+  #inboxDlg .lg{display:none}
+  #inboxDlg .sm{display:inline}
+  .ib-bar{gap:6px}
+  .ib-bar .m-filters{gap:5px}
+  .ib-bar .m-filters button{padding:5px 9px}
+  .ib-bar>.btn{padding:6px 10px}
+  .ib-sel #ibSelClear{order:1}
+  .ib-sel b{flex-basis:calc(100% - 44px)}
+  .ib-sel .btn:not(#ibSelClear){order:2;flex:1;padding:6px 4px}
+}
 #reqList{list-style:none;margin:0;padding:0}
 #reqList li{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
 #reqList li:last-child{border-bottom:0}
@@ -676,11 +733,29 @@ body>main{flex:1 0 auto;width:100%}
   </form>
 </dialog>
 
-<dialog id="inboxDlg" class="sheet" aria-labelledby="inboxTitle" style="width:min(94vw,640px)">
-  <div class="sheet-head"><h2 id="inboxTitle">Inbox</h2><button type="button" class="btn" id="inboxClose">Close</button></div>
-  <div class="sheet-body">
-    <p class="hint" style="margin:0">Messages from the <a href="contact.html">contact page</a>. Only admins can see these.</p>
-    <ul id="inboxList"></ul>
+<dialog id="inboxDlg" class="sheet" aria-labelledby="inboxTitle">
+  <div class="sheet-head"><h2 id="inboxTitle">Inbox</h2><span class="m-total" id="ibTotal"></span><button type="button" class="btn ghost icon" id="ibRefresh" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button><button type="button" class="btn" id="inboxClose">Close</button></div>
+  <div class="m-pane">
+    <div class="ib-tools">
+      <div class="m-search"><svg><use href="#i-search"/></svg><input type="search" id="ibSearch" placeholder="Search name, email or message" autocomplete="off" spellcheck="false" aria-label="Search messages"><kbd title="Press / to search">/</kbd><button type="button" class="m-clear" id="ibClear" aria-label="Clear search">&times;</button></div>
+      <select id="ibTopic" class="role" aria-label="Topic"><option value="">All topics</option></select>
+      <select id="ibSort" class="role" aria-label="Sort messages"><option value="newest">Newest</option><option value="oldest">Oldest</option></select>
+    </div>
+    <div class="ib-bar">
+      <div class="m-filters" id="ibFilters" role="radiogroup" aria-label="Show"></div>
+      <button type="button" class="btn" id="ibAllRead" title="Mark all read" hidden><span class="lg">Mark all read</span><span class="sm">&#10003; All read</span></button>
+    </div>
+    <div class="ib-sel" id="ibSel" hidden>
+      <b id="ibSelText"></b>
+      <button type="button" class="btn" id="ibSelAll"><span class="lg">Select all shown</span><span class="sm">Select all</span></button>
+      <button type="button" class="btn" id="ibSelRead"><span class="lg">Mark read</span><span class="sm">Read</span></button>
+      <button type="button" class="btn" id="ibSelUnread"><span class="lg">Mark unread</span><span class="sm">Unread</span></button>
+      <button type="button" class="btn danger" id="ibSelDel">Delete</button>
+      <button type="button" class="btn icon" id="ibSelClear" aria-label="Clear selection">&times;</button>
+    </div>
+    <button type="button" class="btn primary ib-new" id="ibNew" hidden>New messages · Show</button>
+    <ul id="inboxList" aria-live="polite"></ul>
+    <div class="m-foot"><span id="ibShowing"></span><div class="row"><button type="button" class="btn ghost" id="ibCsv" title="Download every message that matches the current search and filters">Download CSV</button><button type="button" class="btn" id="ibMore" hidden>Load more</button></div></div>
   </div>
 </dialog>
 
@@ -1066,7 +1141,7 @@ function teardown() {
   clearInterval(state.pollTimer); state.pollTimer = null;
   Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map(), shares: [], requests: [] });
   $('requestsBtn').hidden = true;
-  $('inboxBtn').hidden = true; state.inbox = [];
+  $('inboxBtn').hidden = true; state.inboxCounts = { total: 0, unread: 0 };
   $('grid').replaceChildren(); $('albumGrid').replaceChildren();
   $('queue').replaceChildren(); $('queueBar').hidden = true;
   setSelecting(false);
@@ -1203,10 +1278,9 @@ async function loadAll(quiet = false) {
     for (const r of [sh, rq, names]) if (r.error) throw r.error;
     state.shares = sh.data; state.requests = rq.data;
     if (isAdmin()) {
-      const { data: inbox, error: ie } = await sb.from('contact_messages')
-        .select('id,name,email,phone,topic,message,read,created_at').order('created_at', { ascending: false }).limit(200);
-      state.inbox = ie ? [] : inbox;
-    } else state.inbox = [];
+      // Only counts here (cheap, and this runs on every refresh); the Inbox box loads messages page by page.
+      await refreshInboxCounts();
+    } else state.inboxCounts = { total: 0, unread: 0 };
     updateInboxBadge();
     state.names = new Map(names.data.map(m => [m.id, m.display_name]));
     const photos = rows.map(toPhoto);
@@ -1758,50 +1832,250 @@ function renderRequests() {
 $('requestsBtn').onclick = () => { renderRequests(); $('requestsDlg').showModal(); };
 
 /* ---------- inbox: messages from the contact page (admins only) ---------- */
+// Built for hundreds of messages: search, filters and paging run on the server, so only one page
+// (30) is in the browser at a time and the regular refresh only fetches two counts. Opening a
+// message marks it read; several can be selected and marked or deleted together.
 const TOPICS = { 'photo-site': 'Photo site like this', website: 'Website', app: 'App or tool', other: 'Something else' };
+const IB_PAGE = 30;
+const IB_COLS = 'id,name,email,phone,topic,message,read,created_at';
+const ibUI = { q: '', filter: 'all', topic: '', sort: 'newest', rows: [], total: 0, open: null, sel: new Set(), seq: 0, seen: 0 };
+for (const [v, t] of Object.entries(TOPICS)) { const o = el('option', '', t); o.value = v; $('ibTopic').append(o); }
+
+async function refreshInboxCounts() {
+  if (!isAdmin()) { state.inboxCounts = { total: 0, unread: 0 }; return; }
+  const [all, unread] = await Promise.all([
+    sb.from('contact_messages').select('id', { count: 'exact', head: true }),
+    sb.from('contact_messages').select('id', { count: 'exact', head: true }).eq('read', false)]);
+  if (!all.error && !unread.error) state.inboxCounts = { total: all.count || 0, unread: unread.count || 0 };
+}
 function updateInboxBadge() {
-  const unread = (state.inbox || []).filter(m => !m.read).length;
-  $('inboxBtn').hidden = !isAdmin() || !(state.inbox || []).length;
-  $('inboxBadge').textContent = unread; $('inboxBadge').hidden = !unread;
-  if ($('inboxDlg').open) renderInbox();
+  const c = state.inboxCounts || { total: 0, unread: 0 };
+  $('inboxBtn').hidden = !isAdmin() || !c.total;
+  $('inboxBadge').textContent = c.unread; $('inboxBadge').hidden = !c.unread;
+  if ($('inboxDlg').open) {
+    renderIbChrome();
+    if (c.total > ibUI.seen) $('ibNew').hidden = false; // something arrived while the box is open
+  }
+}
+// Search words, stripped of characters that have meaning in the database filter syntax.
+const ibWords = () => ibUI.q.replace(/[,()"'\\%*_:]/g, ' ').trim().split(/\s+/).filter(Boolean).slice(0, 6);
+function ibQuery(cols, opts) {
+  let q = sb.from('contact_messages').select(cols, opts);
+  if (ibUI.filter === 'unread') q = q.eq('read', false); else if (ibUI.filter === 'read') q = q.eq('read', true);
+  if (ibUI.topic) q = q.eq('topic', ibUI.topic);
+  // Every word must appear somewhere: in the name, email, phone or message.
+  for (const w of ibWords()) q = q.or(['name', 'email', 'phone', 'message'].map(c => `${c}.ilike.*${w}*`).join(','));
+  return q.order('created_at', { ascending: ibUI.sort === 'oldest' });
+}
+async function loadInbox(more = false) {
+  const seq = ++ibUI.seq;
+  $('ibMore').disabled = true;
+  const from = more ? ibUI.rows.length : 0;
+  const [{ data, error, count }] = await Promise.all([
+    ibQuery(IB_COLS, { count: 'exact' }).range(from, from + IB_PAGE - 1),
+    more ? null : refreshInboxCounts()]);
+  if (seq !== ibUI.seq) return; // a newer search replaced this one
+  $('ibMore').disabled = false;
+  if (error) { $('inboxList').replaceChildren(el('li', 'm-empty err', errMsg(error))); return; }
+  ibUI.rows = more ? ibUI.rows.concat(data) : data;
+  ibUI.total = count ?? ibUI.rows.length;
+  if (!more) { ibUI.seen = state.inboxCounts?.total || 0; $('ibNew').hidden = true; updateInboxBadge(); }
+  if (ibUI.open && !ibUI.rows.some(r => r.id === ibUI.open)) ibUI.open = null;
+  renderInbox();
+}
+function renderIbChrome() {
+  const c = state.inboxCounts || { total: 0, unread: 0 };
+  $('ibTotal').textContent = `${plural(c.total, 'message')}${c.unread ? ` · ${c.unread} unread` : ''}`;
+  $('ibFilters').replaceChildren(...[['all', 'All', c.total], ['unread', 'Unread', c.unread], ['read', 'Read', c.total - c.unread]].map(([k, label, n]) => {
+    const b = el('button', (n ? '' : 'zero') + (k === 'unread' && n ? ' attn' : ''));
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', ibUI.filter === k);
+    b.append(document.createTextNode(label), el('span', 'n', n));
+    b.onclick = () => {
+      if (ibUI.filter === k) return;
+      ibUI.filter = k; ibUI.open = null; ibUI.sel.clear();
+      renderIbChrome(); $('ibFilters').querySelector('[aria-checked=true]')?.focus(); loadInbox();
+    };
+    return b;
+  }));
+  $('ibAllRead').hidden = !c.unread;
+  const n = ibUI.sel.size;
+  $('ibSel').hidden = !n;
+  if (n) {
+    $('ibSelText').textContent = `${n} selected`;
+    $('ibSelAll').hidden = ibUI.rows.every(r => ibUI.sel.has(r.id));
+  }
 }
 function renderInbox() {
-  const list = state.inbox || [];
-  if (!list.length) { $('inboxList').replaceChildren(el('li', 'hint', 'No messages yet.')); return; }
-  $('inboxList').replaceChildren(...list.map(m => {
-    const li = el('li', m.read ? '' : 'unread');
-    const head = el('div', 'ib-head');
-    head.append(el('b', '', m.name), el('small', '', `${TOPICS[m.topic] || m.topic} · ${new Date(m.created_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`));
-    const meta = el('div', 'ib-meta');
-    const mail = el('a', '', m.email); mail.href = `mailto:${m.email}?subject=${encodeURIComponent('Re: your message about ' + (TOPICS[m.topic] || 'a project').toLowerCase())}`;
-    meta.append(mail);
-    if (m.phone) { const tel = el('a', '', m.phone); tel.href = 'tel:' + m.phone.replace(/[^\d+]/g, ''); meta.append(tel); }
-    const actions = el('div', 'ib-actions');
-    const reply = el('a', 'btn primary', 'Reply by email'); reply.href = mail.href;
-    const toggle = el('button', 'btn', m.read ? 'Mark unread' : 'Mark read'); toggle.type = 'button';
-    toggle.onclick = async () => {
-      toggle.disabled = true;
-      const { error } = await sb.from('contact_messages').update({ read: !m.read }).eq('id', m.id);
-      if (error) { toast(errMsg(error), 'error'); toggle.disabled = false; return; }
-      m.read = !m.read; updateInboxBadge();
-    };
-    const del = el('button', 'btn danger', 'Delete'); del.type = 'button';
-    del.onclick = async () => {
-      $('inboxDlg').close();
-      const ok = await ask(`Delete the message from ${m.name}?`, 'This can\u2019t be undone.', 'Delete');
-      if (ok) {
-        const { error } = await sb.from('contact_messages').delete().eq('id', m.id);
-        if (error) toast(errMsg(error), 'error');
-        else { state.inbox = state.inbox.filter(x => x.id !== m.id); toast('Message deleted.'); }
-      }
-      updateInboxBadge(); renderInbox(); $('inboxDlg').showModal();
-    };
-    actions.append(reply, toggle, del);
-    li.append(head, meta, el('div', 'ib-msg', m.message), actions);
-    return li;
-  }));
+  renderIbChrome();
+  const rows = ibUI.rows;
+  if (!rows.length) {
+    const searching = ibUI.q.trim() || ibUI.topic;
+    const li = el('li', 'm-empty');
+    li.append(el('div', '', searching ? 'No messages match.' : { all: 'No messages yet.', unread: 'No unread messages. All caught up.', read: 'No read messages.' }[ibUI.filter]));
+    if (searching || ibUI.filter !== 'all') {
+      const c = el('button', 'btn', 'Show all messages'); c.type = 'button'; c.style.marginTop = '12px';
+      c.onclick = () => { ibUI.q = ''; $('ibSearch').value = ''; ibUI.topic = ''; $('ibTopic').value = ''; ibUI.filter = 'all'; loadInbox(); };
+      li.append(c);
+    }
+    $('inboxList').replaceChildren(li);
+  } else $('inboxList').replaceChildren(...rows.map(ibRow));
+  $('ibShowing').textContent = rows.length ? `Showing ${rows.length} of ${ibUI.total}` : '';
+  $('ibMore').hidden = rows.length >= ibUI.total;
+  $('ibMore').textContent = `Load ${Math.min(IB_PAGE, ibUI.total - rows.length)} more`;
+  $('ibCsv').hidden = !rows.length;
 }
-$('inboxBtn').onclick = () => { renderInbox(); $('inboxDlg').showModal(); };
+// Short date for the list: time today, weekday this week, otherwise the date.
+function shortWhen(d) {
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (now - d < 6 * 864e5 && d < now) return d.toLocaleDateString(undefined, { weekday: 'short' });
+  return d.toLocaleDateString(undefined, d.getFullYear() === now.getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+}
+// One-line preview; when searching, start it near the first match so you can see why it matched.
+function ibPreview(text) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  const words = ibWords().map(fold);
+  if (words.length) {
+    const f = fold(t);
+    const i = Math.min(...words.map(w => f.indexOf(w)).filter(i => i >= 0));
+    if (Number.isFinite(i) && i > 60) return '\u2026' + t.slice(i - 30, i + 200);
+  }
+  return t.slice(0, 220);
+}
+function ibRow(m) {
+  const li = el('li', (m.read ? '' : 'unread') + (ibUI.sel.has(m.id) ? ' sel' : ''));
+  const row = el('div', 'ib-row');
+  const ck = el('input', 'ib-ck'); ck.type = 'checkbox'; ck.checked = ibUI.sel.has(m.id);
+  ck.setAttribute('aria-label', `Select message from ${m.name}`);
+  ck.onchange = () => { ck.checked ? ibUI.sel.add(m.id) : ibUI.sel.delete(m.id); li.classList.toggle('sel', ck.checked); renderIbChrome(); };
+  const who = el('div', 'ib-who'); who.append(highlighted('b', m.name, ibUI.q), highlighted('small', m.email, ibUI.q));
+  const d = new Date(m.created_at);
+  const when = el('span', 'ib-when', shortWhen(d)); when.title = d.toLocaleString();
+  const prev = highlighted('div', ibPreview(m.message), ibUI.q); prev.className = 'ib-prev';
+  const chev = el('button', 'btn ghost icon m-chev'); chev.type = 'button';
+  chev.setAttribute('aria-label', `Open message from ${m.name}`); chev.setAttribute('aria-expanded', ibUI.open === m.id);
+  chev.append(svgIcon('i-chev'));
+  row.append(ck, who, el('span', 'chip ib-topic', TOPICS[m.topic] || m.topic), when, prev, chev);
+  row.onclick = e => {
+    if (e.target === ck || (e.target.closest('button,a,input,select') && e.target.closest('button') !== chev)) return;
+    ibToggle(m);
+  };
+  li.append(row);
+  if (ibUI.open !== m.id) return li;
+
+  li.classList.add('open');
+  const body = el('div', 'ib-body');
+  const meta = el('div', 'ib-meta');
+  const subject = 'Re: your message about ' + (TOPICS[m.topic] || 'a project').toLowerCase();
+  const quoted = String(m.message).slice(0, 1500).split('\n').map(l => '> ' + l).join('\n');
+  const mailHref = `mailto:${m.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`\n\n---\nOn ${d.toLocaleString()}, ${m.name} wrote:\n${quoted}`)}`;
+  const mail = el('a', '', m.email); mail.href = mailHref;
+  meta.append(mail);
+  if (m.phone) { const tel = el('a', '', m.phone); tel.href = 'tel:' + m.phone.replace(/[^\d+]/g, ''); meta.append(tel); }
+  meta.append(el('span', '', TOPICS[m.topic] || m.topic), el('span', '', d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })));
+  const msg = highlighted('p', m.message, ibUI.q); msg.className = 'ib-msg';
+  const actions = el('div', 'ib-actions');
+  const reply = el('a', 'btn primary', 'Reply by email'); reply.href = mailHref;
+  const toggle = el('button', 'btn', m.read ? 'Mark unread' : 'Mark read'); toggle.type = 'button';
+  toggle.onclick = () => ibSetRead([m.id], !m.read);
+  const del = el('button', 'btn danger', 'Delete'); del.type = 'button';
+  del.onclick = () => ibDelete([m.id], `the message from ${m.name}`);
+  actions.append(reply, toggle, del);
+  body.append(meta, msg, actions);
+  li.append(body);
+  return li;
+}
+async function ibToggle(m) {
+  ibUI.open = ibUI.open === m.id ? null : m.id;
+  renderInbox();
+  if (ibUI.open === m.id && !m.read) await ibSetRead([m.id], true, true); // opening it counts as reading it
+}
+async function ibChunks(ids, fn) {
+  for (let i = 0; i < ids.length; i += 100) { const { error } = await fn(ids.slice(i, i + 100)); if (error) throw error; }
+}
+async function ibSetRead(ids, read, quiet = false) {
+  try {
+    await ibChunks(ids, chunk => sb.from('contact_messages').update({ read }).in('id', chunk));
+  } catch (err) { toast(errMsg(err), 'error'); return; }
+  const set = new Set(ids);
+  ibUI.rows.forEach(r => { if (set.has(r.id)) r.read = read; }); // stays in view until the next reload, so nothing jumps
+  await refreshInboxCounts(); updateInboxBadge(); renderInbox();
+  if (!quiet) toast(`Marked ${ids.length === 1 ? '' : plural(ids.length, 'message') + ' '}as ${read ? 'read' : 'unread'}.`);
+}
+async function ibDelete(ids, label) {
+  if (!(await ask(`Delete ${label}?`, 'This can\u2019t be undone.', 'Delete'))) return;
+  try {
+    await ibChunks(ids, chunk => sb.from('contact_messages').delete().in('id', chunk));
+  } catch (err) { toast(errMsg(err), 'error'); return; }
+  const set = new Set(ids);
+  ibUI.rows = ibUI.rows.filter(r => !set.has(r.id));
+  ibUI.total = Math.max(0, ibUI.total - ids.length);
+  ids.forEach(id => ibUI.sel.delete(id));
+  if (set.has(ibUI.open)) ibUI.open = null;
+  await refreshInboxCounts(); ibUI.seen = state.inboxCounts.total; updateInboxBadge();
+  if (!ibUI.rows.length && ibUI.total) loadInbox(); else renderInbox();
+  toast(`Deleted ${plural(ids.length, 'message')}.`);
+}
+function openInbox() {
+  Object.assign(ibUI, { q: '', filter: 'all', topic: '', open: null, rows: [] }); ibUI.sel.clear();
+  $('ibSearch').value = ''; $('ibTopic').value = '';
+  $('inboxList').replaceChildren(el('li', 'm-empty', 'Loading\u2026'));
+  $('ibShowing').textContent = ''; $('ibMore').hidden = true; $('ibNew').hidden = true;
+  renderIbChrome();
+  if (!$('inboxDlg').open) $('inboxDlg').showModal();
+  if (matchMedia('(pointer:fine)').matches) $('ibSearch').focus();
+  loadInbox();
+}
+let ibTimer;
+$('ibSearch').oninput = () => {
+  clearTimeout(ibTimer);
+  ibTimer = setTimeout(() => { ibUI.q = $('ibSearch').value; ibUI.open = null; ibUI.sel.clear(); loadInbox(); }, 250);
+};
+$('ibSearch').onkeydown = e => {
+  if (e.key === 'Escape' && $('ibSearch').value) { e.preventDefault(); $('ibSearch').value = ''; ibUI.q = ''; loadInbox(); }
+};
+$('ibClear').onclick = () => { $('ibSearch').value = ''; ibUI.q = ''; ibUI.open = null; loadInbox(); $('ibSearch').focus(); };
+$('ibTopic').onchange = () => { ibUI.topic = $('ibTopic').value; ibUI.open = null; ibUI.sel.clear(); loadInbox(); };
+$('ibSort').onchange = () => { ibUI.sort = $('ibSort').value; loadInbox(); };
+$('ibMore').onclick = () => loadInbox(true);
+$('ibRefresh').onclick = () => loadInbox();
+$('ibNew').onclick = () => { ibUI.sort = 'newest'; $('ibSort').value = 'newest'; $('inboxList').scrollTop = 0; loadInbox(); };
+$('ibAllRead').onclick = async () => {
+  const n = state.inboxCounts?.unread || 0;
+  $('ibAllRead').disabled = true;
+  const { error } = await sb.from('contact_messages').update({ read: true }).eq('read', false);
+  $('ibAllRead').disabled = false;
+  if (error) return toast(errMsg(error), 'error');
+  ibUI.rows.forEach(r => { r.read = true; });
+  await refreshInboxCounts(); updateInboxBadge(); renderInbox();
+  toast(`Marked ${plural(n, 'message')} as read.`);
+};
+$('ibSelAll').onclick = () => { ibUI.rows.forEach(r => ibUI.sel.add(r.id)); renderInbox(); };
+$('ibSelClear').onclick = () => { ibUI.sel.clear(); renderInbox(); };
+$('ibSelRead').onclick = async () => { const ids = [...ibUI.sel]; ibUI.sel.clear(); await ibSetRead(ids, true); };
+$('ibSelUnread').onclick = async () => { const ids = [...ibUI.sel]; ibUI.sel.clear(); await ibSetRead(ids, false); };
+$('ibSelDel').onclick = () => { const ids = [...ibUI.sel]; ibDelete(ids, ids.length === 1 ? 'this message' : plural(ids.length, 'message')); };
+// Spreadsheet of whatever the current search and filters match (all pages, not just what's shown).
+$('ibCsv').onclick = async () => {
+  $('ibCsv').disabled = true;
+  try {
+    const all = [];
+    for (let from = 0; from < 10000; from += 1000) {
+      const { data, error } = await ibQuery(IB_COLS).range(from, from + 999);
+      if (error) throw error;
+      all.push(...data); if (data.length < 1000) break;
+    }
+    // Cells starting with = + - @ are prefixed so a spreadsheet won't run them as formulas.
+    const cell = v => { let t = String(v ?? ''); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+    const lines = [['Received', 'Name', 'Email', 'Phone', 'Topic', 'Read', 'Message'].map(cell).join(','),
+      ...all.map(m => [new Date(m.created_at).toLocaleString(), m.name, m.email, m.phone, TOPICS[m.topic] || m.topic, m.read ? 'yes' : 'no', m.message].map(cell).join(','))];
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = el('a'); a.href = URL.createObjectURL(blob); a.download = `inbox-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast(`Downloaded ${plural(all.length, 'message')}.`);
+  } catch (err) { toast(errMsg(err), 'error'); } finally { $('ibCsv').disabled = false; }
+};
+$('inboxBtn').onclick = openInbox;
 $('inboxClose').onclick = () => $('inboxDlg').close();
 $('requestsClose').onclick = () => $('requestsDlg').close();
 
@@ -2223,9 +2497,9 @@ function renderMembers() {
   $('mMore').textContent = `Show ${Math.min(M_PAGE, list.length - shown.length)} more`;
 }
 // Name/email with the search words highlighted (built with text nodes, never innerHTML).
-function highlighted(tag, text) {
+function highlighted(tag, text, q = mUI.q) {
   const out = el(tag); text = String(text || '');
-  const words = fold(mUI.q).split(/\s+/).filter(Boolean);
+  const words = fold(q).split(/\s+/).filter(Boolean);
   const f = fold(text);
   if (!words.length || f.length !== text.length) { out.textContent = text; return out; }
   const hit = new Array(text.length).fill(false);
@@ -2341,9 +2615,9 @@ $('mTabSettings').onclick = () => setMembersTab('settings');
 // '/' jumps to the search box (like many sites). Listens on the document because a click can
 // leave focus on the page body after the list is redrawn.
 document.addEventListener('keydown', e => {
-  if (e.key !== '/' || !$('members').open || mUI.tab !== 'people' || $('ask').open) return;
-  if (e.target.closest?.('input,select,textarea,[contenteditable]')) return;
-  e.preventDefault(); $('mSearch').focus();
+  if (e.key !== '/' || $('ask').open || e.target.closest?.('input,select,textarea,[contenteditable]')) return;
+  const box = $('inboxDlg').open ? 'ibSearch' : $('members').open && mUI.tab === 'people' ? 'mSearch' : null;
+  if (box) { e.preventDefault(); $(box).focus(); }
 });
 $('mBulkGo').onclick = async () => {
   const list = memberMatches().filter(m => m.status === 'pending');
