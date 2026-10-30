@@ -2104,7 +2104,9 @@ $('settingsForm').onsubmit = async e => {
     owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null
   }).eq('id', 1);
   $('setSave').disabled = false;
-  if (error) $('setErr').textContent = errMsg(error); else $('setOk').textContent = 'Saved.';
+  if (error) { $('setErr').textContent = errMsg(error); return; } // stay open so the problem can be fixed
+  $('members').close();
+  toast('Album settings saved.');
 };
 $('membersBtn').onclick = openMembers;
 $('mRefresh').onclick = openMembers;
