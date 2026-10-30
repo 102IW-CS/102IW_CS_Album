@@ -11,7 +11,7 @@ A private photo album for friends and colleagues. People create an account on th
 - What protects the photos is the set of **access rules in the database** (`supabase/setup.sql`). They're enforced on Supabase's servers, so editing the page can't get around them:
   - New accounts start as **pending** and see nothing until an admin approves them.
   - Only approved members can see photos. Files are in a private bucket and open only through short-lived signed links.
-  - People upload only into their own folder. They can delete their own photos; admins can delete any.
+  - People upload only into their own folder. Any approved member can move or delete photos.
   - Who uploaded a photo, and when, is stamped by the server, so it can't be faked.
   - The first account ever created becomes the admin.
 - Passwords are stored and checked by Supabase Auth; the page never sees or stores them.
@@ -28,7 +28,7 @@ A private photo album for friends and colleagues. People create an account on th
 - Any approved member can start an album and add photos to it. Photos added outside an album land in **Unsorted**.
 - **Move to…** (select photos, or from the photo viewer) files photos into an album or creates a new one on the spot.
 - The album's creator or an admin can rename it, set its cover (**Set as cover** in the viewer) or delete it. Deleting an album never deletes photos; they go back to Unsorted.
-- People can move or delete only photos they added; admins can do it for any photo.
+- Any approved member can move or delete any photo, so everyone can help tidy up and free space. Deleting asks first and can't be undone.
 - Each album has its own link (`…/#a-<id>`), so you can send someone straight to it.
 
 ## Everyday use

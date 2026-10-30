@@ -22,12 +22,12 @@
   --radius:10px;--shadow:0 1px 2px rgba(23,22,20,.05),0 10px 30px rgba(23,22,20,.08);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0e0d0b;--surface:#171613;--surface-2:#22201c;--ink:#f0ece4;--muted:#9c968b;--line:#2d2a25;
+  --bg:#1d1c19;--surface:#262420;--surface-2:#312e29;--ink:#f2eee6;--muted:#aaa397;--line:#3d3933;
   --accent:#d6b679;--accent-ink:#1a1408;--accent-soft:#2b2417;--danger:#f0a198;--warn:#e4b55e;--ok:#8ccdaa;
   --scrim:rgba(0,0,0,.6);--shadow:0 1px 0 rgba(255,255,255,.03);color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#0e0d0b;--surface:#171613;--surface-2:#22201c;--ink:#f0ece4;--muted:#9c968b;--line:#2d2a25;
+  --bg:#1d1c19;--surface:#262420;--surface-2:#312e29;--ink:#f2eee6;--muted:#aaa397;--line:#3d3933;
   --accent:#d6b679;--accent-ink:#1a1408;--accent-soft:#2b2417;--danger:#f0a198;--warn:#e4b55e;--ok:#8ccdaa;
   --scrim:rgba(0,0,0,.6);--shadow:0 1px 0 rgba(255,255,255,.03);color-scheme:dark;
 }
@@ -182,7 +182,8 @@ body.dragging #drop{border-color:var(--accent);background:var(--accent-soft)}
 #selbar strong{margin-right:auto;font-size:14px}
 #selbar .btn{background:transparent;border-color:transparent;color:var(--bg)}
 #selbar .btn:hover{background:color-mix(in srgb,var(--bg) 14%,transparent)}
-#selbar .btn.danger{color:color-mix(in srgb,var(--danger) 70%,var(--bg))}
+#selbar .btn.danger{color:color-mix(in srgb,#d8392d 82%,var(--bg))}
+#selbar .btn:disabled{opacity:.35}
 #selbar .btn.done{background:var(--bg);color:var(--ink)}
 
 /* justified photo rows */
@@ -1033,7 +1034,7 @@ function route() {
 
 const albumPhotos = id => state.photos.filter(p => p.albumId === id);
 const canEditAlbum = a => !!a && (a.created_by === uid() || isAdmin());
-const canChange = p => p.uploaderId === uid() || isAdmin(); // move or delete
+const canChange = () => state.profile?.status === 'approved'; // any member can move or delete
 function coverOf(a) {
   const list = albumPhotos(a.id);
   return list.find(p => p.id === a.cover_photo_id) || list[0] || null;
@@ -1408,9 +1409,9 @@ async function runUploads() {
 /* ---------- deleting ---------- */
 async function deletePhotos(list) {
   const mine = list.filter(canChange);
-  if (!mine.length) return toast('You can only delete photos you added.', 'error');
-  const n = mine.length, skipped = list.length - n;
-  const sub = skipped ? `${plural(skipped, 'photo')} added by others will be kept.` : 'This can’t be undone.';
+  if (!mine.length) return;
+  const n = mine.length, others = mine.filter(p => p.uploaderId !== uid()).length;
+  const sub = (others ? `${others === n ? (n === 1 ? 'It was' : 'They were') : `${others} of them were`} added by someone else. ` : '') + 'This removes them for everyone and can’t be undone.';
   if (!(await ask(`Delete ${plural(n, 'photo')} for everyone?`, sub, 'Delete'))) return;
   busy(true); setStatus(`Deleting ${plural(n, 'photo')}…`);
   try {

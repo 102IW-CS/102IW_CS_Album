@@ -112,9 +112,11 @@ create policy "approved can add own" on public.photos
   for insert to authenticated
   with check (private.is_approved() and split_part(path, '/', 1) = auth.uid()::text);
 
+-- Any approved member can delete any photo (for clearing out space).
 drop policy if exists "owner or admin can delete" on public.photos;
-create policy "owner or admin can delete" on public.photos
-  for delete to authenticated using (uploader = auth.uid() or private.is_admin());
+drop policy if exists "approved can delete photos" on public.photos;
+create policy "approved can delete photos" on public.photos
+  for delete to authenticated using (private.is_approved());
 
 -- ============ File storage ============
 -- Private bucket: files are only reachable through short-lived signed links.
@@ -124,8 +126,7 @@ values ('photos', 'photos', false, 52428800,
 on conflict (id) do update
   set public = false, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
--- Everyone approved can view; each person uploads only into their own folder (<user id>/...);
--- people delete their own files, admins can delete any.
+-- Everyone approved can view and delete; each person uploads only into their own folder (<user id>/...).
 drop policy if exists "photos: approved can view" on storage.objects;
 create policy "photos: approved can view" on storage.objects
   for select to authenticated using (bucket_id = 'photos' and private.is_approved());
@@ -136,9 +137,9 @@ create policy "photos: upload to own folder" on storage.objects
   with check (bucket_id = 'photos' and private.is_approved() and (storage.foldername(name))[1] = auth.uid()::text);
 
 drop policy if exists "photos: owner or admin can delete" on storage.objects;
-create policy "photos: owner or admin can delete" on storage.objects
-  for delete to authenticated
-  using (bucket_id = 'photos' and ((storage.foldername(name))[1] = auth.uid()::text or private.is_admin()));
+drop policy if exists "photos: approved can delete" on storage.objects;
+create policy "photos: approved can delete" on storage.objects
+  for delete to authenticated using (bucket_id = 'photos' and private.is_approved());
 
 -- ============ Admin: member list ============
 create or replace function public.admin_list_members()
@@ -234,14 +235,13 @@ create policy "creator or admin can delete albums" on public.albums
 revoke update on public.albums from authenticated, anon;
 grant update (name, description, cover_photo_id) on public.albums to authenticated;
 
--- Moving a photo between albums: the person who added it, or an admin. Nothing else about a photo can change.
+-- Moving a photo between albums: any approved member. Nothing else about a photo can change.
 revoke update on public.photos from authenticated, anon;
 grant update (album_id) on public.photos to authenticated;
 drop policy if exists "owner or admin can move photos" on public.photos;
-create policy "owner or admin can move photos" on public.photos
-  for update to authenticated
-  using (private.is_approved() and (uploader = auth.uid() or private.is_admin()))
-  with check (private.is_approved() and (uploader = auth.uid() or private.is_admin()));
+drop policy if exists "approved can move photos" on public.photos;
+create policy "approved can move photos" on public.photos
+  for update to authenticated using (private.is_approved()) with check (private.is_approved());
 
 revoke execute on function public.stamp_album() from public, anon, authenticated; -- trigger only
 
