@@ -175,11 +175,111 @@ update public.profiles set status = 'approved', is_admin = true
 where id = (select u.id from auth.users u join public.profiles p on p.id = u.id order by u.created_at limit 1)
   and not exists (select 1 from public.profiles where is_admin);
 
--- ============ Live updates ============
--- Lets open pages hear about new or deleted photos right away.
+-- ============ Albums ============
+-- Any approved member can create an album. The creator or an admin can rename or delete it.
+-- Deleting an album never deletes photos: they move to "Unsorted".
+create table if not exists public.albums (
+  id              uuid primary key default gen_random_uuid(),
+  name            text not null check (char_length(trim(name)) between 1 and 80),
+  description     text check (char_length(description) <= 300),
+  cover_photo_id  uuid,
+  created_by      uuid references public.profiles (id) on delete set null default auth.uid(),
+  created_by_name text,
+  created_at      timestamptz not null default now()
+);
+alter table public.albums enable row level security;
+
+alter table public.photos add column if not exists album_id uuid references public.albums (id) on delete set null;
+create index if not exists photos_album_idx on public.photos (album_id, created_at desc);
+
 do $$ begin
-  if not exists (select 1 from pg_publication_tables
-                 where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'photos') then
-    alter publication supabase_realtime add table public.photos;
+  if not exists (select 1 from pg_constraint where conname = 'albums_cover_photo_fk') then
+    alter table public.albums add constraint albums_cover_photo_fk
+      foreign key (cover_photo_id) references public.photos (id) on delete set null;
   end if;
+end $$;
+
+create or replace function public.stamp_album()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.created_by := auth.uid();
+  new.created_by_name := (select display_name from public.profiles where id = auth.uid());
+  new.created_at := now();
+  return new;
+end $$;
+drop trigger if exists stamp_album on public.albums;
+create trigger stamp_album before insert on public.albums
+  for each row execute function public.stamp_album();
+
+drop policy if exists "approved can view albums" on public.albums;
+create policy "approved can view albums" on public.albums
+  for select to authenticated using (private.is_approved());
+
+drop policy if exists "approved can create albums" on public.albums;
+create policy "approved can create albums" on public.albums
+  for insert to authenticated with check (private.is_approved());
+
+drop policy if exists "creator or admin can edit albums" on public.albums;
+create policy "creator or admin can edit albums" on public.albums
+  for update to authenticated
+  using (private.is_approved() and (created_by = auth.uid() or private.is_admin()))
+  with check (private.is_approved() and (created_by = auth.uid() or private.is_admin()));
+
+drop policy if exists "creator or admin can delete albums" on public.albums;
+create policy "creator or admin can delete albums" on public.albums
+  for delete to authenticated
+  using (private.is_approved() and (created_by = auth.uid() or private.is_admin()));
+
+-- Only these columns can be changed from the site; who created it and when stay fixed.
+revoke update on public.albums from authenticated, anon;
+grant update (name, description, cover_photo_id) on public.albums to authenticated;
+
+-- Moving a photo between albums: the person who added it, or an admin. Nothing else about a photo can change.
+revoke update on public.photos from authenticated, anon;
+grant update (album_id) on public.photos to authenticated;
+drop policy if exists "owner or admin can move photos" on public.photos;
+create policy "owner or admin can move photos" on public.photos
+  for update to authenticated
+  using (private.is_approved() and (uploader = auth.uid() or private.is_admin()))
+  with check (private.is_approved() and (uploader = auth.uid() or private.is_admin()));
+
+revoke execute on function public.stamp_album() from public, anon, authenticated; -- trigger only
+
+-- ============ Album settings ============
+-- One row: the album owner's name and how people can reach them.
+-- Signed-in people (including those waiting for approval) can read it; only admins can change it.
+-- The actual name/phone/email are entered in the site's Album settings, not in this public file.
+create table if not exists public.album_settings (
+  id            int primary key default 1 check (id = 1),
+  owner_name    text check (char_length(owner_name) <= 80),
+  contact_phone text check (char_length(contact_phone) <= 40),
+  contact_email text check (char_length(contact_email) <= 120),
+  updated_at    timestamptz not null default now()
+);
+alter table public.album_settings enable row level security;
+insert into public.album_settings (id) values (1) on conflict (id) do nothing;
+
+drop policy if exists "signed-in can read settings" on public.album_settings;
+create policy "signed-in can read settings" on public.album_settings
+  for select to authenticated using (true);
+
+drop policy if exists "admin can edit settings" on public.album_settings;
+create policy "admin can edit settings" on public.album_settings
+  for update to authenticated using (private.is_admin()) with check (private.is_admin());
+
+revoke insert, update, delete on public.album_settings from authenticated, anon;
+revoke select on public.album_settings from anon;
+grant update (owner_name, contact_phone, contact_email) on public.album_settings to authenticated;
+
+-- ============ Live updates ============
+-- Lets open pages hear about new, moved or deleted photos and albums right away.
+do $$
+declare t text;
+begin
+  foreach t in array array['photos', 'albums'] loop
+    if not exists (select 1 from pg_publication_tables
+                   where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
 end $$;

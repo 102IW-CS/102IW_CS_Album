@@ -5,261 +5,437 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
 <title>Photo Share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* Gallery wall: photos run edge to edge in justified rows; type is set like exhibition labels
+   (serif titles, small mono captions with real photo data). */
 :root{
-  --bg:#f6f5f2;--surface:#fff;--surface-2:#efede8;--text:#1d1c1a;--muted:#6b6862;--line:#dedbd4;
-  --accent:#2f6f5e;--accent-text:#fff;--accent-soft:#e3efe9;--danger:#b3261e;--warn:#9a6200;
-  --radius:12px;--shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.06);
+  --bg:#f4f2ee;--surface:#fffefc;--surface-2:#e9e6df;--ink:#171614;--muted:#6c675f;--line:#dbd6cd;
+  --accent:#86652a;--accent-ink:#fffaf0;--accent-soft:#efe5d0;--danger:#b1281f;--warn:#93600b;--ok:#2d6b4b;
+  --scrim:rgba(12,11,10,.55);
+  --display:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --radius:10px;--shadow:0 1px 2px rgba(23,22,20,.05),0 10px 30px rgba(23,22,20,.08);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#141413;--surface:#1e1d1b;--surface-2:#282723;--text:#ecebe7;--muted:#a19e97;--line:#36342f;
-  --accent:#6fbfa6;--accent-text:#0e1f1a;--accent-soft:#1d322b;--danger:#f2a7a1;--warn:#e8b35a;--shadow:none;color-scheme:dark;
+  --bg:#0e0d0b;--surface:#171613;--surface-2:#22201c;--ink:#f0ece4;--muted:#9c968b;--line:#2d2a25;
+  --accent:#d6b679;--accent-ink:#1a1408;--accent-soft:#2b2417;--danger:#f0a198;--warn:#e4b55e;--ok:#8ccdaa;
+  --scrim:rgba(0,0,0,.6);--shadow:0 1px 0 rgba(255,255,255,.03);color-scheme:dark;
 }}
 :root[data-theme="dark"]{
-  --bg:#141413;--surface:#1e1d1b;--surface-2:#282723;--text:#ecebe7;--muted:#a19e97;--line:#36342f;
-  --accent:#6fbfa6;--accent-text:#0e1f1a;--accent-soft:#1d322b;--danger:#f2a7a1;--warn:#e8b35a;--shadow:none;color-scheme:dark;
+  --bg:#0e0d0b;--surface:#171613;--surface-2:#22201c;--ink:#f0ece4;--muted:#9c968b;--line:#2d2a25;
+  --accent:#d6b679;--accent-ink:#1a1408;--accent-soft:#2b2417;--danger:#f0a198;--warn:#e4b55e;--ok:#8ccdaa;
+  --scrim:rgba(0,0,0,.6);--shadow:0 1px 0 rgba(255,255,255,.03);color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
-button,input,select{font:inherit;color:inherit}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--ui);min-height:100vh;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-a{color:var(--accent);font-weight:600}
+a{color:var(--accent)}
 [hidden]{display:none!important}
-.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;line-height:1.08;text-wrap:balance;margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+@media (max-width:560px){.wrap{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}}
+.eyebrow,.meta-line{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* ---------- header ---------- */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-header .wrap{display:flex;align-items:center;gap:12px;height:56px}
-.brand{font-weight:700;font-size:17px;letter-spacing:-.01em;margin-right:auto;display:flex;align-items:center;gap:8px}
-.brand small{font-weight:400;color:var(--muted);font-size:13px}
-.me{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
-.me img{width:26px;height:26px;border-radius:50%}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:var(--ink)}
+.brand svg{width:26px;height:26px;color:var(--accent);flex:none}
+.brand span{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.01em}
+.who{font-size:13px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.who{display:none}.brand span{font-size:21px}}
 
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+/* ---------- buttons & fields ---------- */
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
 .btn:hover{border-color:var(--muted)}
-.btn:disabled{opacity:.5;cursor:default}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:600}
-.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.primary:hover{background:color-mix(in srgb,var(--ink) 85%,var(--accent))}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:transparent;border-color:transparent}
 .btn.ghost:hover{background:var(--surface-2)}
-
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
-#auth,#pending{max-width:440px;margin:40px auto;padding:28px}
-#auth h1,#pending h1{margin:0 0 6px;font-size:22px;letter-spacing:-.01em;text-wrap:balance}
-.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px;margin:0 0 20px}
-.tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:7px 10px;font-weight:600;color:var(--muted)}
-.tabs button[aria-selected=true]{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
-form.stack{display:grid;gap:14px}
-form.stack .row{justify-content:space-between}
-.linkish{border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:14px}
-.ok{color:var(--accent);font-size:14px;margin:0}
-.lead{color:var(--muted);margin:0 0 20px}
-label.field{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
-input[type=password],input[type=search],input[type=email],input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
-.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn.danger{color:var(--danger)}
+.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:var(--surface)}
+.btn.icon{padding:8px 10px}
+.btn svg{width:16px;height:16px;flex:none}
+.linkish{border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.badge{background:var(--danger);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:0 6px;min-width:18px;line-height:18px;text-align:center}
+label.field{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+input[type=text],input[type=email],input[type=password],input[type=search],input[type=tel],textarea,select{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:70px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
 .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .err{color:var(--danger);font-size:14px;margin:0}
+.ok{color:var(--ok);font-size:14px;margin:0}
 .err:empty,.ok:empty{display:none}
-details{margin-top:20px;font-size:14px;color:var(--muted)}
-details summary{cursor:pointer;color:var(--text)}
-details ol{padding-left:20px;margin:10px 0 0}
-code{background:var(--surface-2);padding:1px 5px;border-radius:5px;font-size:13px}
 
-#app{padding:20px 0 60px}
-#drop{border:2px dashed var(--line);border-radius:var(--radius);padding:22px;text-align:center;background:var(--surface);transition:.15s}
+/* password field with show/hide */
+.pw{position:relative}
+.pw input{padding-right:46px}
+.pw .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);width:38px;height:38px;border-radius:6px;display:grid;place-items:center}
+.pw .eye:hover{color:var(--ink);background:var(--surface-2)}
+.pw .eye svg{width:20px;height:20px}
+.rules{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12.5px;color:var(--muted)}
+@media (max-width:420px){.rules{grid-template-columns:1fr}}
+.rules li{display:flex;align-items:center;gap:6px}
+.rules li::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);flex:none;box-sizing:border-box}
+.rules li.met{color:var(--ok)}
+.rules li.met::before{border-color:var(--ok);background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E") center/12px no-repeat}
+.rules.show-missing li:not(.met){color:var(--danger)}
+
+/* ---------- sign in ---------- */
+#auth{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center;min-height:calc(100vh - 62px);padding-block:40px}
+@media (max-width:860px){#auth{grid-template-columns:1fr;gap:28px;min-height:0;padding-block:28px}}
+.intro h1{font-size:clamp(46px,7vw,92px);font-weight:500;margin:14px 0 18px}
+.intro h1 em{font-style:italic;color:var(--accent)}
+.intro p{max-width:46ch;color:var(--muted);font-size:16px;margin:0}
+.frames{display:flex;gap:10px;margin-top:34px}
+.frames span{flex:1;max-width:120px;aspect-ratio:3/4;border-radius:4px;border:1px solid var(--line);background:linear-gradient(160deg,var(--surface-2),var(--surface));position:relative;overflow:hidden}
+.frames span:nth-child(2){aspect-ratio:4/5;margin-top:22px}
+.frames span:nth-child(3){aspect-ratio:1}
+.frames span::after{content:"";position:absolute;inset:auto 0 0;height:55%;background:linear-gradient(transparent,color-mix(in srgb,var(--accent) 22%,transparent))}
+@media (max-width:860px){.intro h1{font-size:52px;margin:10px 0 12px}.frames{display:none}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:30px;box-shadow:var(--shadow)}
+@media (max-width:560px){.panel{padding:22px}}
+.panel h2{font-size:30px;margin-bottom:4px}
+.panel .lead{color:var(--muted);margin:0 0 22px;font-size:14px}
+.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px;margin:0 0 22px}
+.tabs button{flex:1;border:0;background:transparent;border-radius:999px;padding:8px 10px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+form.stack{display:grid;gap:16px}
+.split{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* ---------- waiting for approval ---------- */
+#pending{max-width:560px;margin:56px auto}
+#pending h2{font-size:40px;margin:10px 0 10px}
+#pending .lead{font-size:16px;color:var(--muted);margin:0 0 24px}
+.contact{border-top:1px solid var(--line);margin-top:24px;padding-top:20px}
+.contact h3{font-family:var(--ui);font-size:14px;font-weight:700;margin-bottom:4px}
+.contact p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.contact-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;margin-top:8px;background:var(--bg)}
+.contact-row svg{width:18px;height:18px;color:var(--accent);flex:none}
+.contact-row a{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--ink);font-weight:600;text-decoration:none;user-select:all}
+.contact-row a:hover{text-decoration:underline}
+
+/* ---------- album index ---------- */
+#app{padding-block:28px 80px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 26px}
+.page-head h1{font-size:clamp(40px,6vw,64px)}
+.page-head .desc{color:var(--muted);max-width:60ch;margin:8px 0 0}
+.page-head .meta-line{margin-top:10px}
+.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.back:hover{color:var(--ink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#albumGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:28px 22px}
+@media (max-width:560px){#albumGrid{grid-template-columns:1fr 1fr;gap:20px 12px}}
+.album{display:block;text-decoration:none;color:inherit;min-width:0}
+.album .cover{position:relative;aspect-ratio:4/3;max-width:100%;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.album .cover img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s,transform .5s}
+.album .cover img.loaded{opacity:1}
+.album:hover .cover img{transform:scale(1.03)}
+.album .cover .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted)}
+.album .cover .ph svg{width:34px;height:34px;opacity:.6}
+.album .cover .stack{position:absolute;inset:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 8%,transparent);border-radius:6px;pointer-events:none}
+.album h3{font-size:24px;margin:12px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.album h3{font-size:19px}}
+.album .meta-line{font-size:11px}
+.album.special h3{font-style:italic}
+.album.new .cover{display:grid;place-items:center;border:1.5px dashed var(--line);background:transparent;color:var(--muted)}
+.album.new:hover .cover{border-color:var(--accent);color:var(--accent)}
+.album.new .cover span{display:grid;justify-items:center;gap:6px;font-weight:600;font-size:14px}
+.album.new svg{width:28px;height:28px}
+
+/* ---------- album page ---------- */
+#drop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1.5px dashed var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px;transition:.15s}
+#drop p{margin:0;flex:1;min-width:200px;color:var(--muted);font-size:14px}
 body.dragging #drop{border-color:var(--accent);background:var(--accent-soft)}
-#drop p{margin:0 0 12px;color:var(--muted)}
-#drop .row{justify-content:center}
-.hint{font-size:13px;color:var(--muted)}
-
-#queue{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
-#queue li{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px}
+#queue{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}
+#queue li{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
 #queue .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#queue .qs{color:var(--muted);white-space:nowrap}
+#queue .qs{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12px}
 #queue li.work .qs{color:var(--accent)}
-#queue li.done .qs{color:var(--accent);font-weight:600}
+#queue li.done .qs{color:var(--ok)}
 #queue li.fail .qs{color:var(--danger);white-space:normal;text-align:right}
-#queueBar{margin-top:6px;text-align:right}
+#queueBar{text-align:right;margin-bottom:10px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 16px}
+.toolbar .search{flex:1;min-width:180px;max-width:360px}
+.toolbar select{width:auto}
+.toolbar .spacer{flex:1}
+.meter{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.meter .bar{width:80px;height:4px;border-radius:2px;background:var(--surface-2);overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--accent)}
+.meter.warn .bar i{background:var(--warn)}
+#selbar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);z-index:5;display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--ink);color:var(--bg);border-radius:999px;padding:6px 6px 6px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+#selbar strong{margin-right:auto;font-size:14px}
+#selbar .btn{background:transparent;border-color:transparent;color:var(--bg)}
+#selbar .btn:hover{background:color-mix(in srgb,var(--bg) 14%,transparent)}
+#selbar .btn.danger{color:color-mix(in srgb,var(--danger) 70%,var(--bg))}
+#selbar .btn.done{background:var(--bg);color:var(--ink)}
 
-.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:22px 0 14px}
-.toolbar .search{flex:1;min-width:180px}
-select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
-.meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:12px}
-.meter{display:flex;align-items:center;gap:8px}
-.meter span.bar{width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
-.meter span.bar i{display:block;height:100%;background:var(--accent)}
-.meter.warn span.bar i{background:var(--warn)}
-
-@media (max-width:520px){.brand small,#meName{display:none}.brand{font-size:16px}header .wrap{gap:6px}}
-#selbar{position:sticky;top:64px;z-index:4;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
-#selbar strong{margin-right:auto}
-
-#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-@media (max-width:520px){#grid{grid-template-columns:repeat(2,1fr);gap:8px}}
-.tile{margin:0;position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-.tile .thumb{display:block;width:100%;aspect-ratio:1;border:0;padding:0;background:var(--surface-2);position:relative}
-.tile img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .25s}
+/* justified photo rows */
+#grid{display:flex;flex-direction:column;gap:var(--gap,8px)}
+.jrow{display:flex;gap:var(--gap,8px)}
+.tile{position:relative;flex:none;border:0;padding:0;margin:0;background:var(--surface-2);overflow:hidden;border-radius:3px;max-width:100%}
+.tile img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s,transform .5s}
 .tile img.loaded{opacity:1}
-.tile .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase}
-.tile figcaption{padding:8px 10px;font-size:13px;line-height:1.35}
-.tile figcaption b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tile figcaption span{color:var(--muted)}
-.tile .tick{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);display:none;place-items:center;color:#fff;font-size:14px;font-weight:700}
+.tile:hover img{transform:scale(1.025)}
+.tile .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--mono);font-size:12px;text-transform:uppercase}
+.tile .cap{position:absolute;inset:auto 0 0;padding:28px 10px 8px;background:linear-gradient(transparent,rgba(0,0,0,.66));color:#fff;text-align:left;opacity:0;transition:opacity .2s;pointer-events:none}
+.tile .cap b{display:block;font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .cap span{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;opacity:.85}
+.tile:hover .cap,.tile:focus-visible .cap{opacity:1}
+@media (hover:none){.tile .cap{display:none}}
+.tile .tick{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.28);display:none;place-items:center;color:#fff;font-size:13px;font-weight:700}
 body.selecting .tile .tick{display:grid}
 .tile.selected{outline:3px solid var(--accent);outline-offset:-3px}
-.tile.selected .tick{background:var(--accent);border-color:var(--accent)}
-#empty{text-align:center;color:var(--muted);padding:48px 0}
+.tile.selected img{transform:scale(.94)}
+.tile.selected .tick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+#empty{text-align:center;color:var(--muted);padding:70px 0}
+#empty h3{font-size:30px;color:var(--ink);margin-bottom:6px}
 
-#viewer{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#0d0d0c;color:#eee}
-#viewer::backdrop{background:#0d0d0c}
-#viewer[open]{display:flex;flex-direction:column}
-.v-top{display:flex;align-items:center;gap:10px;padding:10px 16px}
-.v-title{flex:1;min-width:0}
-.v-title strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.v-title small{color:#a8a59f}
-#viewer .btn{background:#262523;border-color:#3a3935;color:#eee}
-#viewer .btn.danger{color:#f2a7a1}
-.v-stage{flex:1;position:relative;display:grid;place-items:center;min-height:0;padding:0 8px 16px}
-#vImg{max-width:100%;max-height:100%;object-fit:contain;user-select:none}
-#vMsg{position:absolute;color:#a8a59f;font-size:14px}
-.v-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:24px;line-height:1}
-.v-nav:hover{background:rgba(255,255,255,.22)}
-#vPrev{left:12px}#vNext{right:12px}
-
-#members{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:0;width:min(94vw,560px);max-height:85vh;box-shadow:var(--shadow)}
-#members::backdrop{background:rgba(0,0,0,.45)}
-#members[open]{display:flex;flex-direction:column}
-.m-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
-.m-head h2{margin:0;font-size:17px;margin-right:auto}
-#memberList{list-style:none;margin:0;padding:6px 16px 16px;overflow:auto}
+/* ---------- dialogs ---------- */
+dialog.sheet{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(94vw,520px);max-height:88vh;box-shadow:var(--shadow)}
+dialog.sheet::backdrop{background:var(--scrim);backdrop-filter:blur(2px)}
+dialog.sheet[open]{display:flex;flex-direction:column}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:18px 20px 12px}
+.sheet-head h2{font-size:28px;margin-right:auto}
+.sheet-body{padding:4px 20px 20px;overflow:auto;display:grid;gap:14px}
+.sheet-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+#ask{width:min(92vw,420px)}
+#ask p{margin:0;font-weight:700;font-size:16px}
+#ask small{color:var(--muted);font-size:14px}
+.section-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 -4px}
+#memberList{list-style:none;margin:0;padding:0}
 #memberList li{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
 #memberList li:last-child{border-bottom:0}
-.m-who{flex:1;min-width:0}
+.m-who{flex:1;min-width:140px}
 .m-who b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m-who small{color:var(--muted);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chip{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;background:var(--surface-2);color:var(--muted)}
-.chip.pending{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
-.chip.approved{background:var(--accent-soft);color:var(--accent)}
-.chip.blocked{background:color-mix(in srgb,var(--danger) 15%,transparent);color:var(--danger)}
-.badge{background:var(--danger);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:0 6px;min-width:18px;text-align:center}
-#ask{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:22px;max-width:min(92vw,400px);box-shadow:var(--shadow)}
-#ask::backdrop{background:rgba(0,0,0,.45)}
-#ask p{margin:0 0 6px;font-weight:600}
-#ask small{display:block;color:var(--muted);margin-bottom:18px}
-#ask .row{justify-content:flex-end}
-.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:var(--surface);font-weight:600}
-#toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;gap:8px;z-index:20;width:min(92vw,440px)}
-.toast{background:var(--text);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:14px;box-shadow:var(--shadow)}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:2px 9px;background:var(--surface-2);color:var(--muted)}
+.chip.pending{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.chip.approved{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.chip.blocked{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.chip.admin{background:var(--accent-soft);color:var(--accent)}
+#moveList{display:grid;gap:6px}
+#moveList label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+#moveList label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+#moveList input{accent-color:var(--accent)}
+
+/* viewer */
+#viewer{width:100vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#0b0a09;color:#eee8dc}
+#viewer::backdrop{background:#0b0a09}
+#viewer[open]{display:flex;flex-direction:column}
+.v-top{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px))}
+.v-title{flex:1;min-width:0}
+.v-title strong{display:block;font-family:var(--display);font-size:24px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#viewer .btn{background:#1d1b18;border-color:#33302b;color:#eee8dc}
+#viewer .btn:hover{border-color:#6d675d}
+#viewer .btn.danger{color:#f0a198}
+.v-stage{flex:1;position:relative;min-height:0;overflow:hidden;display:grid;place-items:center}
+#vImg{position:absolute;inset:0;margin:auto;max-width:calc(100% - 16px);max-height:100%;object-fit:contain;user-select:none}
+#vMsg{position:relative;color:#a8a296;font-size:14px}
+.v-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:26px;line-height:1}
+.v-nav:hover{background:rgba(255,255,255,.2)}
+#vPrev{left:max(12px,env(safe-area-inset-left,0px))}#vNext{right:max(12px,env(safe-area-inset-right,0px))}
+.v-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#vExif{flex:1;min-width:200px;font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;color:#a8a296;text-transform:uppercase}
+#vExif b{color:#eee8dc;font-weight:500}
+
+#toasts{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:grid;gap:8px;z-index:30;width:min(92vw,440px)}
+.toast{background:var(--ink);color:var(--bg);padding:11px 15px;border-radius:10px;font-size:14px;box-shadow:var(--shadow)}
 .toast.error{background:var(--danger);color:#fff}
-#status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted);z-index:15}
+#status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-family:var(--mono);font-size:12px;color:var(--muted);z-index:25}
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <div class="brand">📷 Photo Share</div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-aperture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M14.3 2.3 8.5 12.4M21.7 9.6H10M17.7 19.7 11.9 9.6M9.7 21.7l5.8-10.1M2.3 14.4H14M6.3 4.3l5.8 10.1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7c1.8 0 3.3-.5 4.6-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13M6 10l6 6 6-6M4 21h16"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
+</svg>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="#albums" aria-label="Photo Share, all albums"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost" id="membersBtn" hidden>Members <span class="badge" id="pendingBadge" hidden></span></button>
-  <span class="me" id="me" hidden><span id="meName"></span></span>
+  <span class="who" id="meName" hidden></span>
   <button class="btn ghost" id="signOutBtn" hidden>Sign out</button>
 </div></header>
 
 <main class="wrap">
-  <p id="booting" class="hint" style="text-align:center;margin-top:60px">Loading…</p>
+  <p id="booting" class="hint" style="text-align:center;margin-top:80px">Loading…</p>
 
-  <!-- Sign in / create account / reset password -->
-  <section id="auth" class="card" hidden>
-    <h1 id="authTitle">Welcome to the album</h1>
-    <p class="lead" id="authLead">Sign in to see and share photos.</p>
-    <div class="tabs" role="tablist" id="tabs">
-      <button type="button" role="tab" id="tabIn" aria-selected="true">Sign in</button>
-      <button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button>
+  <!-- ===== Sign in / create account / reset ===== -->
+  <section id="auth" hidden>
+    <div class="intro">
+      <div class="eyebrow">Private album · members only</div>
+      <h1>Photo <em>Share</em></h1>
+      <p>A private collection for friends and colleagues. Every account is approved by the album owner before it can see a single frame.</p>
+      <div class="frames" aria-hidden="true"><span></span><span></span><span></span></div>
     </div>
 
-    <form id="inForm" class="stack" novalidate>
-      <div><label class="field" for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="email" required></div>
-      <div><label class="field" for="inPass">Password</label><input id="inPass" type="password" autocomplete="current-password" required></div>
-      <div class="row">
-        <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in</label>
-        <button class="btn primary" id="inBtn">Sign in</button>
+    <div class="panel">
+      <h2 id="authTitle">Welcome back</h2>
+      <p class="lead" id="authLead">Sign in to see and share photos.</p>
+      <div class="tabs" role="tablist" id="tabs">
+        <button type="button" role="tab" id="tabIn" aria-selected="true">Sign in</button>
+        <button type="button" role="tab" id="tabUp" aria-selected="false">Create account</button>
       </div>
-      <p class="err" id="inErr" role="alert"></p>
-      <button type="button" class="linkish" id="forgotBtn" style="justify-self:start">Forgot password?</button>
-    </form>
 
-    <form id="upForm" class="stack" novalidate hidden>
-      <div><label class="field" for="upName">Your name</label><input id="upName" type="text" autocomplete="name" maxlength="60" required placeholder="Shown next to the photos you add"></div>
-      <div><label class="field" for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="email" required></div>
-      <div><label class="field" for="upPass">Password</label><input id="upPass" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"></div>
-      <p class="hint" style="margin:0">The album owner approves new accounts before they can see photos.</p>
-      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="upBtn">Create account</button></div>
-      <p class="err" id="upErr" role="alert"></p>
-      <p class="ok" id="upOk" role="status"></p>
-    </form>
+      <form id="inForm" class="stack" novalidate>
+        <div><label class="field" for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="email" required></div>
+        <div><label class="field" for="inPass">Password</label><input id="inPass" type="password" autocomplete="current-password" required></div>
+        <div class="split">
+          <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in</label>
+          <button class="btn primary" id="inBtn">Sign in</button>
+        </div>
+        <p class="err" id="inErr" role="alert"></p>
+        <button type="button" class="linkish" id="forgotBtn" style="justify-self:start">Forgot password?</button>
+      </form>
 
-    <form id="forgotForm" class="stack" novalidate hidden>
-      <div><label class="field" for="fgEmail">Email</label><input id="fgEmail" type="email" autocomplete="email" required></div>
-      <div class="row"><button type="button" class="linkish" id="backToIn">Back to sign in</button><button class="btn primary" id="fgBtn">Send reset link</button></div>
-      <p class="err" id="fgErr" role="alert"></p>
-      <p class="ok" id="fgOk" role="status"></p>
-    </form>
+      <form id="upForm" class="stack" novalidate hidden>
+        <div><label class="field" for="upName">Your name</label><input id="upName" type="text" autocomplete="name" maxlength="60" required placeholder="Shown next to the photos you add"></div>
+        <div><label class="field" for="upEmail">Email</label><input id="upEmail" type="email" autocomplete="email" required></div>
+        <div>
+          <label class="field" for="upPass">Password</label><input id="upPass" type="password" autocomplete="new-password" required>
+          <ul class="rules" id="upRules" aria-live="polite"></ul>
+        </div>
+        <div>
+          <label class="field" for="upPass2">Retype password</label><input id="upPass2" type="password" autocomplete="new-password" required>
+          <ul class="rules" id="upMatch" aria-live="polite"><li data-rule="match">Passwords match</li></ul>
+        </div>
+        <p class="hint" style="margin:0">The album owner approves new accounts before they can see photos.</p>
+        <div class="split" style="justify-content:flex-end"><button class="btn primary" id="upBtn">Create account</button></div>
+        <p class="err" id="upErr" role="alert"></p>
+        <p class="ok" id="upOk" role="status"></p>
+      </form>
 
-    <form id="resetForm" class="stack" novalidate hidden>
-      <div><label class="field" for="newPass">New password</label><input id="newPass" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters"></div>
-      <div class="row" style="justify-content:flex-end"><button class="btn primary" id="resetBtn">Save new password</button></div>
-      <p class="err" id="resetErr" role="alert"></p>
-    </form>
+      <form id="forgotForm" class="stack" novalidate hidden>
+        <div><label class="field" for="fgEmail">Email</label><input id="fgEmail" type="email" autocomplete="email" required></div>
+        <div class="split"><button type="button" class="linkish" id="backToIn">Back to sign in</button><button class="btn primary" id="fgBtn">Send reset link</button></div>
+        <p class="err" id="fgErr" role="alert"></p>
+        <p class="ok" id="fgOk" role="status"></p>
+      </form>
+
+      <form id="resetForm" class="stack" novalidate hidden>
+        <div>
+          <label class="field" for="newPass">New password</label><input id="newPass" type="password" autocomplete="new-password" required>
+          <ul class="rules" id="resetRules" aria-live="polite"></ul>
+        </div>
+        <div>
+          <label class="field" for="newPass2">Retype new password</label><input id="newPass2" type="password" autocomplete="new-password" required>
+          <ul class="rules" id="resetMatch" aria-live="polite"><li data-rule="match">Passwords match</li></ul>
+        </div>
+        <button class="btn primary" id="resetBtn">Save new password</button>
+        <p class="err" id="resetErr" role="alert"></p>
+        <div class="split" style="border-top:1px solid var(--line);padding-top:14px">
+          <button type="button" class="linkish" id="resetBack">Back to sign in</button>
+          <button type="button" class="btn" id="resetSkip">I remember it, sign me in</button>
+        </div>
+      </form>
+    </div>
   </section>
 
-  <!-- Signed in but not approved yet -->
-  <section id="pending" class="card" hidden>
-    <h1 id="pendingTitle">Almost in</h1>
+  <!-- ===== Waiting for approval ===== -->
+  <section id="pending" class="panel" hidden>
+    <div class="eyebrow" id="pendingEyebrow">Account pending</div>
+    <h2 id="pendingTitle">Almost in</h2>
     <p class="lead" id="pendingText"></p>
     <div class="row"><button class="btn primary" id="recheckBtn">Check again</button><button class="btn ghost" id="pendingOut">Sign out</button></div>
+    <div class="contact" id="contactBox" hidden>
+      <h3 id="contactTitle">Contact the album owner</h3>
+      <p>If it's been a while, they may have missed the request. Reach out directly:</p>
+      <div class="contact-row" id="phoneRow"><svg><use href="#i-phone"/></svg><a id="phoneLink"></a><button type="button" class="btn ghost" data-copy="phoneLink">Copy</button></div>
+      <div class="contact-row" id="emailRow"><svg><use href="#i-mail"/></svg><a id="emailLink"></a><button type="button" class="btn ghost" data-copy="emailLink">Copy</button></div>
+    </div>
   </section>
 
-  <!-- The album -->
+  <!-- ===== The album ===== -->
   <section id="app" hidden>
-    <div id="drop">
-      <p>Drop photos anywhere on this page, paste them, or</p>
-      <div class="row">
-        <button class="btn primary" id="pickBtn">Choose photos</button>
+    <!-- index of albums -->
+    <div id="indexView" hidden>
+      <div class="page-head">
+        <div>
+          <div class="eyebrow">The collection</div>
+          <h1>Albums</h1>
+          <div class="meta-line" id="indexMeta"></div>
+        </div>
+        <div class="actions">
+          <span class="meter" id="meter" title="Free plan storage used"><span id="meterTxt"></span><span class="bar"><i id="meterBar"></i></span></span>
+          <button class="btn accent" id="newAlbumBtn"><svg><use href="#i-plus"/></svg>New album</button>
+        </div>
+      </div>
+      <div id="albumGrid"></div>
+    </div>
+
+    <!-- one album (or All photos / Unsorted) -->
+    <div id="albumView" hidden>
+      <div class="page-head">
+        <div style="min-width:0">
+          <a class="back" href="#albums">← All albums</a>
+          <h1 id="albumTitle" style="margin-top:10px"></h1>
+          <p class="desc" id="albumDesc"></p>
+          <div class="meta-line" id="albumMeta"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="editAlbumBtn" hidden>Rename</button>
+          <button class="btn danger" id="deleteAlbumBtn" hidden>Delete album</button>
+        </div>
+      </div>
+
+      <div id="drop">
+        <p id="dropText">Drop photos here, paste them, or</p>
+        <button class="btn primary" id="pickBtn"><svg><use href="#i-plus"/></svg>Add photos</button>
         <input type="file" id="fileInput" accept="image/*,.heic,.heif" multiple hidden>
+        <label class="check" title="Resizes and re-saves as JPEG, which also removes hidden location (GPS) data. GIFs are never changed." style="width:100%"><input type="checkbox" id="optimize" checked><span>Optimize (max <span id="maxDimLbl"></span>px, removes location data)</span></label>
       </div>
-      <div class="row" style="justify-content:center;margin-top:12px">
-        <label class="check" title="Resizes and re-saves as JPEG, which also removes hidden location (GPS) data. GIFs are never changed."><input type="checkbox" id="optimize" checked><span>Optimize photos (max <span id="maxDimLbl"></span>px, removes location data)</span></label>
+      <ul id="queue" aria-live="polite"></ul>
+      <div id="queueBar" hidden><button class="btn ghost" id="clearQueue">Clear finished</button></div>
+
+      <div class="toolbar">
+        <input class="search" type="search" id="search" placeholder="Search by name or person" aria-label="Search photos">
+        <select id="sort" aria-label="Sort order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+        <span class="spacer"></span>
+        <button class="btn" id="selectBtn">Select</button>
+        <button class="btn" id="dlAllBtn"><svg><use href="#i-down"/></svg><span id="dlAllLbl">Download album</span></button>
+        <button class="btn ghost icon" id="refreshBtn" title="Refresh" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button>
       </div>
-    </div>
-    <ul id="queue" aria-live="polite"></ul>
-    <div id="queueBar" hidden><button class="btn ghost" id="clearQueue">Clear finished</button></div>
 
-    <div class="toolbar">
-      <input class="search" type="search" id="search" placeholder="Search by file name or person" aria-label="Search photos">
-      <select id="sort" aria-label="Sort order"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
-      <button class="btn" id="selectBtn">Select</button>
-      <button class="btn" id="dlAllBtn">Download all</button>
-      <button class="btn ghost" id="refreshBtn" title="Refresh" aria-label="Refresh">⟳</button>
-    </div>
-    <div class="meta"><span id="count"></span><span class="meter" id="meter" title="Free plan storage"><span id="meterTxt"></span><span class="bar"><i id="meterBar"></i></span></span></div>
+      <div id="selbar" hidden>
+        <strong id="selCount">0 selected</strong>
+        <button class="btn" id="selAll">Select all</button>
+        <button class="btn" id="selMove">Move to…</button>
+        <button class="btn" id="selDl">Download</button>
+        <button class="btn danger" id="selDel">Delete</button>
+        <button class="btn done" id="selDone">Done</button>
+      </div>
 
-    <div id="selbar" hidden>
-      <strong id="selCount">0 selected</strong>
-      <button class="btn ghost" id="selAll">Select all</button>
-      <button class="btn" id="selDl">Download</button>
-      <button class="btn danger" id="selDel">Delete</button>
-      <button class="btn primary" id="selDone">Done</button>
+      <div id="grid"></div>
+      <div id="empty" hidden><h3 id="emptyTitle"></h3><p id="emptyText"></p></div>
     </div>
-
-    <div id="grid"></div>
-    <p id="empty" hidden></p>
   </section>
 </main>
 
 <dialog id="viewer" aria-label="Photo viewer">
   <div class="v-top">
-    <div class="v-title"><strong id="vName"></strong><small id="vMeta"></small></div>
-    <button class="btn" id="vDl">Download</button>
-    <button class="btn danger" id="vDel">Delete</button>
+    <div class="v-title"><strong id="vName"></strong></div>
     <button class="btn" id="vClose" aria-label="Close">✕</button>
   </div>
   <div class="v-stage">
@@ -268,17 +444,58 @@ body.selecting .tile .tick{display:grid}
     <button class="v-nav" id="vPrev" aria-label="Previous photo">‹</button>
     <button class="v-nav" id="vNext" aria-label="Next photo">›</button>
   </div>
+  <div class="v-foot">
+    <div id="vExif"></div>
+    <button class="btn" id="vCover" hidden>Set as cover</button>
+    <button class="btn" id="vMove">Move</button>
+    <button class="btn" id="vDl"><svg><use href="#i-down"/></svg>Download</button>
+    <button class="btn danger" id="vDel">Delete</button>
+  </div>
 </dialog>
 
-<dialog id="members" aria-label="Members">
-  <div class="m-head"><h2>Members</h2><button class="btn ghost" id="mRefresh" aria-label="Refresh">⟳</button><button class="btn" id="mClose">Close</button></div>
-  <ul id="memberList"></ul>
+<dialog id="albumDlg" class="sheet" aria-labelledby="albumDlgTitle">
+  <form id="albumForm" novalidate style="display:contents">
+    <div class="sheet-head"><h2 id="albumDlgTitle">New album</h2></div>
+    <div class="sheet-body">
+      <div><label class="field" for="albumName">Name</label><input id="albumName" type="text" maxlength="80" required placeholder="e.g. Holiday party 2026"></div>
+      <div><label class="field" for="albumDescIn">Description <span class="hint">(optional)</span></label><textarea id="albumDescIn" maxlength="300" placeholder="What's in this album?"></textarea></div>
+      <p class="err" id="albumErr" role="alert"></p>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn ghost" id="albumCancel">Cancel</button><button class="btn primary" id="albumSave">Create album</button></div>
+  </form>
 </dialog>
 
-<dialog id="ask">
-  <form method="dialog">
-    <p id="askMsg"></p><small id="askSub"></small>
-    <div class="row"><button class="btn" value="no">Cancel</button><button class="btn danger-fill" id="askOk" value="yes">OK</button></div>
+<dialog id="moveDlg" class="sheet" aria-labelledby="moveTitle">
+  <div class="sheet-head"><h2 id="moveTitle">Move to album</h2></div>
+  <div class="sheet-body">
+    <p class="hint" id="moveHint" style="margin:0"></p>
+    <div id="moveList"></div>
+    <div><label class="field" for="moveNew">Or create a new album</label><input id="moveNew" type="text" maxlength="80" placeholder="New album name"></div>
+    <p class="err" id="moveErr" role="alert"></p>
+  </div>
+  <div class="sheet-foot"><button type="button" class="btn ghost" id="moveCancel">Cancel</button><button type="button" class="btn primary" id="moveGo">Move</button></div>
+</dialog>
+
+<dialog id="members" class="sheet" aria-labelledby="membersTitle" style="width:min(94vw,600px)">
+  <div class="sheet-head"><h2 id="membersTitle">Members</h2><button class="btn ghost icon" id="mRefresh" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" id="mClose">Close</button></div>
+  <div class="sheet-body">
+    <ul id="memberList"></ul>
+    <div class="section-label">Album settings · shown to people waiting for approval</div>
+    <form id="settingsForm" class="stack" novalidate>
+      <div><label class="field" for="setOwner">Owner name</label><input id="setOwner" type="text" maxlength="80"></div>
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
+        <div style="flex:1.4;min-width:200px"><label class="field" for="setEmail">Email</label><input id="setEmail" type="email" maxlength="120"></div>
+      </div>
+      <div class="split"><p class="ok" id="setOk" role="status"></p><p class="err" id="setErr" role="alert"></p><button class="btn primary" id="setSave" style="margin-left:auto">Save settings</button></div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="ask" class="sheet">
+  <form method="dialog" style="display:contents">
+    <div class="sheet-body" style="padding-top:22px"><p id="askMsg"></p><small id="askSub"></small></div>
+    <div class="sheet-foot"><button class="btn ghost" value="no">Cancel</button><button class="btn danger-fill" id="askOk" value="yes">OK</button></div>
   </form>
 </dialog>
 
@@ -310,12 +527,21 @@ const MIME = { jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', gif:'image/
   avif:'image/avif', heic:'image/heic', heif:'image/heif', bmp:'image/bmp' };
 const ALLOWED = new Set(Object.values(MIME));
 const REMEMBER_KEY = 'photoshare:remember';
+// Matches Supabase's strongest password option (lower + upper + digit + symbol), plus a minimum length.
+const PW_RULES = [
+  ['len', 'At least 8 characters', p => p.length >= 8],
+  ['upper', 'One uppercase letter', p => /[A-Z]/.test(p)],
+  ['lower', 'One lowercase letter', p => /[a-z]/.test(p)],
+  ['digit', 'One number', p => /\d/.test(p)],
+  ['symbol', 'One special character', p => /[^A-Za-z0-9]/.test(p)]
+];
 
 const state = {
-  session: null, profile: null, photos: [], view: [], bytes: 0,
+  session: null, profile: null, settings: null,
+  photos: [], albums: [], view: [], route: { kind: 'index' }, bytes: 0,
   selected: new Set(), selecting: false, queue: [], uploading: false, busy: 0,
   loading: false, reloadPending: false, loadedOnce: false, channel: null, pollTimer: null,
-  urls: new Map(), vi: -1, vToken: 0, recovering: false
+  urls: new Map(), vi: -1, vToken: 0, recovering: false, editingAlbum: null, moveIds: []
 };
 
 /* ---------- small helpers ---------- */
@@ -340,6 +566,11 @@ function el(tag, cls, text) {
   if (text != null) e.textContent = text;
   return e;
 }
+function svgIcon(id) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const u = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  u.setAttribute('href', '#' + id); s.append(u); return s;
+}
 function limiter(n) {
   let active = 0; const q = [];
   const next = () => {
@@ -352,6 +583,8 @@ function limiter(n) {
 }
 const net = limiter(4);
 const siteUrl = () => location.origin + location.pathname;
+const uid = () => state.session?.user.id;
+const isAdmin = () => !!state.profile?.is_admin;
 
 function toast(msg, kind = '') {
   const t = el('div', `toast ${kind}`, msg);
@@ -377,7 +610,8 @@ function errMsg(e) {
   if (code === 'invalid_credentials' || /invalid login credentials/i.test(m)) return 'Wrong email or password.';
   if (code === 'email_not_confirmed' || /email not confirmed/i.test(m)) return 'Confirm your email first. Check your inbox (and spam) for the link.';
   if (code === 'user_already_exists' || /already registered/i.test(m)) return 'That email already has an account. Sign in instead.';
-  if (code === 'weak_password' || /password should/i.test(m)) return 'Choose a stronger password: at least 8 characters.';
+  if (code === 'same_password') return 'That is already your password. Choose a different one, or sign in with it.';
+  if (code === 'weak_password' || /password should|password is known/i.test(m)) return 'Choose a stronger password that meets every rule below.';
   if (/rate limit/i.test(m) || code.startsWith('over_')) return 'Too many attempts. Wait a few minutes and try again.';
   if (/row-level security|not authorized|permission denied|Unauthorized/i.test(m)) return "You don't have permission to do that.";
   if (/exceeded the maximum allowed size|payload too large/i.test(m)) return `Too large. The limit is ${CONFIG.maxFileMB} MB; try with Optimize on.`;
@@ -386,8 +620,7 @@ function errMsg(e) {
 }
 
 /* ---------- Supabase client ---------- */
-// Session goes to localStorage ("keep me signed in") or sessionStorage (until the tab closes).
-const authStorage = {
+const authStorage = { // "keep me signed in" → localStorage, otherwise until the tab closes
   getItem: k => store.get(k),
   setItem: (k, v) => store.set(k, v, remember()),
   removeItem: k => store.del(k)
@@ -405,26 +638,67 @@ const sb = window.supabase.createClient(CONFIG.url, CONFIG.key, {
 });
 const bucket = () => sb.storage.from(CONFIG.bucket);
 
+/* ---------- password fields ---------- */
+function addEye(input) { // show/hide toggle on every password box
+  const wrap = el('div', 'pw');
+  input.replaceWith(wrap); wrap.append(input);
+  const b = el('button', 'eye'); b.type = 'button';
+  const set = shown => {
+    input.type = shown ? 'text' : 'password';
+    b.setAttribute('aria-label', shown ? 'Hide password' : 'Show password');
+    b.setAttribute('aria-pressed', shown);
+    b.replaceChildren(svgIcon(shown ? 'i-eye-off' : 'i-eye'));
+  };
+  b.onclick = () => { set(input.type === 'password'); input.focus(); };
+  set(false); wrap.append(b);
+}
+document.querySelectorAll('input[type=password]').forEach(addEye);
+
+function rulesChecker(passId, confirmId, rulesId, matchId) {
+  const ul = $(rulesId);
+  ul.replaceChildren(...PW_RULES.map(([k, label]) => { const li = el('li', '', label); li.dataset.rule = k; return li; }));
+  const update = () => {
+    const p = $(passId).value, c = $(confirmId).value;
+    for (const [k, , test] of PW_RULES) ul.querySelector(`[data-rule=${k}]`).classList.toggle('met', test(p));
+    $(matchId).firstElementChild.classList.toggle('met', !!p && p === c);
+  };
+  $(passId).addEventListener('input', update); $(confirmId).addEventListener('input', update);
+  return {
+    update,
+    reset() { ul.classList.remove('show-missing'); $(matchId).classList.remove('show-missing'); update(); },
+    check() { // returns an error sentence, or '' when everything is satisfied
+      update();
+      const p = $(passId).value, c = $(confirmId).value;
+      const missing = PW_RULES.filter(([, , t]) => !t(p));
+      ul.classList.toggle('show-missing', missing.length > 0);
+      $(matchId).classList.toggle('show-missing', p !== c);
+      if (missing.length) return 'Your password needs: ' + missing.map(([, l]) => l.toLowerCase()).join(', ') + '.';
+      if (p !== c) return 'The two passwords don’t match.';
+      return '';
+    }
+  };
+}
+const upRules = rulesChecker('upPass', 'upPass2', 'upRules', 'upMatch');
+const resetRules = rulesChecker('newPass', 'newPass2', 'resetRules', 'resetMatch');
+
 /* ---------- screens ---------- */
 function show(which) {
   for (const id of ['booting', 'auth', 'pending', 'app']) $(id).hidden = id !== which;
   const inside = which === 'app' || which === 'pending';
   $('signOutBtn').hidden = !inside;
-  $('me').hidden = which !== 'app';
-  $('membersBtn').hidden = !(which === 'app' && state.profile?.is_admin);
+  $('meName').hidden = which !== 'app';
+  $('membersBtn').hidden = !(which === 'app' && isAdmin());
 }
 function authMode(mode) {
   $('tabIn').setAttribute('aria-selected', mode === 'in');
   $('tabUp').setAttribute('aria-selected', mode === 'up');
   $('tabs').hidden = mode === 'forgot' || mode === 'reset';
-  $('inForm').hidden = mode !== 'in';
-  $('upForm').hidden = mode !== 'up';
-  $('forgotForm').hidden = mode !== 'forgot';
-  $('resetForm').hidden = mode !== 'reset';
-  $('authTitle').textContent = { in: 'Welcome to the album', up: 'Create your account', forgot: 'Reset your password', reset: 'Choose a new password' }[mode];
+  for (const [m, id] of [['in', 'inForm'], ['up', 'upForm'], ['forgot', 'forgotForm'], ['reset', 'resetForm']]) $(id).hidden = mode !== m;
+  $('authTitle').textContent = { in: 'Welcome back', up: 'Create your account', forgot: 'Reset your password', reset: 'Choose a new password' }[mode];
   $('authLead').textContent = { in: 'Sign in to see and share photos.', up: 'Join to see and share photos with the group.',
-    forgot: "Enter your email and we'll send you a reset link.", reset: 'Enter a new password for your account.' }[mode];
+    forgot: "Enter your email and we'll send you a reset link.", reset: 'Pick a new password, or sign in if you remember the old one.' }[mode];
   for (const id of ['inErr', 'upErr', 'upOk', 'fgErr', 'fgOk', 'resetErr']) $(id).textContent = '';
+  upRules.reset(); resetRules.reset();
 }
 function showAuth(mode = 'in') { teardown(); state.profile = null; authMode(mode); show('auth'); }
 
@@ -434,7 +708,7 @@ sb.auth.onAuthStateChange((event, session) => setTimeout(() => onAuth(event, ses
 
 async function onAuth(event, session) {
   if (event === 'PASSWORD_RECOVERY') { state.recovering = true; state.session = session; authMode('reset'); show('auth'); return; }
-  if (state.recovering) { // stay on the new-password form until it's saved
+  if (state.recovering) { // stay on the new-password form until it's saved or skipped
     if (!session) { state.recovering = false; showAuth('forgot'); $('fgErr').textContent = 'That reset link has expired. Request a new one.'; }
     return;
   }
@@ -444,39 +718,68 @@ async function onAuth(event, session) {
   if (!sameUser) await loadProfile();
 }
 
+async function loadSettings() {
+  const { data } = await sb.from('album_settings').select('owner_name,contact_phone,contact_email').eq('id', 1).maybeSingle();
+  state.settings = data || {};
+  return state.settings;
+}
+
 async function loadProfile() {
-  const uid = state.session.user.id;
-  const { data, error } = await sb.from('profiles').select('id,display_name,email,status,is_admin').eq('id', uid).maybeSingle();
+  const { data, error } = await sb.from('profiles').select('id,display_name,email,status,is_admin').eq('id', uid()).maybeSingle();
   if (state.recovering) return;
   if (error) { toast(errMsg(error), 'error'); showAuth('in'); return; }
   if (!data) {
     $('pendingTitle').textContent = 'Account not set up';
-    $('pendingText').textContent = "Your sign-in worked, but the album has no member record for you. Ask the album owner to check the database setup.";
-    show('pending'); return;
+    $('pendingText').textContent = 'Your sign-in worked, but the album has no member record for you. Ask the album owner to check the database setup.';
+    $('contactBox').hidden = true; show('pending'); return;
   }
   state.profile = data;
   if (data.status === 'approved') {
     $('meName').textContent = data.display_name;
     show('app');
-    await loadPhotos();
+    await loadAll();
     startLive();
     if (data.is_admin) refreshPendingCount();
   } else {
     teardown();
-    $('pendingTitle').textContent = data.status === 'blocked' ? 'Access turned off' : 'Almost in';
-    $('pendingText').textContent = data.status === 'blocked'
-      ? 'The album owner has turned off access for this account.'
-      : `Thanks, ${data.display_name}. Your account is waiting for the album owner to approve it. Check back soon.`;
-    $('recheckBtn').hidden = data.status === 'blocked';
-    show('pending');
+    await showPending(data);
   }
 }
+
+async function showPending(p) {
+  const s = await loadSettings().catch(() => ({}));
+  const owner = s.owner_name ? `the album owner, ${s.owner_name},` : 'the album owner';
+  const blocked = p.status === 'blocked';
+  $('pendingEyebrow').textContent = blocked ? 'Access off' : 'Account pending';
+  $('pendingTitle').textContent = blocked ? 'Access turned off' : `Almost in, ${p.display_name}`;
+  $('pendingText').textContent = blocked
+    ? `The album owner${s.owner_name ? `, ${s.owner_name},` : ''} has turned off access for this account. If you think that's a mistake, get in touch.`
+    : `Thanks for joining. Your account is waiting for ${owner} to approve it. You'll get in as soon as they do; tap Check again anytime.`;
+  $('recheckBtn').hidden = blocked;
+  // contact card (phone/email come from the database, not the page code)
+  const phone = (s.contact_phone || '').trim(), email = (s.contact_email || '').trim();
+  $('contactTitle').textContent = s.owner_name ? `Contact ${s.owner_name}` : 'Contact the album owner';
+  $('phoneRow').hidden = !phone; $('emailRow').hidden = !email;
+  if (phone) { const d = phone.replace(/[^\d+]/g, ''); $('phoneLink').href = 'tel:' + (/^\d{10}$/.test(d) ? '+1' + d : d); $('phoneLink').textContent = phone; }
+  if (email) {
+    $('emailLink').href = `mailto:${email}?subject=${encodeURIComponent('Photo Share: please approve my account')}&body=${encodeURIComponent(`Hi${s.owner_name ? ' ' + s.owner_name.split(' ')[0] : ''}, I signed up for Photo Share as ${p.display_name} (${p.email}). Could you approve my account? Thanks!`)}`;
+    $('emailLink').textContent = email;
+  }
+  $('contactBox').hidden = !phone && !email;
+  show('pending');
+}
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
+  const text = $(b.dataset.copy).textContent;
+  try { await navigator.clipboard.writeText(text); b.textContent = 'Copied'; }
+  catch { const r = document.createRange(); r.selectNodeContents($(b.dataset.copy)); getSelection().removeAllRanges(); getSelection().addRange(r); b.textContent = 'Selected'; }
+  setTimeout(() => { b.textContent = 'Copy'; }, 1800);
+});
 
 function teardown() {
   if (state.channel) { sb.removeChannel(state.channel); state.channel = null; }
   clearInterval(state.pollTimer); state.pollTimer = null;
-  Object.assign(state, { photos: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map() });
-  $('grid').replaceChildren();
+  Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map() });
+  $('grid').replaceChildren(); $('albumGrid').replaceChildren();
   $('queue').replaceChildren(); $('queueBar').hidden = true;
   setSelecting(false);
 }
@@ -485,8 +788,7 @@ $('tabIn').onclick = () => authMode('in');
 $('tabUp').onclick = () => authMode('up');
 $('forgotBtn').onclick = () => { $('fgEmail').value = $('inEmail').value; authMode('forgot'); };
 $('backToIn').onclick = () => authMode('in');
-
-function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 $('inForm').onsubmit = async e => {
   e.preventDefault();
@@ -508,13 +810,14 @@ $('upForm').onsubmit = async e => {
   $('upErr').textContent = ''; $('upOk').textContent = '';
   if (!name) return void ($('upErr').textContent = 'Enter your name.');
   if (!validEmail(email)) return void ($('upErr').textContent = 'Enter a valid email address.');
-  if (password.length < 8) return void ($('upErr').textContent = 'Use at least 8 characters for your password.');
+  const pwProblem = upRules.check();
+  if (pwProblem) return void ($('upErr').textContent = pwProblem);
   $('upBtn').disabled = true;
   try {
     const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name }, emailRedirectTo: siteUrl() } });
     if (error) throw error;
     if (!data.session) $('upOk').textContent = 'Account created. Check your email for a confirmation link, then sign in.';
-    $('upPass').value = '';
+    $('upPass').value = ''; $('upPass2').value = ''; upRules.reset();
   } catch (err) { $('upErr').textContent = errMsg(err); }
   finally { $('upBtn').disabled = false; }
 };
@@ -533,27 +836,39 @@ $('forgotForm').onsubmit = async e => {
   finally { $('fgBtn').disabled = false; }
 };
 
+async function finishRecovery() { // leave the reset screen and continue with the session the email link opened
+  state.recovering = false;
+  history.replaceState(null, '', siteUrl());
+  const { data } = await sb.auth.getSession();
+  state.profile = null;
+  await onAuth('SIGNED_IN', data.session);
+}
 $('resetForm').onsubmit = async e => {
   e.preventDefault();
-  const password = $('newPass').value;
-  if (password.length < 8) return void ($('resetErr').textContent = 'Use at least 8 characters.');
+  $('resetErr').textContent = '';
+  const problem = resetRules.check();
+  if (problem) return void ($('resetErr').textContent = problem);
   $('resetBtn').disabled = true;
   try {
-    const { error } = await sb.auth.updateUser({ password });
+    const { error } = await sb.auth.updateUser({ password: $('newPass').value });
     if (error) throw error;
-    state.recovering = false;
-    history.replaceState(null, '', siteUrl());
     toast('Password updated.');
-    const { data } = await sb.auth.getSession();
-    state.profile = null;
-    await onAuth('SIGNED_IN', data.session);
+    await finishRecovery();
   } catch (err) { $('resetErr').textContent = errMsg(err); }
   finally { $('resetBtn').disabled = false; }
+};
+$('resetSkip').onclick = () => finishRecovery(); // the reset link already proved who they are
+$('resetBack').onclick = async () => { // end the link's session and show the normal sign-in form
+  state.recovering = false;
+  history.replaceState(null, '', siteUrl());
+  await sb.auth.signOut().catch(() => {});
+  showAuth('in');
 };
 
 async function signOut() {
   if (state.uploading && !(await ask('Uploads are still running.', 'Signing out now stops them.', 'Sign out'))) return;
   state.queue.length = 0;
+  $('toasts').replaceChildren();
   await sb.auth.signOut().catch(() => {});
   state.session = null;
   showAuth('in');
@@ -562,72 +877,79 @@ $('signOutBtn').onclick = signOut;
 $('pendingOut').onclick = signOut;
 $('recheckBtn').onclick = () => loadProfile();
 
-/* ---------- loading the album ---------- */
+/* ---------- loading data ---------- */
 function toPhoto(r) {
   const ext = extOf(r.file_name) || extOf(r.path);
   return { id: r.id, path: r.path, thumbPath: r.thumb_path, display: r.file_name, size: r.size_bytes || 0,
+    w: r.width || 0, h: r.height || 0, albumId: r.album_id || null,
     type: r.content_type || MIME[ext] || 'application/octet-stream', ext,
     uploaderId: r.uploader, uploader: r.uploader_name || 'Former member', date: new Date(r.created_at) };
 }
-
 async function fetchAllPhotos() {
   const rows = [];
   for (let from = 0; ; from += 1000) { // the API returns at most 1000 rows per request
     const { data, error } = await sb.from('photos')
-      .select('id,path,thumb_path,file_name,content_type,size_bytes,uploader,uploader_name,created_at')
+      .select('id,path,thumb_path,file_name,content_type,size_bytes,width,height,album_id,uploader,uploader_name,created_at')
       .order('created_at', { ascending: false }).range(from, from + 999);
     if (error) throw error;
     rows.push(...data);
     if (data.length < 1000) return rows;
   }
 }
+async function fetchAlbums() {
+  const { data, error } = await sb.from('albums')
+    .select('id,name,description,cover_photo_id,created_by,created_by_name,created_at').order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
 
-async function loadPhotos(quiet = false) {
+async function loadAll(quiet = false) {
   if (state.loading) { state.reloadPending = true; return; }
   state.loading = true;
-  if (!quiet) setStatus('Loading photos…');
+  if (!quiet) setStatus('Loading…');
   try {
-    const photos = (await fetchAllPhotos()).map(toPhoto);
+    const [rows, albums] = await Promise.all([fetchAllPhotos(), fetchAlbums()]);
+    const photos = rows.map(toPhoto);
     if (state.loadedOnce) { // tell people when someone else added photos
       const before = new Set(state.photos.map(p => p.id));
-      const fresh = photos.filter(p => !before.has(p.id) && p.uploaderId !== state.session?.user.id);
+      const fresh = photos.filter(p => !before.has(p.id) && p.uploaderId !== uid());
       if (fresh.length) toast(`${plural(fresh.length, 'new photo')} from ${[...new Set(fresh.map(p => p.uploader))].join(', ')}`);
     }
     state.loadedOnce = true;
     state.photos = photos;
+    state.albums = albums;
     state.bytes = photos.reduce((s, p) => s + p.size + (p.thumbPath ? 40000 : 0), 0); // thumbnails ≈ 40 KB each
-    render();
+    route();
   } catch (e) {
     if (!quiet) toast(errMsg(e), 'error'); else console.warn(e);
   } finally {
     state.loading = false;
     if (!quiet) setStatus('');
-    if (state.reloadPending) { state.reloadPending = false; loadPhotos(true); }
+    if (state.reloadPending) { state.reloadPending = false; loadAll(true); }
   }
 }
 
-// Live updates: the database tells open pages when photos are added or removed.
+// Live updates: the database tells open pages when photos or albums change.
 function startLive() {
   if (state.channel) return;
   let t = null;
-  state.channel = sb.channel('photos-feed')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'photos' }, () => {
-      clearTimeout(t); t = setTimeout(() => { if (!state.uploading) loadPhotos(true); }, 700);
-    })
+  const kick = () => { clearTimeout(t); t = setTimeout(() => { if (!state.uploading) loadAll(true); }, 700); };
+  state.channel = sb.channel('album-feed')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'photos' }, kick)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'albums' }, kick)
     .subscribe();
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(() => {
     if (document.visibilityState !== 'visible' || state.uploading || state.busy) return;
-    loadPhotos(true);
-    if (state.profile?.is_admin) refreshPendingCount();
+    loadAll(true);
+    if (isAdmin()) refreshPendingCount();
   }, CONFIG.pollSeconds * 1000);
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && state.profile?.status === 'approved' && !state.uploading) loadPhotos(true);
+  if (document.visibilityState === 'visible' && state.profile?.status === 'approved' && !state.uploading) loadAll(true);
 });
 
-// Private files are opened through short-lived signed links. Requests are batched:
-// one call signs every preview that scrolls into view at about the same time.
+// Private files open through short-lived signed links, batched: one call signs every image that scrolls into view together.
 const signer = (() => {
   let pending = new Map(), timer = null;
   async function flush() {
@@ -662,64 +984,169 @@ const signer = (() => {
     });
   };
 })();
+const previewPath = p => p ? (p.thumbPath || (p.size <= 8 * 1024 * 1024 ? p.path : null)) : null; // never pull huge originals into a grid
 
-/* ---------- gallery ---------- */
 const lazy = new IntersectionObserver(entries => {
   for (const en of entries) {
     if (!en.isIntersecting) continue;
     lazy.unobserve(en.target);
-    const { img, p, ph } = en.target._ps;
-    const path = p.thumbPath || (p.size <= 8 * 1024 * 1024 ? p.path : null); // don't pull huge originals into the grid
+    const { img, path, ph } = en.target._lz;
     if (!path) { ph.hidden = false; continue; }
     signer(path).then(u => { img.src = u; }).catch(() => { ph.hidden = false; });
   }
-}, { rootMargin: '400px' });
+}, { rootMargin: '500px' });
+function lazyImg(host, path, ph) {
+  const img = el('img'); img.alt = ''; img.decoding = 'async';
+  img.onload = () => img.classList.add('loaded');
+  img.onerror = () => { ph.hidden = false; };
+  host._lz = { img, path, ph }; lazy.observe(host);
+  return img;
+}
 
+/* ---------- routing: #albums, #all, #unsorted, #a-<album id> ---------- */
+function parseRoute() {
+  const h = location.hash.slice(1);
+  if (h === 'all') return { kind: 'all' };
+  if (h === 'unsorted') return { kind: 'unsorted' };
+  if (h.startsWith('a-')) return { kind: 'album', id: h.slice(2) };
+  return { kind: 'index' };
+}
+window.addEventListener('hashchange', () => { if (state.profile?.status === 'approved') { setSelecting(false); $('search').value = ''; route(); scrollTo(0, 0); } });
+
+function route() {
+  if (state.profile?.status !== 'approved') return;
+  const r = parseRoute();
+  if (r.kind === 'album' && !state.albums.some(a => a.id === r.id)) { // deleted or unknown album
+    if (state.loadedOnce) { history.replaceState(null, '', '#albums'); return route(); }
+  }
+  state.route = r;
+  $('indexView').hidden = r.kind !== 'index';
+  $('albumView').hidden = r.kind === 'index';
+  lazy.disconnect();
+  if (r.kind === 'index') renderIndex(); else renderAlbum();
+}
+
+const albumPhotos = id => state.photos.filter(p => p.albumId === id);
+const canEditAlbum = a => !!a && (a.created_by === uid() || isAdmin());
+const canChange = p => p.uploaderId === uid() || isAdmin(); // move or delete
+function coverOf(a) {
+  const list = albumPhotos(a.id);
+  return list.find(p => p.id === a.cover_photo_id) || list[0] || null;
+}
+function monthYear(d) { return d ? d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''; }
+
+function albumCard({ href, name, count, date, cover, special }) {
+  const a = el('a', 'album' + (special ? ' special' : '')); a.href = href;
+  const c = el('div', 'cover');
+  const ph = el('span', 'ph'); ph.append(svgIcon('i-image'));
+  const path = previewPath(cover);
+  if (path) { ph.hidden = true; c.append(lazyImg(c, path, ph)); }
+  c.append(ph, el('span', 'stack'));
+  a.append(c, el('h3', '', name), el('div', 'meta-line', [plural(count, 'photograph'), monthYear(date)].filter(Boolean).join(' · ')));
+  return a;
+}
+
+function renderIndex() {
+  const cards = [];
+  if (state.photos.length) cards.push(albumCard({ href: '#all', name: 'All photos', count: state.photos.length, date: state.photos[0]?.date, cover: state.photos[0], special: true }));
+  for (const a of state.albums) {
+    const list = albumPhotos(a.id);
+    cards.push(albumCard({ href: '#a-' + a.id, name: a.name, count: list.length, date: list[0]?.date || new Date(a.created_at), cover: coverOf(a) }));
+  }
+  const unsorted = albumPhotos(null);
+  if (unsorted.length) cards.push(albumCard({ href: '#unsorted', name: 'Unsorted', count: unsorted.length, date: unsorted[0].date, cover: unsorted[0], special: true }));
+  const add = el('a', 'album new'); add.href = '#albums';
+  const c = el('div', 'cover'); const s = el('span'); s.append(svgIcon('i-plus'), document.createTextNode('New album')); c.append(s);
+  add.append(c, el('h3', '', 'Start an album'), el('div', 'meta-line', 'Group related photos'));
+  add.onclick = e => { e.preventDefault(); openAlbumDlg(); };
+  if (!state.albums.length) cards.push(add); // the header button covers it once albums exist
+  $('albumGrid').replaceChildren(...cards);
+  $('indexMeta').textContent = `${plural(state.photos.length, 'photograph')} · ${plural(state.albums.length, 'album')}`;
+  const pct = Math.min(100, state.bytes / (CONFIG.storageGB * 1024 ** 3) * 100);
+  $('meterTxt').textContent = `${fmtBytes(state.bytes)} of ${CONFIG.storageGB} GB`;
+  $('meterBar').style.width = pct + '%';
+  $('meter').classList.toggle('warn', pct > 80);
+}
+
+function currentAlbum() { return state.route.kind === 'album' ? state.albums.find(a => a.id === state.route.id) : null; }
+function routePhotos() {
+  const r = state.route;
+  if (r.kind === 'all') return state.photos;
+  if (r.kind === 'unsorted') return albumPhotos(null);
+  return albumPhotos(r.id);
+}
 function visiblePhotos() {
   const q = $('search').value.trim().toLowerCase();
-  let list = state.photos.filter(p => !q || p.display.toLowerCase().includes(q) || p.uploader.toLowerCase().includes(q));
+  let list = routePhotos().filter(p => !q || p.display.toLowerCase().includes(q) || p.uploader.toLowerCase().includes(q));
   if ($('sort').value === 'oldest') list = list.slice().reverse();
   return list;
 }
-const canDelete = p => p.uploaderId === state.session?.user.id || !!state.profile?.is_admin;
 
-function tile(p, i) {
-  const fig = el('figure', 'tile');
-  if (state.selected.has(p.id)) fig.classList.add('selected');
-  const btn = el('button', 'thumb');
-  btn.type = 'button';
-  btn.setAttribute('aria-label', `Open ${p.display}`);
-  const img = el('img'); img.alt = ''; img.decoding = 'async';
-  img.onload = () => img.classList.add('loaded');
-  const ph = el('span', 'ph', p.ext || 'file'); ph.hidden = true;
-  img.onerror = () => { ph.hidden = false; };
-  btn.append(img, ph, el('span', 'tick', '✓'));
-  btn.onclick = () => state.selecting ? toggleSelect(p, fig) : openViewer(i);
-  const cap = el('figcaption');
-  cap.append(el('b', '', p.display), el('span', '', [p.uploader, fmtDate(p.date)].filter(Boolean).join(' · ')));
-  fig.append(btn, cap);
-  btn._ps = { img, p, ph };
-  lazy.observe(btn);
-  return fig;
+function renderAlbum() {
+  const r = state.route, a = currentAlbum();
+  const all = routePhotos();
+  const title = r.kind === 'all' ? 'All photos' : r.kind === 'unsorted' ? 'Unsorted' : a?.name || '';
+  $('albumTitle').textContent = title;
+  $('albumTitle').style.fontStyle = r.kind === 'album' ? '' : 'italic';
+  $('albumDesc').textContent = r.kind === 'album' ? (a?.description || '') : r.kind === 'unsorted' ? 'Photos that aren’t in an album yet. Select some and choose Move to…' : 'Every photo in the collection.';
+  $('albumDesc').hidden = !$('albumDesc').textContent;
+  const meta = [plural(all.length, 'photograph')];
+  if (a?.created_by_name) meta.push(`by ${a.created_by_name}`);
+  if (a) meta.push(`started ${fmtDate(new Date(a.created_at))}`);
+  $('albumMeta').textContent = meta.join(' · ');
+  $('editAlbumBtn').hidden = $('deleteAlbumBtn').hidden = !canEditAlbum(a);
+  $('dropText').textContent = r.kind === 'album' ? `Drop photos here to add them to “${a?.name}”, paste them, or` : 'Drop photos here (they’ll go to Unsorted), paste them, or';
+  $('dlAllLbl').textContent = r.kind === 'album' ? 'Download album' : 'Download all';
+  renderGrid();
 }
 
-function render() {
+/* ---------- justified grid ---------- */
+let lastGridW = 0;
+function renderGrid() {
+  lazy.disconnect();
   const list = visiblePhotos();
   state.view = list;
   const ids = new Set(state.photos.map(p => p.id));
   for (const s of state.selected) if (!ids.has(s)) state.selected.delete(s);
-  lazy.disconnect();
-  $('grid').replaceChildren(...list.map(tile));
+  state.tiles = list.map(tile);
+  layoutGrid();
+  const total = routePhotos().length;
   $('empty').hidden = list.length > 0;
-  $('empty').textContent = state.photos.length ? 'No photos match your search.' : 'No photos yet. Add the first ones above.';
-  $('count').textContent = plural(state.photos.length, 'photo');
-  const limit = CONFIG.storageGB * 1024 ** 3;
-  const pct = Math.min(100, state.bytes / limit * 100);
-  $('meterTxt').textContent = `${fmtBytes(state.bytes)} of ${CONFIG.storageGB} GB`;
-  $('meterBar').style.width = pct + '%';
-  $('meter').classList.toggle('warn', pct > 80);
+  $('emptyTitle').textContent = total ? 'Nothing matches' : 'No photos yet';
+  $('emptyText').textContent = total ? 'Try a different name or person.' : 'Drop photos above or use Add photos to fill this album.';
   $('dlAllBtn').disabled = !list.length;
+  $('selectBtn').disabled = !list.length;
   updateSelBar();
+}
+function layoutGrid() {
+  const W = $('grid').clientWidth; if (!W || !state.tiles) return;
+  lastGridW = W;
+  const target = W < 560 ? 140 : W < 900 ? 200 : 250, gap = W < 560 ? 4 : 8;
+  $('grid').style.setProperty('--gap', gap + 'px');
+  const rows = []; let row = [], sum = 0;
+  state.view.forEach((p, i) => {
+    const ar = p.w && p.h ? Math.min(3, Math.max(0.4, p.w / p.h)) : 1; // clamp panoramas and very tall shots
+    row.push([state.tiles[i], ar]); sum += ar;
+    if (sum * target + gap * (row.length - 1) >= W) { rows.push([row, (W - gap * (row.length - 1)) / sum]); row = []; sum = 0; }
+  });
+  if (row.length) rows.push([row, Math.min(target, (W - gap * (row.length - 1)) / sum)]);
+  $('grid').replaceChildren(...rows.map(([items, h]) => {
+    const r = el('div', 'jrow'); r.style.height = h.toFixed(1) + 'px';
+    for (const [t, ar] of items) { t.style.width = (ar * h).toFixed(1) + 'px'; r.append(t); }
+    return r;
+  }));
+}
+new ResizeObserver(() => { const W = $('grid').clientWidth; if (W && Math.abs(W - lastGridW) > 2) layoutGrid(); }).observe($('grid'));
+
+function tile(p, i) {
+  const btn = el('button', 'tile'); btn.type = 'button';
+  btn.setAttribute('aria-label', `Open ${p.display}`);
+  if (state.selected.has(p.id)) btn.classList.add('selected');
+  const ph = el('span', 'ph', p.ext || 'file'); ph.hidden = true;
+  const cap = el('span', 'cap'); cap.append(el('b', '', p.display), el('span', '', `${p.uploader} · ${fmtDate(p.date)}`));
+  btn.append(lazyImg(btn, previewPath(p), ph), ph, cap, el('span', 'tick', '✓'));
+  btn.onclick = () => state.selecting ? toggleSelect(p, btn) : openViewer(i);
+  return btn;
 }
 
 /* ---------- selection ---------- */
@@ -729,27 +1156,126 @@ function setSelecting(on) {
   if (!on) { state.selected.clear(); document.querySelectorAll('.tile.selected').forEach(t => t.classList.remove('selected')); }
   updateSelBar();
 }
-function toggleSelect(p, fig) {
+function toggleSelect(p, t) {
   if (state.selected.has(p.id)) state.selected.delete(p.id); else state.selected.add(p.id);
-  fig.classList.toggle('selected', state.selected.has(p.id));
+  t.classList.toggle('selected', state.selected.has(p.id));
   updateSelBar();
 }
+const selectedPhotos = () => state.photos.filter(p => state.selected.has(p.id));
 function updateSelBar() {
   $('selbar').hidden = !state.selecting;
   $('selectBtn').hidden = state.selecting;
   const sel = selectedPhotos();
   $('selCount').textContent = `${sel.length} selected`;
   $('selDl').disabled = !sel.length;
-  $('selDel').disabled = !sel.some(canDelete);
+  $('selDel').disabled = $('selMove').disabled = !sel.some(canChange);
 }
-const selectedPhotos = () => state.photos.filter(p => state.selected.has(p.id));
+
+/* ---------- albums: create, rename, delete, move, cover ---------- */
+function openAlbumDlg(album = null) {
+  state.editingAlbum = album;
+  $('albumDlgTitle').textContent = album ? 'Rename album' : 'New album';
+  $('albumSave').textContent = album ? 'Save' : 'Create album';
+  $('albumName').value = album?.name || '';
+  $('albumDescIn').value = album?.description || '';
+  $('albumErr').textContent = '';
+  $('albumDlg').showModal();
+  $('albumName').focus();
+}
+$('albumCancel').onclick = () => $('albumDlg').close();
+$('albumForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('albumName').value.trim(), description = $('albumDescIn').value.trim() || null;
+  if (!name) return void ($('albumErr').textContent = 'Give the album a name.');
+  $('albumSave').disabled = true;
+  try {
+    const a = state.editingAlbum;
+    if (a) {
+      const { error } = await sb.from('albums').update({ name, description }).eq('id', a.id);
+      if (error) throw error;
+      toast('Album updated.');
+    } else {
+      const { data, error } = await sb.from('albums').insert({ name, description }).select('id').single();
+      if (error) throw error;
+      toast(`Album “${name}” created.`);
+      $('albumDlg').close();
+      await loadAll(true);
+      location.hash = 'a-' + data.id;
+      return;
+    }
+    $('albumDlg').close();
+    await loadAll(true);
+  } catch (err) { $('albumErr').textContent = errMsg(err); }
+  finally { $('albumSave').disabled = false; }
+};
+$('newAlbumBtn').onclick = () => openAlbumDlg();
+$('editAlbumBtn').onclick = () => openAlbumDlg(currentAlbum());
+$('deleteAlbumBtn').onclick = async () => {
+  const a = currentAlbum(); if (!a) return;
+  const n = albumPhotos(a.id).length;
+  if (!(await ask(`Delete the album “${a.name}”?`, n ? `Its ${plural(n, 'photo')} won’t be deleted; they move to Unsorted.` : 'The album is empty.', 'Delete album'))) return;
+  const { error } = await sb.from('albums').delete().eq('id', a.id);
+  if (error) return toast(errMsg(error), 'error');
+  toast('Album deleted.');
+  location.hash = 'albums';
+  await loadAll(true);
+};
+
+function openMove(ids) {
+  const list = state.photos.filter(p => ids.includes(p.id) && canChange(p));
+  if (!list.length) return toast('You can only move photos you added.', 'error');
+  state.moveIds = list.map(p => p.id);
+  const skipped = ids.length - list.length;
+  $('moveHint').textContent = `Moving ${plural(list.length, 'photo')}.` + (skipped ? ` ${plural(skipped, 'photo')} added by others will stay put.` : '');
+  const cur = list.length === 1 ? list[0].albumId : (state.route.kind === 'album' ? state.route.id : null);
+  const opt = (value, label) => {
+    const l = el('label'); const r = el('input'); r.type = 'radio'; r.name = 'moveTo'; r.value = value;
+    r.checked = value === (cur || ''); l.append(r, el('span', '', label)); return l;
+  };
+  const albums = state.albums.slice().sort((x, y) => x.name.localeCompare(y.name));
+  $('moveList').replaceChildren(...albums.map(a => opt(a.id, a.name)), opt('', 'Unsorted (no album)'));
+  $('moveNew').value = ''; $('moveErr').textContent = '';
+  $('moveDlg').showModal();
+}
+$('moveNew').oninput = () => { if ($('moveNew').value.trim()) document.querySelectorAll('[name=moveTo]').forEach(r => { r.checked = false; }); };
+$('moveCancel').onclick = () => $('moveDlg').close();
+$('moveGo').onclick = async () => {
+  $('moveErr').textContent = '';
+  let target = document.querySelector('[name=moveTo]:checked')?.value ?? null;
+  const newName = $('moveNew').value.trim();
+  $('moveGo').disabled = true;
+  try {
+    let label;
+    if (newName) {
+      const { data, error } = await sb.from('albums').insert({ name: newName }).select('id').single();
+      if (error) throw error;
+      target = data.id; label = newName;
+    } else if (target === null) { $('moveErr').textContent = 'Choose an album.'; return; }
+    else label = target ? state.albums.find(a => a.id === target)?.name : 'Unsorted';
+    const { data, error } = await sb.from('photos').update({ album_id: target || null }).in('id', state.moveIds).select('id');
+    if (error) throw error;
+    $('moveDlg').close();
+    if ($('viewer').open) $('viewer').close();
+    setSelecting(false);
+    toast(`Moved ${plural(data.length, 'photo')} to ${label}.`);
+    await loadAll(true);
+  } catch (err) { $('moveErr').textContent = errMsg(err); }
+  finally { $('moveGo').disabled = false; }
+};
+
+async function setCover(p) {
+  const a = currentAlbum(); if (!a) return;
+  const { error } = await sb.from('albums').update({ cover_photo_id: p.id }).eq('id', a.id);
+  if (error) return toast(errMsg(error), 'error');
+  toast('Album cover updated.');
+  await loadAll(true);
+}
 
 /* ---------- uploading ---------- */
 function isImage(f) {
   if (f.type === 'image/svg+xml' || /\.svg$/i.test(f.name)) return false;
   return f.type.startsWith('image/') || IMG_EXT.test(f.name);
 }
-
 async function decode(file) {
   if ('createImageBitmap' in window) {
     try {
@@ -766,7 +1292,6 @@ async function decode(file) {
     return null; // e.g. HEIC in Chrome: uploaded as-is, no preview
   }
 }
-
 async function draw(src, scale, type, quality) {
   const w = Math.max(1, Math.round(src.width * scale)), h = Math.max(1, Math.round(src.height * scale));
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -779,7 +1304,6 @@ async function draw(src, scale, type, quality) {
   if (!blob) throw new Error('Could not process this image.');
   return { blob, width: w, height: h };
 }
-
 async function prepare(file) {
   let ext = extOf(file.name) || (file.type.split('/')[1] || 'jpg').toLowerCase();
   let type = file.type || MIME[ext] || '';
@@ -793,7 +1317,7 @@ async function prepare(file) {
         if (type === 'image/png') { if (scale < 1) ({ blob: main, width, height } = await draw(src, scale, 'image/png')); }
         else { ({ blob: main, width, height } = await draw(src, scale, 'image/jpeg', CONFIG.jpegQuality)); ext = 'jpg'; type = 'image/jpeg'; }
       }
-      thumb = (await draw(src, Math.min(1, CONFIG.thumbDim / Math.max(src.width, src.height)), 'image/jpeg', 0.78)).blob;
+      thumb = (await draw(src, Math.min(1, CONFIG.thumbDim / Math.max(src.width, src.height)), 'image/jpeg', 0.8)).blob;
     } finally { src.close(); }
   }
   if (ext === 'jpeg') ext = 'jpg';
@@ -803,14 +1327,12 @@ async function prepare(file) {
   const base = file.name.replace(/\.[^.]*$/, '').replace(/[\u0000-\u001f\\/]+/g, ' ').trim().slice(0, 100) || 'Photo';
   return { main, thumb, type, ext, width, height, name: `${base}.${ext}` };
 }
-
 async function uploadOne(it) {
-  const uid = state.session.user.id;
   it.set('Preparing…', 'work');
   const prep = await prepare(it.file);
   const id = crypto.randomUUID();
-  const path = `${uid}/${id}.${prep.ext}`;
-  const thumbPath = prep.thumb ? `${uid}/thumbs/${id}.jpg` : null;
+  const path = `${uid()}/${id}.${prep.ext}`;
+  const thumbPath = prep.thumb ? `${uid()}/thumbs/${id}.jpg` : null;
   it.set('Uploading…', 'work');
   const put = (p, blob, type) => net(async () => {
     const { error } = await bucket().upload(p, blob, { contentType: type, upsert: false, cacheControl: '31536000' });
@@ -818,7 +1340,7 @@ async function uploadOne(it) {
   });
   try {
     await Promise.all([put(path, prep.main, prep.type), thumbPath ? put(thumbPath, prep.thumb, 'image/jpeg') : null]);
-    const { error } = await sb.from('photos').insert({ path, thumb_path: thumbPath, file_name: prep.name,
+    const { error } = await sb.from('photos').insert({ path, thumb_path: thumbPath, file_name: prep.name, album_id: it.albumId,
       content_type: prep.type, size_bytes: prep.main.size, width: prep.width, height: prep.height });
     if (error) throw error;
   } catch (e) {
@@ -826,14 +1348,13 @@ async function uploadOne(it) {
     throw e;
   }
 }
-
-function queueItem(file) {
+function queueItem(file, albumId) {
   const li = el('li');
   const st = el('span', 'qs', 'Waiting…');
   li.append(el('span', 'qn', file.name), el('span', 'hint', fmtBytes(file.size)), st);
   $('queue').append(li);
   const it = {
-    file, li,
+    file, li, albumId,
     set(text, kind) { st.textContent = text; li.className = kind || ''; },
     fail(msg) {
       it.set(`Failed: ${msg}`, 'fail');
@@ -846,17 +1367,17 @@ function queueItem(file) {
   return it;
 }
 function updateQueueBar() { $('queueBar').hidden = !$('queue').querySelector('li.done, li.fail'); }
-
 function handleFiles(files) {
   if (state.profile?.status !== 'approved') return;
   const all = [...files];
   const picked = all.filter(isImage);
   if (all.length > picked.length) toast(`${plural(all.length - picked.length, 'file')} skipped: only photos can be added.`);
   if (!picked.length) return;
-  state.queue.push(...picked.map(queueItem));
+  const albumId = state.route.kind === 'album' ? state.route.id : null;
+  if (state.route.kind === 'index') { location.hash = 'unsorted'; toast(`Adding ${plural(picked.length, 'photo')} to Unsorted.`); }
+  state.queue.push(...picked.map(f => queueItem(f, albumId)));
   runUploads();
 }
-
 async function runUploads() {
   if (state.uploading) return;
   state.uploading = true;
@@ -870,18 +1391,18 @@ async function runUploads() {
         try { await uploadOne(it); it.set('Added ✓', 'done'); added++; }
         catch (e) { it.fail(errMsg(e)); }
       }));
-      if (!state.queue.length) { await Promise.all(jobs.splice(0)); } // pick up files dropped mid-upload
+      if (!state.queue.length) await Promise.all(jobs.splice(0)); // pick up files dropped mid-upload
     }
   } finally {
     state.uploading = false;
     updateQueueBar();
-    if (added) await loadPhotos(true);
+    if (added) await loadAll(true);
   }
 }
 
 /* ---------- deleting ---------- */
 async function deletePhotos(list) {
-  const mine = list.filter(canDelete);
+  const mine = list.filter(canChange);
   if (!mine.length) return toast('You can only delete photos you added.', 'error');
   const n = mine.length, skipped = list.length - n;
   const sub = skipped ? `${plural(skipped, 'photo')} added by others will be kept.` : 'This can’t be undone.';
@@ -894,7 +1415,7 @@ async function deletePhotos(list) {
     if (files.length) await bucket().remove(files);
     setSelecting(false);
     if ($('viewer').open) $('viewer').close();
-    await loadPhotos(true);
+    await loadAll(true);
     toast(`Deleted ${plural(data.length, 'photo')}.`);
   } catch (e) {
     toast(errMsg(e), 'error');
@@ -911,7 +1432,6 @@ async function downloadOne(p) {
     document.body.append(a); a.click(); a.remove();
   } catch (e) { toast(errMsg(e), 'error'); }
 }
-
 let zipLib;
 function loadJSZip() {
   return zipLib ||= new Promise((res, rej) => {
@@ -928,6 +1448,10 @@ function saveBlob(blob, name) {
   const a = el('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+function zipName() {
+  const t = ($('albumTitle').textContent || 'photos').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 40) || 'photos';
+  return `${t}-${new Date().toISOString().slice(0, 10)}.zip`;
 }
 async function downloadMany(list) {
   if (!list.length) return;
@@ -949,27 +1473,31 @@ async function downloadMany(list) {
       setStatus(`Preparing ZIP… ${++done}/${list.length}`);
     })));
     // Photos are already compressed; STORE skips pointless re-compression and is much faster.
-    const out = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-    saveBlob(out, `photos-${new Date().toISOString().slice(0, 10)}.zip`);
+    saveBlob(await zip.generateAsync({ type: 'blob', compression: 'STORE' }), zipName());
   } catch (e) {
     toast(errMsg(e), 'error');
   } finally { busy(false); setStatus(''); }
 }
 
 /* ---------- viewer ---------- */
-function openViewer(i) {
-  state.vi = i;
-  showInViewer();
-  if (!$('viewer').open) $('viewer').showModal();
-}
+function openViewer(i) { state.vi = i; showInViewer(); if (!$('viewer').open) $('viewer').showModal(); }
 function showInViewer() {
   const p = state.view[state.vi]; if (!p) return;
   const token = ++state.vToken;
   $('vName').textContent = p.display;
-  $('vMeta').textContent = [p.uploader, fmtDate(p.date), fmtBytes(p.size)].filter(Boolean).join(' · ');
+  const album = p.albumId ? state.albums.find(a => a.id === p.albumId)?.name : 'Unsorted';
+  const bits = [p.w && p.h ? `<b>${p.w} × ${p.h}</b>` : '', fmtBytes(p.size), p.uploader, fmtDate(p.date), album].filter(Boolean);
+  $('vExif').replaceChildren(); // build safely: names come from users
+  bits.forEach((b, i) => {
+    if (i) $('vExif').append(document.createTextNode('  ·  '));
+    if (b.startsWith('<b>')) $('vExif').append(el('b', '', b.slice(3, -4))); else $('vExif').append(document.createTextNode(b));
+  });
   $('vPrev').hidden = state.vi <= 0;
   $('vNext').hidden = state.vi >= state.view.length - 1;
-  $('vDel').hidden = !canDelete(p);
+  $('vDel').hidden = $('vMove').hidden = !canChange(p);
+  const a = currentAlbum();
+  $('vCover').hidden = !(a && canEditAlbum(a) && p.albumId === a.id);
+  $('vCover').textContent = a?.cover_photo_id === p.id ? 'Album cover ✓' : 'Set as cover';
   const img = $('vImg');
   img.removeAttribute('src');
   const quick = p.thumbPath && state.urls.get(p.thumbPath);
@@ -980,12 +1508,10 @@ function showInViewer() {
   signer(p.path).then(u => { if (token !== state.vToken) return; state.vFull = u; img.src = u; })
     .catch(e => { if (token === state.vToken) $('vMsg').textContent = errMsg(e); });
 }
-function step(d) {
-  const n = state.vi + d;
-  if (n >= 0 && n < state.view.length) { state.vi = n; showInViewer(); }
-}
+function step(d) { const n = state.vi + d; if (n >= 0 && n < state.view.length) { state.vi = n; showInViewer(); } }
+const vPhoto = () => state.view[state.vi];
 
-/* ---------- members (admin) ---------- */
+/* ---------- members & settings (admin) ---------- */
 async function refreshPendingCount() {
   const { data, error } = await sb.rpc('admin_list_members');
   if (error) return;
@@ -996,7 +1522,9 @@ async function refreshPendingCount() {
 async function openMembers() {
   if (!$('members').open) $('members').showModal();
   $('memberList').replaceChildren(el('li', 'hint', 'Loading…'));
-  const { data, error } = await sb.rpc('admin_list_members');
+  $('setOk').textContent = ''; $('setErr').textContent = '';
+  const [{ data, error }, s] = await Promise.all([sb.rpc('admin_list_members'), loadSettings().catch(() => ({}))]);
+  $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
   if (error) { $('memberList').replaceChildren(el('li', 'err', errMsg(error))); return; }
   const n = data.filter(m => m.status === 'pending').length;
   $('pendingBadge').textContent = n; $('pendingBadge').hidden = !n;
@@ -1005,9 +1533,9 @@ async function openMembers() {
 function memberRow(m) {
   const li = el('li');
   const who = el('div', 'm-who');
-  const me = m.id === state.session.user.id;
+  const me = m.id === uid();
   who.append(el('b', '', m.display_name + (me ? ' (you)' : '')), el('small', '', `${m.email || ''} · joined ${fmtDate(new Date(m.created_at))}`));
-  li.append(who, el('span', `chip ${m.status}`, m.is_admin ? 'admin' : m.status));
+  li.append(who, el('span', `chip ${m.is_admin ? 'admin' : m.status}`, m.is_admin ? 'admin' : m.status));
   if (!me) {
     const act = (label, status, cls = '') => {
       const b = el('button', `btn ${cls}`, label);
@@ -1027,6 +1555,18 @@ function memberRow(m) {
   }
   return li;
 }
+$('settingsForm').onsubmit = async e => {
+  e.preventDefault();
+  $('setOk').textContent = ''; $('setErr').textContent = '';
+  const email = $('setEmail').value.trim();
+  if (email && !validEmail(email)) return void ($('setErr').textContent = 'That email doesn’t look right.');
+  $('setSave').disabled = true;
+  const { error } = await sb.from('album_settings').update({
+    owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null
+  }).eq('id', 1);
+  $('setSave').disabled = false;
+  if (error) $('setErr').textContent = errMsg(error); else $('setOk').textContent = 'Saved.';
+};
 $('membersBtn').onclick = openMembers;
 $('mRefresh').onclick = openMembers;
 $('mClose').onclick = () => $('members').close();
@@ -1035,24 +1575,24 @@ $('mClose').onclick = () => $('members').close();
 $('pickBtn').onclick = () => $('fileInput').click();
 $('fileInput').onchange = e => { handleFiles(e.target.files); e.target.value = ''; };
 $('clearQueue').onclick = () => { $('queue').querySelectorAll('li.done, li.fail').forEach(li => li.remove()); updateQueueBar(); };
-$('search').oninput = render;
-$('sort').onchange = render;
-$('refreshBtn').onclick = () => loadPhotos();
+$('search').oninput = renderGrid;
+$('sort').onchange = renderGrid;
+$('refreshBtn').onclick = () => loadAll();
 $('selectBtn').onclick = () => setSelecting(true);
 $('selDone').onclick = () => setSelecting(false);
-$('selAll').onclick = () => { state.view.forEach(p => state.selected.add(p.id)); render(); };
+$('selAll').onclick = () => { state.view.forEach(p => state.selected.add(p.id)); state.tiles.forEach(t => t.classList.add('selected')); updateSelBar(); };
 $('selDl').onclick = () => downloadMany(selectedPhotos());
 $('selDel').onclick = () => deletePhotos(selectedPhotos());
+$('selMove').onclick = () => openMove([...state.selected]);
 $('dlAllBtn').onclick = () => downloadMany(state.view);
 $('vClose').onclick = () => $('viewer').close();
 $('vPrev').onclick = () => step(-1);
 $('vNext').onclick = () => step(1);
-$('vDl').onclick = () => { const p = state.view[state.vi]; if (p) downloadOne(p); };
-$('vDel').onclick = () => { const p = state.view[state.vi]; if (p) deletePhotos([p]); };
-$('viewer').addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') step(-1);
-  if (e.key === 'ArrowRight') step(1);
-});
+$('vDl').onclick = () => vPhoto() && downloadOne(vPhoto());
+$('vDel').onclick = () => vPhoto() && deletePhotos([vPhoto()]);
+$('vMove').onclick = () => vPhoto() && openMove([vPhoto().id]);
+$('vCover').onclick = () => vPhoto() && setCover(vPhoto());
+$('viewer').addEventListener('keydown', e => { if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1); });
 $('viewer').addEventListener('close', () => { state.vToken++; $('vImg').removeAttribute('src'); });
 let touchX = null;
 $('viewer').addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
@@ -1074,13 +1614,11 @@ window.addEventListener('drop', e => {
   handleFiles(e.dataTransfer.files);
 });
 document.addEventListener('paste', e => {
-  if (state.profile?.status !== 'approved' || e.target.matches('input')) return;
+  if (state.profile?.status !== 'approved' || e.target.matches('input, textarea')) return;
   const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
   if (files.length) handleFiles(files);
 });
-window.addEventListener('beforeunload', e => {
-  if (state.uploading || state.queue.length) { e.preventDefault(); e.returnValue = ''; }
-});
+window.addEventListener('beforeunload', e => { if (state.uploading || state.queue.length) { e.preventDefault(); e.returnValue = ''; } });
 
 $('optimize').checked = store.get('photoshare:optimize') !== '0';
 $('optimize').onchange = e => store.set('photoshare:optimize', e.target.checked ? '1' : '0', true);
