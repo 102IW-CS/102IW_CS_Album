@@ -2199,7 +2199,8 @@ function renderMembers() {
   if (bulk) { $('mBulkText').textContent = `${plural(waiting.length, 'account')} waiting${mUI.q ? ' match your search' : ''}.`; $('mBulkGo').textContent = `Approve all ${waiting.length}`; }
   if (!list.length) {
     const li = el('li', 'm-empty');
-    li.append(el('div', '', mUI.q ? `No one matches “${mUI.q.trim()}”${mUI.filter !== 'all' ? ' in this view' : ''}.` : 'No one here.'));
+    const none = { pending: 'No one is waiting for approval.', approved: 'No active members.', moderator: 'No moderators yet.', admin: 'No admins.', blocked: 'No turned-off accounts.', all: 'No one here.' };
+    li.append(el('div', '', mUI.q ? `No one matches “${mUI.q.trim()}”${mUI.filter !== 'all' ? ' in this view' : ''}.` : none[mUI.filter]));
     if (mUI.q || mUI.filter !== 'all') {
       const c = el('button', 'btn', 'Show everyone'); c.type = 'button'; c.style.marginTop = '12px';
       c.onclick = () => { mUI.q = ''; $('mSearch').value = ''; mUI.filter = 'all'; renderMembers(); };
