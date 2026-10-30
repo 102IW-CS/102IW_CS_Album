@@ -58,10 +58,29 @@ header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 .brand{flex:none} /* never squeeze the name; fitHeader() makes room instead */
 .brand span{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1;white-space:nowrap}
 .who{font-size:13px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (min-width:721px){#meBtn .who{display:inline-block}}
+#meBtn .who{font-weight:600;color:var(--muted)}
+#meBtn:hover .who{color:var(--ink)}
+/* My account */
+#acctDlg{width:min(94vw,560px)}
+.acct-id{display:flex;align-items:center;gap:12px}
+.acct-id .m-av{width:44px;height:44px;font-size:15px}
+.acct-id div{flex:1;min-width:0}
+.acct-id b{display:block;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-id small{display:block;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-block{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px}
+.acct-block h3{font-family:var(--ui);font-size:14px;font-weight:700;letter-spacing:0;margin:0}
+.acct-block p{margin:0}
+.acct-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.acct-row input{flex:1;min-width:180px}
+.acct-block.danger{border-color:color-mix(in srgb,var(--danger) 45%,var(--line))}
+.acct-block.danger h3{color:var(--danger)}
+.m-terms.ok{color:var(--ok)}
+.m-terms.no{color:var(--warn)}
+#delMeDlg{width:min(94vw,480px)}
 /* header buttons: text on wide screens, icons (with badges) on phones */
 .btn.nav svg{display:none}
 @media (max-width:720px){
-  .who{display:none}
   .btn.nav{position:relative;padding:8px 9px}
   .btn.nav .lbl{display:none}
   .btn.nav svg{display:block;width:21px;height:21px}
@@ -482,6 +501,7 @@ body>main{flex:1 0 auto;width:100%}
   <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.2-6.5 8-6.5s7 2.5 8 6.5"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
@@ -493,7 +513,7 @@ body>main{flex:1 0 auto;width:100%}
   <button class="btn ghost nav" id="inboxBtn" aria-label="Inbox" title="Inbox" hidden><svg><use href="#i-mail"/></svg><span class="lbl">Inbox</span><span class="badge" id="inboxBadge" hidden></span></button>
   <button class="btn ghost nav" id="requestsBtn" aria-label="Removal requests" title="Removal requests" hidden><svg><use href="#i-flag"/></svg><span class="lbl">Requests</span><span class="badge" id="requestsBadge"></span></button>
   <button class="btn ghost nav" id="membersBtn" aria-label="Members" title="Members" hidden><svg><use href="#i-users"/></svg><span class="lbl">Members</span><span class="badge" id="pendingBadge" hidden></span></button>
-  <span class="who" id="meName" hidden></span>
+  <button class="btn ghost nav" id="meBtn" aria-label="My account" title="My account" hidden><svg><use href="#i-user"/></svg><span class="lbl who" id="meName"></span></button>
   <button class="btn ghost nav" id="signOutBtn" aria-label="Sign out" title="Sign out" hidden><svg><use href="#i-logout"/></svg><span class="lbl">Sign out</span></button>
 </div></header>
 
@@ -858,6 +878,62 @@ body>main{flex:1 0 auto;width:100%}
   <div class="sheet-foot"><button type="button" class="btn ghost" id="removeCancel">Cancel</button><button type="button" class="btn danger-fill" id="removeGo">Remove member</button></div>
 </dialog>
 
+<dialog id="acctDlg" class="sheet" aria-labelledby="acctTitle">
+  <div class="sheet-head"><h2 id="acctTitle">My account</h2><button type="button" class="btn" id="acctClose">Close</button></div>
+  <div class="sheet-body">
+    <div class="acct-id"><span class="m-av" id="acctAv" aria-hidden="true"></span><div><b id="acctName"></b><small id="acctEmail"></small></div><span class="chip" id="acctRole"></span></div>
+    <p class="hint" style="margin:0" id="acctStats"></p>
+
+    <form class="acct-block" id="nameForm" novalidate>
+      <h3>Your name</h3>
+      <div class="acct-row"><input id="acName" type="text" maxlength="60" autocomplete="name" aria-label="Your name"><button class="btn" id="acNameSave">Save name</button></div>
+      <p class="hint">Shown next to the photos and albums you add. Changing it updates them all.</p>
+      <p class="err" id="acNameErr" role="alert"></p>
+    </form>
+
+    <form class="acct-block" id="pwForm" novalidate>
+      <h3>Change password</h3>
+      <input type="text" autocomplete="username" id="acUser" hidden>
+      <div><label class="field" for="acCur">Current password</label><input id="acCur" type="password" autocomplete="current-password"></div>
+      <div><label class="field" for="acNew">New password</label><input id="acNew" type="password" autocomplete="new-password"><ul class="rules" id="acRules" aria-live="polite"></ul></div>
+      <div><label class="field" for="acNew2">Retype new password</label><input id="acNew2" type="password" autocomplete="new-password"><ul class="rules" id="acMatch" aria-live="polite"><li data-rule="match">Passwords match</li></ul></div>
+      <div class="split" style="justify-content:flex-end"><button class="btn primary" id="acPwSave">Change password</button></div>
+      <p class="err" id="acPwErr" role="alert"></p>
+    </form>
+
+    <div class="acct-block">
+      <h3>Your photos</h3>
+      <p class="hint" id="acPhotosText"></p>
+      <div class="acct-row"><button type="button" class="btn" id="acDownload">Download all my photos</button></div>
+    </div>
+
+    <div class="acct-block">
+      <h3>Terms &amp; privacy</h3>
+      <p class="hint" id="acTermsText"></p>
+      <p class="hint" style="display:flex;gap:14px;flex-wrap:wrap"><a href="terms.html" target="_blank" rel="noopener">Terms of Service ↗</a><a href="privacy.html" target="_blank" rel="noopener">Privacy Policy ↗</a></p>
+    </div>
+
+    <div class="acct-block danger">
+      <h3>Delete account</h3>
+      <p class="hint">Permanently removes your account and, unless you choose otherwise, your photos and albums. Download anything you want to keep first.</p>
+      <div class="acct-row"><button type="button" class="btn danger" id="acDelete">Delete my account…</button></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="delMeDlg" class="sheet" aria-labelledby="delMeTitle">
+  <form id="delMeForm" novalidate>
+    <div class="sheet-head"><h2 id="delMeTitle">Delete your account?</h2></div>
+    <div class="sheet-body">
+      <p style="margin:0">You'll be signed out, and your account, shares and requests are removed for good. Any invite links you made stop working.</p>
+      <label class="check" id="delMeContentRow" style="align-items:flex-start"><input type="checkbox" id="delMeContent" checked style="margin-top:3px"><span id="delMeContentLbl"></span></label>
+      <div><label class="field" for="delMeConfirm">Type <b>DELETE</b> to confirm</label><input id="delMeConfirm" type="text" autocomplete="off" spellcheck="false" autocapitalize="characters"></div>
+      <p class="err" id="delMeErr" role="alert"></p>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn ghost" id="delMeCancel">Cancel</button><button type="submit" class="btn danger-fill" id="delMeGo" disabled>Delete my account</button></div>
+  </form>
+</dialog>
+
 <dialog id="termsDlg" class="sheet" aria-labelledby="termsTitle" style="width:min(94vw,500px)">
   <form id="termsForm" novalidate>
     <div class="sheet-head"><h2 id="termsTitle">Terms &amp; privacy</h2></div>
@@ -1166,6 +1242,120 @@ $('termsOut').onclick = async () => {
   state.session = null; showAuth('in');
 };
 
+/* ---------- My account: name, password, download everything, delete account ---------- */
+const acPwRules = rulesChecker('acNew', 'acNew2', 'acRules', 'acMatch');
+const myPhotos = () => state.photos.filter(p => p.uploaderId === uid());
+const myAlbums = () => state.albums.filter(a => a.created_by === uid());
+const missingFn = (err, name) => new RegExp(name + '|could not find the function|schema cache', 'i').test(String(err?.message));
+function openAccount() {
+  const p = state.profile || {}, me = state.session?.user || {};
+  const role = p.is_admin ? 'admin' : p.is_moderator ? 'moderator' : 'member';
+  $('acctAv').textContent = initials(p.display_name);
+  $('acctName').textContent = p.display_name || '';
+  $('acctEmail').textContent = p.email || me.email || '';
+  $('acctRole').className = 'chip ' + (role === 'member' ? 'approved' : role); $('acctRole').textContent = role;
+  const photos = myPhotos(), albums = myAlbums(), bytes = photos.reduce((s, x) => s + x.size, 0);
+  $('acctStats').textContent = `${plural(photos.length, 'photo')} · ${plural(albums.length, 'album')} · ${fmtBytes(bytes)} of storage`;
+  $('acName').value = p.display_name || ''; $('acNameErr').textContent = '';
+  $('acUser').value = p.email || me.email || '';
+  for (const id of ['acCur', 'acNew', 'acNew2']) $(id).value = '';
+  acPwRules.reset(); $('acPwErr').textContent = '';
+  $('acPhotosText').textContent = photos.length
+    ? `Save a copy of the ${plural(photos.length, 'photo')} you've added (${fmtBytes(bytes)}), as a ZIP file.`
+    : 'You haven’t added any photos yet.';
+  $('acDownload').disabled = !photos.length;
+  const meta = me.user_metadata || {};
+  $('acTermsText').textContent = meta.terms_version === TERMS_VERSION
+    ? `You accepted the current Terms of Service and Privacy Policy${meta.terms_accepted_at ? ' on ' + fmtDate(new Date(meta.terms_accepted_at)) : ''}.`
+    : 'You haven’t accepted the current version yet.';
+  $('acctDlg').showModal();
+}
+$('meBtn').onclick = openAccount;
+$('acctClose').onclick = () => $('acctDlg').close();
+
+$('nameForm').onsubmit = async e => {
+  e.preventDefault();
+  const name = $('acName').value.trim();
+  $('acNameErr').textContent = '';
+  if (!name) return void ($('acNameErr').textContent = 'Enter your name.');
+  if (name === state.profile?.display_name) return;
+  $('acNameSave').disabled = true;
+  let { data, error } = await sb.rpc('rename_me', { new_name: name });
+  if (error && missingFn(error, 'rename_me')) { // older database: rename just the profile
+    ({ error } = await sb.from('profiles').update({ display_name: name }).eq('id', uid())); data = name;
+  }
+  $('acNameSave').disabled = false;
+  if (error) return void ($('acNameErr').textContent = errMsg(error));
+  state.profile.display_name = data || name;
+  $('meName').textContent = state.profile.display_name; $('acctName').textContent = state.profile.display_name;
+  $('acctAv').textContent = initials(state.profile.display_name);
+  toast('Name updated.');
+  loadAll(true);
+};
+
+$('pwForm').onsubmit = async e => {
+  e.preventDefault();
+  $('acPwErr').textContent = '';
+  if (!$('acCur').value) return void ($('acPwErr').textContent = 'Enter your current password.');
+  const problem = acPwRules.check();
+  if (problem) return void ($('acPwErr').textContent = problem);
+  if ($('acNew').value === $('acCur').value) return void ($('acPwErr').textContent = 'Choose a password different from your current one.');
+  $('acPwSave').disabled = true;
+  try {
+    // Prove it's really you before changing the password (protects an unlocked, unattended screen).
+    const { error: e1 } = await sb.auth.signInWithPassword({ email: $('acUser').value, password: $('acCur').value });
+    if (e1) throw (e1.code === 'invalid_credentials' || /invalid login/i.test(e1.message)) ? new Error('Your current password isn’t right.') : e1;
+    const { error: e2 } = await sb.auth.updateUser({ password: $('acNew').value });
+    if (e2) throw e2;
+    for (const id of ['acCur', 'acNew', 'acNew2']) $(id).value = '';
+    acPwRules.reset();
+    toast('Password changed.');
+  } catch (err) { $('acPwErr').textContent = err.message.startsWith('Your current') ? err.message : errMsg(err); }
+  finally { $('acPwSave').disabled = false; }
+};
+
+$('acDownload').onclick = async () => { $('acctDlg').close(); await downloadMany(myPhotos()); };
+
+$('acDelete').onclick = () => {
+  const photos = myPhotos(), albums = myAlbums();
+  const what = [photos.length ? plural(photos.length, 'photo') : '', albums.length ? plural(albums.length, 'album') : ''].filter(Boolean).join(' and ');
+  $('delMeContentRow').hidden = !what;
+  $('delMeContent').checked = true;
+  $('delMeContentLbl').textContent = `Also delete my ${what}. Untick to leave them for the people you shared them with (admins will manage them).`;
+  $('delMeConfirm').value = ''; $('delMeGo').disabled = true; $('delMeErr').textContent = '';
+  $('acctDlg').close(); $('delMeDlg').showModal(); $('delMeConfirm').focus();
+};
+$('delMeConfirm').oninput = () => { $('delMeGo').disabled = $('delMeConfirm').value.trim().toUpperCase() !== 'DELETE'; };
+$('delMeCancel').onclick = () => { $('delMeDlg').close(); openAccount(); };
+$('delMeForm').onsubmit = async e => {
+  e.preventDefault();
+  if ($('delMeConfirm').value.trim().toUpperCase() !== 'DELETE') return;
+  $('delMeGo').disabled = true; $('delMeErr').textContent = '';
+  try {
+    if (isAdmin()) { // check before deleting anything: the album must keep an admin
+      const { data, error } = await sb.rpc('list_members_admin');
+      if (error) throw error;
+      if (data.filter(m => m.is_admin && m.status === 'approved').length <= 1) throw new Error('You are the only admin. Make someone else an admin first (Members → a person → Role).');
+    }
+    if ($('delMeContent').checked && !$('delMeContentRow').hidden) {
+      await removePhotos(myPhotos());
+      const ids = myAlbums().map(a => a.id);
+      if (ids.length) { const { error } = await sb.from('albums').delete().in('id', ids); if (error) throw error; }
+    }
+    const { error } = await sb.rpc('delete_my_account');
+    if (error) throw error;
+    $('delMeDlg').close();
+    teardown();
+    await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    state.session = null; showAuth('in');
+    $('authNoteText').textContent = 'Your account was deleted. Thanks for being part of the album.'; $('authNote').hidden = false;
+  } catch (err) {
+    $('delMeErr').textContent = missingFn(err, 'delete_my_account') ? 'Deleting your own account isn’t switched on yet. Ask the album owner to remove it for you.'
+      : err.message?.startsWith('You are the only admin') ? err.message : errMsg(err);
+    $('delMeGo').disabled = $('delMeConfirm').value.trim().toUpperCase() !== 'DELETE';
+  }
+};
+
 /* ---------- password fields ---------- */
 function addEye(input) { // show/hide toggle on every password box
   const wrap = el('div', 'pw');
@@ -1214,7 +1404,7 @@ function show(which) {
   for (const id of ['booting', 'auth', 'pending', 'app']) $(id).hidden = id !== which;
   const inside = which === 'app' || which === 'pending';
   $('signOutBtn').hidden = !inside;
-  $('meName').hidden = which !== 'app';
+  $('meBtn').hidden = which !== 'app';
   $('membersBtn').hidden = !(which === 'app' && isModerator());
 }
 function authMode(mode) {
@@ -2656,7 +2846,8 @@ const M_FILTERS = [
   ['approved', 'Active', m => m.status === 'approved'],
   ['moderator', 'Moderators', m => m.is_moderator && !m.is_admin],
   ['admin', 'Admins', m => m.is_admin],
-  ['blocked', 'Turned off', m => m.status === 'blocked']
+  ['blocked', 'Turned off', m => m.status === 'blocked'],
+  ['terms', 'Terms not accepted', m => m.status !== 'blocked' && m.terms_version !== TERMS_VERSION] // only when the database reports it
 ];
 const fold = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const roleOf = m => m.is_admin ? 'admin' : m.is_moderator ? 'moderator' : 'member';
@@ -2679,7 +2870,10 @@ async function openMembers() {
   await reloadMembers();
 }
 async function reloadMembers() {
-  const { data, error } = await sb.rpc('list_members_admin');
+  // Newer list includes who accepted the Terms; fall back if the database doesn't have it yet.
+  let { data, error } = await sb.rpc('list_members_with_terms');
+  mUI.hasTerms = !error;
+  if (error && /list_members_with_terms|could not find the function|schema cache/i.test(String(error.message))) ({ data, error } = await sb.rpc('list_members_admin'));
   if (error) { $('memberList').replaceChildren(el('li', 'm-empty err', errMsg(error))); return; }
   mUI.data = data || [];
   const n = mUI.data.filter(m => m.status === 'pending').length;
@@ -2710,7 +2904,7 @@ function renderMembers() {
   const pending = all.filter(m => m.status === 'pending').length;
   $('mTotal').textContent = `${plural(all.length, 'person').replace('persons', 'people')}${pending ? ` · ${pending} waiting` : ''}`;
   // Filter chips with live counts.
-  $('mFilters').replaceChildren(...M_FILTERS.map(([key, label, f]) => {
+  $('mFilters').replaceChildren(...M_FILTERS.filter(([key]) => key !== 'terms' || mUI.hasTerms).map(([key, label, f]) => {
     const n = all.filter(f).length;
     const b = el('button', (n ? '' : 'zero') + (key === 'pending' && n ? ' attn' : ''));
     b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', mUI.filter === key);
@@ -2799,6 +2993,14 @@ function memberRow(m, nPhotos, nAlbums) {
   if (isAdmin()) bits.push(`${plural(nPhotos, 'photo')} · ${plural(nAlbums, 'album')}`);
   meta.textContent = bits.join(' · ');
   panel.append(meta);
+  if (mUI.hasTerms) {
+    const ok = m.terms_version === TERMS_VERSION;
+    const t = el('p', 'm-meta m-terms' + (ok ? ' ok' : ' no'));
+    t.textContent = ok ? `\u2713 Accepted the Terms and Privacy Policy${m.terms_accepted_at ? ' on ' + fmtDate(new Date(m.terms_accepted_at)) : ''}`
+      : m.terms_version ? `Accepted an older version of the Terms (${m.terms_version}); will be asked again at next sign-in`
+      : 'Hasn\u2019t accepted the Terms yet; will be asked at next sign-in';
+    panel.append(t);
+  }
   if (!canManage) {
     panel.append(el('p', 'm-meta', me ? 'This is you. Nobody can change their own role or remove themselves, so there’s always an admin.' : 'Only admins can manage admins and moderators.'));
     li.append(panel); return li;
