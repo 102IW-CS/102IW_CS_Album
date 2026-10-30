@@ -370,8 +370,12 @@ drop policy if exists "creator or admin can edit albums" on public.albums;
 drop policy if exists "creator or admin can delete albums" on public.albums;
 
 drop policy if exists "albums: see own, shared, or all if admin" on public.albums;
+-- Checks the row's own fields: creating an album returns the new row, and a lookup by id
+-- can't see a row inserted in the same statement.
 create policy "albums: see own, shared, or all if admin" on public.albums
-  for select to authenticated using (private.can_see_album(id));
+  for select to authenticated
+  using (private.is_approved() and (private.is_admin() or created_by = auth.uid() or shared
+         or exists (select 1 from public.shares s where s.album_id = albums.id and s.member = auth.uid())));
 
 drop policy if exists "albums: approved can create" on public.albums;
 create policy "albums: approved can create" on public.albums
