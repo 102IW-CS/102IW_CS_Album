@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="no-referrer">
 <title>Photo Share</title>
-<script>try{var t=localStorage.getItem('photoshare:theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script>var t='dark';try{if(localStorage.getItem('photoshare:theme')==='light')t='light'}catch(e){}document.documentElement.setAttribute('data-theme',t)</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -153,6 +153,13 @@ form.stack{display:grid;gap:16px}
 @media (max-width:560px){.album h3{font-size:19px}}
 .album .meta-line{font-size:11px}
 .album.special h3{font-style:italic}
+.album .cover .del{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;opacity:0;transition:opacity .15s,background .15s;z-index:2}
+.album .cover .del:hover{background:#b1281f}
+.album:hover .cover .del,.album .cover .del:focus-visible{opacity:1}
+@media (hover:none){.album .cover .del{opacity:1}}
+.album .cover .del svg{width:17px;height:17px}
+.album .cover .vis{position:absolute;left:8px;bottom:8px;display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;z-index:2;max-width:calc(100% - 60px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.album .cover .vis svg{width:13px;height:13px;flex:none}
 .album.new .cover{display:grid;place-items:center;border:1.5px dashed var(--line);background:transparent;color:var(--muted)}
 .album.new:hover .cover{border-color:var(--accent);color:var(--accent)}
 .album.new .cover span{display:grid;justify-items:center;gap:6px;font-weight:600;font-size:14px}
@@ -274,6 +281,9 @@ dialog.sheet[open]{display:flex;flex-direction:column}
   <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.6 3.5 5.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
 </svg>
 
@@ -401,6 +411,7 @@ dialog.sheet[open]{display:flex;flex-direction:column}
           <div class="meta-line" id="albumMeta"></div>
         </div>
         <div class="actions">
+          <button class="btn" id="shareBtn" hidden></button>
           <button class="btn" id="editAlbumBtn" hidden>Rename</button>
           <button class="btn danger" id="deleteAlbumBtn" hidden>Delete album</button>
         </div>
@@ -465,10 +476,21 @@ dialog.sheet[open]{display:flex;flex-direction:column}
     <div class="sheet-body">
       <div><label class="field" for="albumName">Name</label><input id="albumName" type="text" maxlength="80" required placeholder="e.g. Holiday party 2026"></div>
       <div><label class="field" for="albumDescIn">Description <span class="hint">(optional)</span></label><textarea id="albumDescIn" maxlength="300" placeholder="What's in this album?"></textarea></div>
+      <label class="check" id="albumSharedRow" hidden style="align-items:flex-start"><input type="checkbox" id="albumShared" style="margin-top:3px"><span>Share with all members: everyone can see it and add photos</span></label>
       <p class="err" id="albumErr" role="alert"></p>
     </div>
     <div class="sheet-foot"><button type="button" class="btn ghost" id="albumCancel">Cancel</button><button class="btn primary" id="albumSave">Create album</button></div>
   </form>
+</dialog>
+
+<dialog id="delAlbumDlg" class="sheet" aria-labelledby="delAlbumTitle">
+  <div class="sheet-head"><h2 id="delAlbumTitle">Delete album</h2></div>
+  <div class="sheet-body">
+    <p id="delAlbumText" style="margin:0"></p>
+    <label class="check" id="delAlbumPhotosRow" style="align-items:flex-start"><input type="checkbox" id="delAlbumPhotos" style="margin-top:3px"><span id="delAlbumPhotosLbl"></span></label>
+    <p class="err" id="delAlbumErr" role="alert"></p>
+  </div>
+  <div class="sheet-foot"><button type="button" class="btn ghost" id="delAlbumCancel">Cancel</button><button type="button" class="btn danger-fill" id="delAlbumGo">Delete album</button></div>
 </dialog>
 
 <dialog id="moveDlg" class="sheet" aria-labelledby="moveTitle">
@@ -904,7 +926,7 @@ async function fetchAllPhotos() {
 }
 async function fetchAlbums() {
   const { data, error } = await sb.from('albums')
-    .select('id,name,description,cover_photo_id,created_by,created_by_name,created_at').order('created_at', { ascending: false });
+    .select('id,name,description,cover_photo_id,created_by,created_by_name,created_at,shared').order('created_at', { ascending: false });
   if (error) throw error;
   return data;
 }
@@ -1033,21 +1055,33 @@ function route() {
 }
 
 const albumPhotos = id => state.photos.filter(p => p.albumId === id);
-const canEditAlbum = a => !!a && (a.created_by === uid() || isAdmin());
-const canChange = () => state.profile?.status === 'approved'; // any member can move or delete
+const canEditAlbum = a => !!a && (isAdmin() || (a.created_by === uid() && !a.shared)); // rename, cover, delete
+const canChange = () => state.profile?.status === 'approved'; // delete anything you can see
+const canMove = p => p.uploaderId === uid() || isAdmin();
 function coverOf(a) {
   const list = albumPhotos(a.id);
   return list.find(p => p.id === a.cover_photo_id) || list[0] || null;
 }
 function monthYear(d) { return d ? d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''; }
 
-function albumCard({ href, name, count, date, cover, special }) {
+function albumCard({ href, name, count, date, cover, special, album }) {
   const a = el('a', 'album' + (special ? ' special' : '')); a.href = href;
   const c = el('div', 'cover');
   const ph = el('span', 'ph'); ph.append(svgIcon('i-image'));
   const path = previewPath(cover);
   if (path) { ph.hidden = true; c.append(lazyImg(c, path, ph)); }
   c.append(ph, el('span', 'stack'));
+  if (album) {
+    const v = el('span', 'vis');
+    v.append(svgIcon(album.shared ? 'i-users' : 'i-lock'), document.createTextNode(album.shared ? 'Shared' : (album.created_by === uid() ? 'Private' : `Private · ${album.created_by_name || 'member'}`)));
+    c.append(v);
+    if (canEditAlbum(album)) {
+      const d = el('button', 'del'); d.type = 'button'; d.setAttribute('aria-label', `Delete album ${album.name}`); d.title = 'Delete album';
+      d.append(svgIcon('i-trash'));
+      d.onclick = e => { e.preventDefault(); e.stopPropagation(); openDeleteAlbum(album); };
+      c.append(d);
+    }
+  }
   a.append(c, el('h3', '', name), el('div', 'meta-line', [plural(count, 'photograph'), monthYear(date)].filter(Boolean).join(' · ')));
   return a;
 }
@@ -1055,9 +1089,10 @@ function albumCard({ href, name, count, date, cover, special }) {
 function renderIndex() {
   const cards = [];
   if (state.photos.length) cards.push(albumCard({ href: '#all', name: 'All photos', count: state.photos.length, date: state.photos[0]?.date, cover: state.photos[0], special: true }));
-  for (const a of state.albums) {
+  const ordered = state.albums.slice().sort((x, y) => (y.shared - x.shared) || (new Date(y.created_at) - new Date(x.created_at))); // shared first
+  for (const a of ordered) {
     const list = albumPhotos(a.id);
-    cards.push(albumCard({ href: '#a-' + a.id, name: a.name, count: list.length, date: list[0]?.date || new Date(a.created_at), cover: coverOf(a) }));
+    cards.push(albumCard({ href: '#a-' + a.id, name: a.name, count: list.length, date: list[0]?.date || new Date(a.created_at), cover: coverOf(a), album: a }));
   }
   const unsorted = albumPhotos(null);
   if (unsorted.length) cards.push(albumCard({ href: '#unsorted', name: 'Unsorted', count: unsorted.length, date: unsorted[0].date, cover: unsorted[0], special: true }));
@@ -1068,6 +1103,7 @@ function renderIndex() {
   if (!state.albums.length) cards.push(add); // the header button covers it once albums exist
   $('albumGrid').replaceChildren(...cards);
   $('indexMeta').textContent = `${plural(state.photos.length, 'photograph')} · ${plural(state.albums.length, 'album')}`;
+  $('meter').hidden = !isAdmin(); // members only see part of the collection
   const pct = Math.min(100, state.bytes / (CONFIG.storageGB * 1024 ** 3) * 100);
   $('meterTxt').textContent = `${fmtBytes(state.bytes)} of ${CONFIG.storageGB} GB`;
   $('meterBar').style.width = pct + '%';
@@ -1094,14 +1130,21 @@ function renderAlbum() {
   const title = r.kind === 'all' ? 'All photos' : r.kind === 'unsorted' ? 'Unsorted' : a?.name || '';
   $('albumTitle').textContent = title;
   $('albumTitle').style.fontStyle = r.kind === 'album' ? '' : 'italic';
-  $('albumDesc').textContent = r.kind === 'album' ? (a?.description || '') : r.kind === 'unsorted' ? 'Photos that aren’t in an album yet. Select some and choose Move to…' : 'Every photo in the collection.';
+  $('albumDesc').textContent = r.kind === 'album' ? (a?.description || '')
+    : r.kind === 'unsorted' ? (isAdmin() ? 'Photos from every member that aren\u2019t in an album yet.' : 'Your photos that aren\u2019t in an album yet. Only you and the admin can see them.')
+    : (isAdmin() ? 'Every photo from every member.' : 'Your photos, plus everything in shared albums.');
   $('albumDesc').hidden = !$('albumDesc').textContent;
   const meta = [plural(all.length, 'photograph')];
-  if (a?.created_by_name) meta.push(`by ${a.created_by_name}`);
+  if (a) meta.push(a.shared ? 'Shared with all members' : (a.created_by === uid() ? (isAdmin() ? 'Private: only you' : 'Private: only you and the admin') : `Private: ${a.created_by_name || 'a member'} and admins`));
+  if (a?.created_by_name && a.created_by !== uid()) meta.push(`by ${a.created_by_name}`);
   if (a) meta.push(`started ${fmtDate(new Date(a.created_at))}`);
   $('albumMeta').textContent = meta.join(' · ');
   $('editAlbumBtn').hidden = $('deleteAlbumBtn').hidden = !canEditAlbum(a);
-  $('dropText').textContent = r.kind === 'album' ? `Drop photos here to add them to “${a?.name}”, paste them, or` : 'Drop photos here (they’ll go to Unsorted), paste them, or';
+  $('shareBtn').hidden = !(a && isAdmin());
+  if (a) $('shareBtn').replaceChildren(svgIcon(a.shared ? 'i-lock' : 'i-users'), document.createTextNode(a.shared ? 'Make private' : 'Share with everyone'));
+  $('dropText').textContent = r.kind === 'album'
+    ? `Drop photos here to add them to \u201c${a?.name}\u201d${a?.shared ? ' (all members will see them)' : ''}, paste them, or`
+    : 'Drop photos here (they\u2019ll go to Unsorted, seen only by you and the admin), paste them, or';
   $('dlAllLbl').textContent = r.kind === 'album' ? 'Download album' : 'Download all';
   renderGrid();
 }
@@ -1174,7 +1217,8 @@ function updateSelBar() {
   const sel = selectedPhotos();
   $('selCount').textContent = `${sel.length} selected`;
   $('selDl').disabled = !sel.length;
-  $('selDel').disabled = $('selMove').disabled = !sel.some(canChange);
+  $('selDel').disabled = !sel.some(canChange);
+  $('selMove').disabled = !sel.some(canMove);
 }
 
 /* ---------- albums: create, rename, delete, move, cover ---------- */
@@ -1184,6 +1228,8 @@ function openAlbumDlg(album = null) {
   $('albumSave').textContent = album ? 'Save' : 'Create album';
   $('albumName').value = album?.name || '';
   $('albumDescIn').value = album?.description || '';
+  $('albumSharedRow').hidden = !isAdmin();
+  $('albumShared').checked = album ? !!album.shared : true;
   $('albumErr').textContent = '';
   $('albumDlg').showModal();
   $('albumName').focus();
@@ -1192,16 +1238,18 @@ $('albumCancel').onclick = () => $('albumDlg').close();
 $('albumForm').onsubmit = async e => {
   e.preventDefault();
   const name = $('albumName').value.trim(), description = $('albumDescIn').value.trim() || null;
+  const fields = { name, description };
+  if (isAdmin()) fields.shared = $('albumShared').checked;
   if (!name) return void ($('albumErr').textContent = 'Give the album a name.');
   $('albumSave').disabled = true;
   try {
     const a = state.editingAlbum;
     if (a) {
-      const { error } = await sb.from('albums').update({ name, description }).eq('id', a.id);
+      const { error } = await sb.from('albums').update(fields).eq('id', a.id);
       if (error) throw error;
       toast('Album updated.');
     } else {
-      const { data, error } = await sb.from('albums').insert({ name, description }).select('id').single();
+      const { data, error } = await sb.from('albums').insert(fields).select('id').single();
       if (error) throw error;
       toast(`Album “${name}” created.`);
       $('albumDlg').close();
@@ -1216,19 +1264,51 @@ $('albumForm').onsubmit = async e => {
 };
 $('newAlbumBtn').onclick = () => openAlbumDlg();
 $('editAlbumBtn').onclick = () => openAlbumDlg(currentAlbum());
-$('deleteAlbumBtn').onclick = async () => {
-  const a = currentAlbum(); if (!a) return;
+$('deleteAlbumBtn').onclick = () => { const a = currentAlbum(); if (a) openDeleteAlbum(a); };
+
+let delAlbum = null;
+function openDeleteAlbum(a) {
+  delAlbum = a;
   const n = albumPhotos(a.id).length;
-  if (!(await ask(`Delete the album “${a.name}”?`, n ? `Its ${plural(n, 'photo')} won’t be deleted; they move to Unsorted.` : 'The album is empty.', 'Delete album'))) return;
-  const { error } = await sb.from('albums').delete().eq('id', a.id);
+  $('delAlbumTitle').textContent = `Delete \u201c${a.name}\u201d?`;
+  $('delAlbumText').textContent = n ? `It has ${plural(n, 'photo')}. Unless you tick the box, they move to Unsorted and nothing is lost.` : 'This album is empty.';
+  $('delAlbumPhotosRow').hidden = !n;
+  $('delAlbumPhotos').checked = false;
+  $('delAlbumPhotosLbl').textContent = `Also delete the ${plural(n, 'photo')} for everyone. Frees up space; can\u2019t be undone.`;
+  $('delAlbumGo').textContent = 'Delete album';
+  $('delAlbumErr').textContent = '';
+  $('delAlbumDlg').showModal();
+}
+$('delAlbumPhotos').onchange = () => { $('delAlbumGo').textContent = $('delAlbumPhotos').checked ? 'Delete album and photos' : 'Delete album'; };
+$('delAlbumCancel').onclick = () => $('delAlbumDlg').close();
+$('delAlbumGo').onclick = async () => {
+  const a = delAlbum; if (!a) return;
+  $('delAlbumGo').disabled = true; $('delAlbumErr').textContent = '';
+  try {
+    let removed = 0;
+    if ($('delAlbumPhotos').checked) removed = await removePhotos(albumPhotos(a.id));
+    const { data, error } = await sb.from('albums').delete().eq('id', a.id).select('id');
+    if (error) throw error;
+    if (!data.length) throw new Error("You don't have permission to delete this album.");
+    $('delAlbumDlg').close();
+    toast(removed ? `Album and ${plural(removed, 'photo')} deleted.` : 'Album deleted.');
+    if (state.route.kind === 'album' && state.route.id === a.id) location.hash = 'albums';
+    await loadAll(true);
+  } catch (err) { $('delAlbumErr').textContent = errMsg(err); }
+  finally { $('delAlbumGo').disabled = false; }
+};
+
+$('shareBtn').onclick = async () => {
+  const a = currentAlbum(); if (!a || !isAdmin()) return;
+  if (!a.shared && !(await ask(`Share \u201c${a.name}\u201d with all members?`, 'Every approved member will see its photos and can add their own.', 'Share'))) return;
+  const { error } = await sb.from('albums').update({ shared: !a.shared }).eq('id', a.id);
   if (error) return toast(errMsg(error), 'error');
-  toast('Album deleted.');
-  location.hash = 'albums';
+  toast(a.shared ? 'Album is private again.' : 'Album shared with all members.');
   await loadAll(true);
 };
 
 function openMove(ids) {
-  const list = state.photos.filter(p => ids.includes(p.id) && canChange(p));
+  const list = state.photos.filter(p => ids.includes(p.id) && canMove(p));
   if (!list.length) return toast('You can only move photos you added.', 'error');
   state.moveIds = list.map(p => p.id);
   const skipped = ids.length - list.length;
@@ -1239,7 +1319,7 @@ function openMove(ids) {
     r.checked = value === (cur || ''); l.append(r, el('span', '', label)); return l;
   };
   const albums = state.albums.slice().sort((x, y) => x.name.localeCompare(y.name));
-  $('moveList').replaceChildren(...albums.map(a => opt(a.id, a.name)), opt('', 'Unsorted (no album)'));
+  $('moveList').replaceChildren(...albums.map(a => opt(a.id, a.name + (a.shared ? '  (shared)' : ''))), opt('', 'Unsorted (no album)'));
   $('moveNew').value = ''; $('moveErr').textContent = '';
   $('moveDlg').showModal();
 }
@@ -1407,22 +1487,35 @@ async function runUploads() {
 }
 
 /* ---------- deleting ---------- */
+// Remove files first: whether you may delete a shared file is checked against its photo record.
+async function removePhotos(list) {
+  if (!list.length) return 0;
+  const files = list.flatMap(p => [p.path, p.thumbPath]).filter(Boolean);
+  for (let i = 0; i < files.length; i += 100) {
+    const { error } = await bucket().remove(files.slice(i, i + 100));
+    if (error) throw error;
+  }
+  let n = 0;
+  for (let i = 0; i < list.length; i += 200) {
+    const { data, error } = await sb.from('photos').delete().in('id', list.slice(i, i + 200).map(p => p.id)).select('id');
+    if (error) throw error;
+    n += data.length;
+  }
+  return n;
+}
 async function deletePhotos(list) {
   const mine = list.filter(canChange);
   if (!mine.length) return;
   const n = mine.length, others = mine.filter(p => p.uploaderId !== uid()).length;
-  const sub = (others ? `${others === n ? (n === 1 ? 'It was' : 'They were') : `${others} of them were`} added by someone else. ` : '') + 'This removes them for everyone and can’t be undone.';
+  const sub = (others ? `${others === n ? (n === 1 ? 'It was' : 'They were') : `${others} of them were`} added by someone else. ` : '') + 'This removes them for everyone and can\u2019t be undone.';
   if (!(await ask(`Delete ${plural(n, 'photo')} for everyone?`, sub, 'Delete'))) return;
-  busy(true); setStatus(`Deleting ${plural(n, 'photo')}…`);
+  busy(true); setStatus(`Deleting ${plural(n, 'photo')}\u2026`);
   try {
-    const { data, error } = await sb.from('photos').delete().in('id', mine.map(p => p.id)).select('id,path,thumb_path');
-    if (error) throw error;
-    const files = data.flatMap(r => [r.path, r.thumb_path]).filter(Boolean);
-    if (files.length) await bucket().remove(files);
+    const done = await removePhotos(mine);
     setSelecting(false);
     if ($('viewer').open) $('viewer').close();
     await loadAll(true);
-    toast(`Deleted ${plural(data.length, 'photo')}.`);
+    toast(`Deleted ${plural(done, 'photo')}.`);
   } catch (e) {
     toast(errMsg(e), 'error');
   } finally { busy(false); setStatus(''); }
@@ -1500,7 +1593,8 @@ function showInViewer() {
   });
   $('vPrev').hidden = state.vi <= 0;
   $('vNext').hidden = state.vi >= state.view.length - 1;
-  $('vDel').hidden = $('vMove').hidden = !canChange(p);
+  $('vDel').hidden = !canChange(p);
+  $('vMove').hidden = !canMove(p);
   const a = currentAlbum();
   $('vCover').hidden = !(a && canEditAlbum(a) && p.albumId === a.id);
   $('vCover').textContent = a?.cover_photo_id === p.id ? 'Album cover ✓' : 'Set as cover';
@@ -1626,26 +1720,18 @@ document.addEventListener('paste', e => {
 });
 window.addEventListener('beforeunload', e => { if (state.uploading || state.queue.length) { e.preventDefault(); e.returnValue = ''; } });
 
-/* ---------- theme: auto (follows the device) → light → dark ---------- */
+/* ---------- theme: dark by default; light only when someone picks it ---------- */
 const THEME_KEY = 'photoshare:theme';
-const THEMES = { auto: ['i-auto', 'Theme: automatic (matches your device). Switch to light'],
-                 light: ['i-sun', 'Theme: light. Switch to dark'], dark: ['i-moon', 'Theme: dark. Switch to automatic'] };
-function applyTheme(t) {
-  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
-  else document.documentElement.removeAttribute('data-theme');
-  const [icon, label] = THEMES[t] || THEMES.auto;
-  $('themeBtn').replaceChildren(svgIcon(icon));
+const currentTheme = () => store.get(THEME_KEY) === 'light' ? 'light' : 'dark';
+function applyTheme() {
+  const t = currentTheme();
+  document.documentElement.setAttribute('data-theme', t);
+  const label = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  $('themeBtn').replaceChildren(svgIcon(t === 'dark' ? 'i-sun' : 'i-moon')); // icon shows where a tap takes you
   $('themeBtn').setAttribute('aria-label', label); $('themeBtn').title = label;
 }
-let theme = store.get(THEME_KEY) || 'auto';
-applyTheme(theme);
-$('themeBtn').onclick = () => {
-  theme = { auto: 'light', light: 'dark', dark: 'auto' }[theme] || 'auto';
-  store.set(THEME_KEY, theme, true); applyTheme(theme);
-  const old = document.querySelector('.toast.theme'); if (old) old.remove(); // one notice at a time
-  toast({ auto: 'Theme now follows your device.', light: 'Light theme on.', dark: 'Dark theme on.' }[theme]);
-  document.querySelector('#toasts .toast:last-child')?.classList.add('theme');
-};
+applyTheme();
+$('themeBtn').onclick = () => { store.set(THEME_KEY, currentTheme() === 'dark' ? 'light' : 'dark', true); applyTheme(); };
 
 $('optimize').checked = store.get('photoshare:optimize') !== '0';
 $('optimize').onchange = e => store.set('photoshare:optimize', e.target.checked ? '1' : '0', true);

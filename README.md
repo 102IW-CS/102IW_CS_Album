@@ -10,8 +10,9 @@ A private photo album for friends and colleagues. People create an account on th
 - The page is static, so it can't keep secrets. It only contains Supabase's **publishable** key, which is meant to be public.
 - What protects the photos is the set of **access rules in the database** (`supabase/setup.sql`). They're enforced on Supabase's servers, so editing the page can't get around them:
   - New accounts start as **pending** and see nothing until an admin approves them.
-  - Only approved members can see photos. Files are in a private bucket and open only through short-lived signed links.
-  - People upload only into their own folder. Any approved member can move or delete photos.
+  - **Members see only their own photos and albums, plus albums the admin marks Shared.** Admins see everything.
+  - Files are in a private bucket and open only through short-lived signed links, checked against the same rules.
+  - People upload only into their own folder. Members can delete any photo they can see, and move their own.
   - Who uploaded a photo, and when, is stamped by the server, so it can't be faked.
   - The first account ever created becomes the admin.
 - Passwords are stored and checked by Supabase Auth; the page never sees or stores them.
@@ -23,12 +24,12 @@ A private photo album for friends and colleagues. People create an account on th
 3. **Email confirmation (recommended: off):** Authentication → Sign In / Providers → Email → turn off **Confirm email**. You approve every account anyway, and Supabase's built-in email sender only allows a few emails per hour. Password-reset emails still work.
 4. **Become the admin:** open the site and create your account **first**.
 
-## Albums
+## Albums and sharing
 
-- Any approved member can start an album and add photos to it. Photos added outside an album land in **Unsorted**.
-- **Move to…** (select photos, or from the photo viewer) files photos into an album or creates a new one on the spot.
-- The album's creator or an admin can rename it, set its cover (**Set as cover** in the viewer) or delete it. Deleting an album never deletes photos; they go back to Unsorted.
-- Any approved member can move or delete any photo, so everyone can help tidy up and free space. Deleting asks first and can't be undone.
+- Members create their own albums; those are **private** (only the member and admins see them). Photos added outside an album land in **Unsorted**, also private.
+- Only an admin can make an album **Shared**: open it and tap **Share with everyone** (or tick the box when creating it). Every member can then see it and add their own photos, which become visible to everyone in it. **Make private** undoes it.
+- **Move to…** files your own photos into one of your albums or a shared one (admins can move any photo).
+- **Delete:** members can delete any photo they can see. Albums can be deleted from the album page or the trash button on its card, by the album's creator (private albums) or an admin (any). The dialog lets you keep the photos (they go to Unsorted) or delete them too to free space.
 - Each album has its own link (`…/#a-<id>`), so you can send someone straight to it.
 
 ## Everyday use
@@ -41,4 +42,4 @@ A private photo album for friends and colleagues. People create an account on th
 
 ## Features
 
-Albums with covers · justified gallery layout · Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.
+Private and shared albums · light/dark theme (dark by default) · justified gallery layout · Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.
