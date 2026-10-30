@@ -530,7 +530,7 @@ body>main{flex:1 0 auto;width:100%}
     <div class="intro">
       <div class="eyebrow">Private album · members only</div>
       <h1>Photo <em>Share</em></h1>
-      <p>A private collection for friends and colleagues. Every account is approved by the album owner before it can see a single frame.</p>
+      <p>A private collection for friends and colleagues. <span id="introApproval">Every account is approved by the album owner before it can see a single frame.</span></p>
       <p class="privacy-link"><a href="contact.html#how-it-works">How your photos are kept private &rarr;</a></p>
       <div class="frames" aria-hidden="true">
         <figure><canvas data-scene="0"></canvas><figcaption>Ridge, 18:42</figcaption></figure>
@@ -572,7 +572,7 @@ body>main{flex:1 0 auto;width:100%}
           <label class="field" for="upPass2">Retype password</label><input id="upPass2" type="password" autocomplete="new-password" required>
           <ul class="rules" id="upMatch" aria-live="polite"><li data-rule="match">Passwords match</li></ul>
         </div>
-        <p class="hint" style="margin:0">The album owner approves new accounts before they can see photos.</p>
+        <p class="hint" style="margin:0" id="upApproval">The album owner approves new accounts before they can see photos.</p>
         <label class="check agree" id="upAgreeRow"><input type="checkbox" id="upAgree" required><span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
         <div class="split" style="justify-content:flex-end"><button class="btn primary" id="upBtn">Create account</button></div>
         <p class="err" id="upErr" role="alert"></p>
@@ -868,6 +868,13 @@ body>main{flex:1 0 auto;width:100%}
         <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
         <div style="flex:1.4;min-width:200px"><label class="field" for="setEmail">Email</label><input id="setEmail" type="email" maxlength="120"></div>
       </div>
+      <div class="section-label" style="margin:6px 0 0">New accounts</div>
+      <div><label class="field" for="setApprove">Approval</label>
+        <select id="setApprove"><option value="false">An admin or moderator approves each account</option><option value="true">Approve automatically once the email is confirmed</option></select></div>
+      <div id="setDomainsRow" hidden><label class="field" for="setDomains">Only for these email domains <span class="opt" style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input id="setDomains" type="text" maxlength="500" spellcheck="false" autocomplete="off" placeholder="e.g. us.af.mil, gmail.com">
+        <p class="hint" style="margin:6px 0 0">Leave empty to approve every confirmed address. Otherwise only these domains (and their subdomains) are approved automatically; everyone else waits for you.</p></div>
+      <p class="hint" style="margin:0" id="setApproveHint"></p>
       <div class="section-label" style="margin:6px 0 0">Sign-in sessions · apply to everyone</div>
       <div class="row" style="align-items:flex-start">
         <div style="flex:1;min-width:200px"><label class="field" for="setIdle">Sign out after no activity</label>
@@ -1136,12 +1143,19 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 const policy = () => { try { return JSON.parse(lsGet(POLICY_KEY)) || {}; } catch { return {}; } };
 const idleLabel = m => m >= 60 ? plural(m / 60, 'hour') : plural(m, 'minute');
 function setPolicy(s) {
-  lsSet(POLICY_KEY, JSON.stringify({ idle: s.idle_timeout_minutes ?? null, remember: s.allow_remember !== false }));
+  lsSet(POLICY_KEY, JSON.stringify({ idle: s.idle_timeout_minutes ?? null, remember: s.allow_remember !== false, autoApprove: !!s.auto_approve }));
   applyPolicy();
 }
 function applyPolicy() {
   const p = policy();
   $('rememberRow').hidden = p.remember === false;
+  // Describe what happens after sign-up, matching the admins' approval setting.
+  $('upApproval').textContent = p.autoApprove
+    ? 'After you confirm your email, your account may be approved right away; otherwise an admin approves it.'
+    : 'The album owner approves new accounts before they can see photos.';
+  $('introApproval').textContent = p.autoApprove
+    ? 'Every account confirms its email address before it can see a single frame.'
+    : 'Every account is approved by the album owner before it can see a single frame.';
   if (p.remember === false && remember()) { // "Keep me signed in" no longer allowed: move this browser's session
     store.set(REMEMBER_KEY, '0', true);
     try {
@@ -1153,8 +1167,11 @@ function applyPolicy() {
 }
 applyPolicy();
 // Visitors can read just these two rules, so the sign-in form is right before anyone signs in.
-sb.from('album_settings').select('idle_timeout_minutes,allow_remember').eq('id', 1).maybeSingle()
-  .then(({ data }) => { if (data) setPolicy(data); }, () => {});
+sb.from('album_settings').select('idle_timeout_minutes,allow_remember,auto_approve').eq('id', 1).maybeSingle()
+  .then(async ({ data, error }) => {
+    if (error) ({ data } = await sb.from('album_settings').select('idle_timeout_minutes,allow_remember').eq('id', 1).maybeSingle()); // older database
+    if (data) setPolicy(data);
+  }, () => {});
 
 const idle = { last: Date.now(), wrote: 0, warned: false, ending: false };
 const lastActive = () => Math.max(idle.last, +lsGet(ACTIVE_KEY) || 0);
@@ -2975,6 +2992,7 @@ async function openMembers() {
   loadSettings().then(s => {
     $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
     $('setIdle').value = String(s.idle_timeout_minutes || ''); $('setRemember').value = String(s.allow_remember !== false);
+    $('setApprove').value = String(!!s.auto_approve); $('setDomains').value = s.auto_approve_domains || ''; syncApproveUI();
   }).catch(() => {});
   await reloadMembers();
 }
@@ -3253,16 +3271,54 @@ $('settingsForm').onsubmit = async e => {
   if (email && !validEmail(email)) return void ($('setErr').textContent = 'That email doesn’t look right.');
   $('setSave').disabled = true;
   const rules = { idle_timeout_minutes: $('setIdle').value ? +$('setIdle').value : null, allow_remember: $('setRemember').value === 'true' };
+  const auto = $('setApprove').value === 'true';
+  const domains = cleanDomains($('setDomains').value);
+  const approval = { auto_approve: auto, auto_approve_domains: domains || null }; // kept while off, so switching back on remembers it
+  const wasAuto = !!state.settings?.auto_approve;
   const { error } = await sb.from('album_settings').update({
-    owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null, ...rules
+    owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null, ...rules, ...approval
   }).eq('id', 1);
   $('setSave').disabled = false;
-  if (error) { $('setErr').textContent = errMsg(error); return; } // stay open so the problem can be fixed
-  state.settings = { ...state.settings, ...rules };
-  setPolicy(rules);
+  if (error) { // stay open so the problem can be fixed
+    $('setErr').textContent = /auto_approve/i.test(String(error.message)) ? 'Automatic approval isn\u2019t switched on in the database yet.' : errMsg(error);
+    return;
+  }
+  state.settings = { ...state.settings, ...rules, ...approval };
+  setPolicy({ ...rules, auto_approve: auto });
   $('members').close();
   toast('Settings saved.');
+  if (auto && !wasAuto) await offerApproveWaiting(approval.auto_approve_domains);
 };
+// Automatic approval helpers (Members → Settings → New accounts).
+const cleanDomains = v => [...new Set(String(v || '').toLowerCase().split(/[\s,;]+/).map(d => d.replace(/^@+/, '').trim())
+  .filter(d => /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d)))].join(', ');
+const domainOk = (email, domains) => !domains || domains.split(',').map(d => d.trim()).filter(Boolean)
+  .some(d => { const e = String(email || '').toLowerCase().split('@')[1] || ''; return e === d || e.endsWith('.' + d); });
+function syncApproveUI() {
+  const auto = $('setApprove').value === 'true';
+  $('setDomainsRow').hidden = !auto;
+  $('setApproveHint').textContent = auto
+    ? 'Anyone who confirms a matching email address gets in without waiting, including access to everything shared with all members. You can switch back at any time; Turn off and Remove still work as usual.'
+    : 'New people confirm their email, then wait on the \u201cwaiting for approval\u201d screen until an admin or moderator approves them.';
+}
+$('setApprove').onchange = syncApproveUI;
+$('setDomains').addEventListener('blur', () => { $('setDomains').value = cleanDomains($('setDomains').value); });
+async function offerApproveWaiting(domains) {
+  const { data, error } = await sb.rpc('list_members_admin');
+  if (error) return;
+  let confirmed = new Map();
+  const es = await sb.rpc('member_email_status');
+  if (!es.error) confirmed = new Map(es.data.map(r => [r.id, r.email_confirmed]));
+  const waiting = data.filter(m => m.status === 'pending' && confirmed.get(m.id) !== false && domainOk(m.email, domains));
+  if (!waiting.length) return;
+  if (!(await ask(`Also approve the ${waiting.length === 1 ? '1 person' : waiting.length + ' people'} already waiting?`,
+    waiting.slice(0, 8).map(m => m.display_name).join(', ') + (waiting.length > 8 ? ` and ${waiting.length - 8} more` : '') + ' confirmed their email and match the new setting.', 'Approve them'))) return;
+  let ok = 0;
+  for (const m of waiting) { const { error: e } = await sb.rpc('set_member_status', { target: m.id, new_status: 'approved' }); if (!e) ok++; }
+  toast(`Approved ${plural(ok, 'account')}.`);
+  refreshPendingCount();
+}
+
 $('membersBtn').onclick = openMembers;
 $('mRefresh').onclick = () => reloadMembers();
 $('mClose').onclick = () => $('members').close();
