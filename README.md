@@ -4,6 +4,7 @@ A private photo album for friends and colleagues. People create an account on th
 
 - **Page:** `index.html`, hosted on GitHub Pages at https://102iw-cs.github.io/102IW_CS_Album/
 - **Accounts, database and photo storage:** Supabase (free plan)
+- **Terms of Service and Privacy Policy:** `terms.html` and `privacy.html` (shared `legal.css` / `legal.js`). New accounts must tick “I agree”; the accepted version and time are saved with the account. Members who signed up earlier are asked once. To publish a revised version, update both pages' version line and `TERMS_VERSION` in `index.html`, and everyone is asked to accept again.
 - **Contact page:** `contact.html` — design & development inquiries, plus a plain-language explanation of how the site works and keeps photos private
 
 ## How it's put together

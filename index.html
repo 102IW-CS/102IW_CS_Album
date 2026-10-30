@@ -96,6 +96,12 @@ input[type=text],input[type=email],input[type=password],input[type=search],input
 textarea{resize:vertical;min-height:70px}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
 .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+/* Terms agreement: required tick on Create account, fine print under Sign in */
+.agree{align-items:flex-start;color:var(--ink);line-height:1.5;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.agree input{margin-top:3px;flex:none;width:16px;height:16px;accent-color:var(--accent)}
+.agree.missing{border-color:var(--danger)}
+.agree a,.fine a{color:var(--accent)}
+.fine{font-size:12.5px;color:var(--muted);text-align:center;margin:4px 0 0;line-height:1.5}
 .check input{accent-color:var(--accent);width:16px;height:16px}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .err{color:var(--danger);font-size:14px;margin:0}
@@ -451,6 +457,8 @@ body>main{flex:1 0 auto;width:100%}
 .site-foot .credit{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
 .site-foot .credit a{color:var(--accent);text-decoration:none}
 .site-foot .credit a:hover{text-decoration:underline}
+.site-foot a.legal{color:var(--muted);text-decoration:none}
+.site-foot a.legal:hover{color:var(--accent);text-decoration:underline}
 @media (max-width:560px){.site-foot .wrap{justify-content:center;text-align:center}}
 #status{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-family:var(--mono);font-size:12px;color:var(--muted);z-index:25}
 </style>
@@ -525,6 +533,7 @@ body>main{flex:1 0 auto;width:100%}
         </div>
         <p class="err" id="inErr" role="alert"></p>
         <button type="button" class="linkish" id="forgotBtn" style="justify-self:start">Forgot password?</button>
+        <p class="fine">By signing in, you agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</p>
       </form>
 
       <form id="upForm" class="stack" novalidate hidden>
@@ -539,6 +548,7 @@ body>main{flex:1 0 auto;width:100%}
           <ul class="rules" id="upMatch" aria-live="polite"><li data-rule="match">Passwords match</li></ul>
         </div>
         <p class="hint" style="margin:0">The album owner approves new accounts before they can see photos.</p>
+        <label class="check agree" id="upAgreeRow"><input type="checkbox" id="upAgree" required><span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
         <div class="split" style="justify-content:flex-end"><button class="btn primary" id="upBtn">Create account</button></div>
         <p class="err" id="upErr" role="alert"></p>
         <p class="ok" id="upOk" role="status"></p>
@@ -655,7 +665,7 @@ body>main{flex:1 0 auto;width:100%}
 
 <footer class="site-foot">
   <div class="wrap">
-    <span>&copy; 2026 Mohan Karki &middot; All rights reserved</span>
+    <span>&copy; 2026 Mohan Karki &middot; All rights reserved &middot; <a class="legal" href="terms.html">Terms</a> &middot; <a class="legal" href="privacy.html">Privacy</a></span>
     <span class="credit">Design &amp; development: <a href="contact.html">Contact</a></span>
   </div>
 </footer>
@@ -846,6 +856,19 @@ body>main{flex:1 0 auto;width:100%}
     <p class="err" id="removeErr" role="alert"></p>
   </div>
   <div class="sheet-foot"><button type="button" class="btn ghost" id="removeCancel">Cancel</button><button type="button" class="btn danger-fill" id="removeGo">Remove member</button></div>
+</dialog>
+
+<dialog id="termsDlg" class="sheet" aria-labelledby="termsTitle" style="width:min(94vw,500px)">
+  <form id="termsForm" novalidate>
+    <div class="sheet-head"><h2 id="termsTitle">Terms &amp; privacy</h2></div>
+    <div class="sheet-body">
+      <p style="margin:0" id="termsText">Photo Share now has a Terms of Service and a Privacy Policy. They explain who can see your photos, what's kept and for how long, and the rules for what can be shared. Please take a moment to read them.</p>
+      <p style="margin:0;display:flex;gap:16px;flex-wrap:wrap"><a href="terms.html" target="_blank" rel="noopener">Terms of Service ↗</a><a href="privacy.html" target="_blank" rel="noopener">Privacy Policy ↗</a></p>
+      <label class="check agree" id="termsAgreeRow"><input type="checkbox" id="termsAgree"><span>I have read and agree to the Terms of Service and Privacy Policy.</span></label>
+      <p class="err" id="termsErr" role="alert"></p>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn ghost" id="termsOut">Sign out</button><button type="submit" class="btn primary" id="termsOk">Agree and continue</button></div>
+  </form>
 </dialog>
 
 <dialog id="idleDlg" class="sheet" aria-labelledby="idleTitle" style="width:min(92vw,420px)">
@@ -1110,6 +1133,39 @@ $('idleStay').onclick = () => { markActive(true); closeIdleWarning(); };
 $('idleDlg').addEventListener('cancel', e => { e.preventDefault(); markActive(true); closeIdleWarning(); }); // Esc = stay
 $('idleOut').onclick = () => { closeIdleWarning(); signOut(); };
 
+/* ---------- Terms of Service + Privacy Policy acceptance ----------
+   New accounts tick "I agree" on Create account. The version and time are saved with the
+   account (Supabase user metadata). Anyone signed in without the current version (members
+   from before the Terms existed, or after a significant update) is asked once. */
+const TERMS_VERSION = '2026-10-30';
+const termsRecord = () => ({ terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString() });
+let termsWaiter = null;
+function termsGate(session) {
+  if (session?.user?.user_metadata?.terms_version === TERMS_VERSION) return Promise.resolve(true);
+  if (termsWaiter) return termsWaiter; // already asking (e.g. a token refresh fired meanwhile)
+  $('termsAgree').checked = false; $('termsAgreeRow').classList.remove('missing'); $('termsErr').textContent = '';
+  if (!$('termsDlg').open) $('termsDlg').showModal();
+  termsWaiter = new Promise(res => { termsGate.done = ok => { termsWaiter = null; termsGate.done = null; res(ok); }; });
+  return termsWaiter;
+}
+$('termsDlg').addEventListener('cancel', e => e.preventDefault()); // must choose: agree or sign out
+$('upAgree').onchange = () => $('upAgreeRow').classList.remove('missing');
+$('termsAgree').onchange = () => $('termsAgreeRow').classList.toggle('missing', !$('termsAgree').checked && !!$('termsErr').textContent);
+$('termsForm').onsubmit = async e => {
+  e.preventDefault();
+  if (!$('termsAgree').checked) { $('termsAgreeRow').classList.add('missing'); $('termsErr').textContent = 'Tick the box to agree, or sign out.'; return; }
+  $('termsOk').disabled = true; $('termsErr').textContent = '';
+  const { error } = await sb.auth.updateUser({ data: termsRecord() });
+  $('termsOk').disabled = false;
+  if (error) { $('termsErr').textContent = errMsg(error); return; }
+  $('termsDlg').close(); termsGate.done?.(true);
+};
+$('termsOut').onclick = async () => {
+  $('termsDlg').close(); termsGate.done?.(false);
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+  state.session = null; showAuth('in');
+};
+
 /* ---------- password fields ---------- */
 function addEye(input) { // show/hide toggle on every password box
   const wrap = el('div', 'pw');
@@ -1197,6 +1253,7 @@ async function onAuth(event, session) {
     if (why) { await endSession(why); return; }
   } else if (event === 'SIGNED_IN' && !state.session) markActive(true);
   hideAuthNote();
+  if (!(await termsGate(session))) return; // members who haven't accepted the current Terms yet
   const sameUser = state.session?.user?.id === session.user.id && state.profile;
   state.session = session;
   if (!sameUser) await loadProfile();
@@ -1315,15 +1372,19 @@ $('inForm').onsubmit = async e => {
 $('upForm').onsubmit = async e => {
   e.preventDefault();
   const name = $('upName').value.trim(), email = $('upEmail').value.trim(), password = $('upPass').value;
-  $('upErr').textContent = ''; $('upOk').textContent = '';
+  $('upErr').textContent = ''; $('upOk').textContent = ''; $('upAgreeRow').classList.remove('missing');
   if (policy().remember === false) store.set(REMEMBER_KEY, '0', true);
   if (!name) return void ($('upErr').textContent = 'Enter your name.');
   if (!validEmail(email)) return void ($('upErr').textContent = 'Enter a valid email address.');
   const pwProblem = upRules.check();
   if (pwProblem) return void ($('upErr').textContent = pwProblem);
+  if (!$('upAgree').checked) {
+    $('upAgreeRow').classList.add('missing'); $('upAgree').focus();
+    return void ($('upErr').textContent = 'Please read and agree to the Terms of Service and Privacy Policy to create an account.');
+  }
   $('upBtn').disabled = true;
   try {
-    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name }, emailRedirectTo: siteUrl() } });
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { display_name: name, ...termsRecord() }, emailRedirectTo: siteUrl() } });
     if (error) throw error;
     if (!data.session) $('upOk').textContent = 'Account created. Check your email for a confirmation link, then sign in.';
     $('upPass').value = ''; $('upPass2').value = ''; upRules.reset();
