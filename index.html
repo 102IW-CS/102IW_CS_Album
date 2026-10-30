@@ -339,7 +339,10 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .m-line>.lbl{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);min-width:64px}
 .m-line .hint{flex-basis:100%;margin:0}
 .m-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 20px 14px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);min-height:52px}
-#mSettings{flex:1}
+/* Settings tab: keep fields together at the top (grid rows were stretching to fill the tall box),
+   and let the box shrink to fit the form instead of staying list-height. */
+#mSettings,#mSettings form.stack{align-content:start}
+#members:has(#mSettings:not([hidden])){height:fit-content}
 @media (max-width:560px){
   .m-row{flex-wrap:wrap;row-gap:8px}
   .m-quick{order:5;width:100%;padding-left:48px}
