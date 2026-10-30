@@ -685,6 +685,20 @@ end $$;
 revoke execute on function public.purge_read_messages() from public, anon;
 grant execute on function public.purge_read_messages() to authenticated;
 
+-- Sign-in session rules (enforced by the site in each browser): sign out after N idle minutes,
+-- and whether "Keep me signed in" is allowed. Visitors may read just these two columns.
+alter table public.album_settings add column if not exists idle_timeout_minutes int
+  constraint album_settings_idle_timeout_check check (idle_timeout_minutes in (5, 10, 15, 30, 60, 240));
+alter table public.album_settings add column if not exists allow_remember boolean not null default true;
+grant update (idle_timeout_minutes, allow_remember) on public.album_settings to authenticated;
+
+grant select (id, idle_timeout_minutes, allow_remember) on public.album_settings to anon;
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'album_settings' and policyname = 'visitors read sign-in rules') then
+    create policy "visitors read sign-in rules" on public.album_settings for select to anon using (true);
+  end if;
+end $$;
+
 -- ============ Who may run what ============
 -- Postgres lets everyone run new functions by default; narrow that down.
 revoke execute on function private.is_approved(), private.is_admin(), private.is_moderator(), private.can_see_album(uuid),

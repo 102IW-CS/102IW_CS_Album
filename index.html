@@ -508,6 +508,7 @@ body>main{flex:1 0 auto;width:100%}
 
     <div class="panel">
       <p class="invite-note" id="inviteNote" hidden><svg><use href="#i-users"/></svg><span id="inviteNoteText">Someone shared photos with you. Create an account (or sign in if you already have one) to open the invite.</span></p>
+      <p class="invite-note" id="authNote" role="status" hidden><svg><use href="#i-lock"/></svg><span id="authNoteText"></span></p>
       <h2 id="authTitle">Welcome back</h2>
       <p class="lead" id="authLead">Sign in to see and share photos.</p>
       <div class="tabs" role="tablist" id="tabs">
@@ -519,7 +520,7 @@ body>main{flex:1 0 auto;width:100%}
         <div><label class="field" for="inEmail">Email</label><input id="inEmail" type="email" autocomplete="email" required></div>
         <div><label class="field" for="inPass">Password</label><input id="inPass" type="password" autocomplete="current-password" required></div>
         <div class="split">
-          <label class="check"><input type="checkbox" id="remember" checked> Keep me signed in</label>
+          <label class="check" id="rememberRow"><input type="checkbox" id="remember" checked> Keep me signed in</label>
           <button class="btn primary" id="inBtn">Sign in</button>
         </div>
         <p class="err" id="inErr" role="alert"></p>
@@ -801,7 +802,7 @@ body>main{flex:1 0 auto;width:100%}
   <div class="sheet-head"><h2 id="membersTitle">Members</h2><span class="m-total" id="mTotal"></span><button class="btn ghost icon" id="mRefresh" aria-label="Refresh" title="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" id="mClose">Close</button></div>
   <div class="tabs admin-only" role="tablist" aria-label="Members sections">
     <button type="button" role="tab" id="mTabPeople" aria-selected="true" aria-controls="mPeople">People</button>
-    <button type="button" role="tab" id="mTabSettings" aria-selected="false" aria-controls="mSettings">Album settings</button>
+    <button type="button" role="tab" id="mTabSettings" aria-selected="false" aria-controls="mSettings">Settings</button>
   </div>
   <div class="m-pane" id="mPeople" role="tabpanel" aria-labelledby="mTabPeople">
     <div class="m-tools">
@@ -816,13 +817,21 @@ body>main{flex:1 0 auto;width:100%}
     <div class="m-foot"><span id="mShowing"></span><button type="button" class="btn" id="mMore" hidden>Show more</button></div>
   </div>
   <div class="sheet-body" id="mSettings" role="tabpanel" aria-labelledby="mTabSettings" hidden>
-    <p class="hint" style="margin:0">Shown to people whose account is waiting for approval, so they know who to contact.</p>
     <form id="settingsForm" class="stack" novalidate>
+      <div class="section-label" style="margin:0">Owner contact · shown to people waiting for approval</div>
       <div><label class="field" for="setOwner">Owner name</label><input id="setOwner" type="text" maxlength="80"></div>
       <div class="row" style="align-items:flex-start">
         <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
         <div style="flex:1.4;min-width:200px"><label class="field" for="setEmail">Email</label><input id="setEmail" type="email" maxlength="120"></div>
       </div>
+      <div class="section-label" style="margin:6px 0 0">Sign-in sessions · apply to everyone</div>
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1;min-width:200px"><label class="field" for="setIdle">Sign out after no activity</label>
+          <select id="setIdle"><option value="">Never</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="240">4 hours</option></select></div>
+        <div style="flex:1;min-width:200px"><label class="field" for="setRemember">When the browser is closed</label>
+          <select id="setRemember"><option value="false">Sign in again next time</option><option value="true">Let people tick “Keep me signed in”</option></select></div>
+      </div>
+      <p class="hint" style="margin:0">A minute before the time runs out, people see a “Still there?” warning. Uploads in progress count as activity. The site applies these rules in each browser; Supabase’s own server-side session limits need a paid plan.</p>
       <div class="split"><p class="ok" id="setOk" role="status"></p><p class="err" id="setErr" role="alert"></p><button class="btn primary" id="setSave" style="margin-left:auto">Save settings</button></div>
     </form>
   </div>
@@ -837,6 +846,12 @@ body>main{flex:1 0 auto;width:100%}
     <p class="err" id="removeErr" role="alert"></p>
   </div>
   <div class="sheet-foot"><button type="button" class="btn ghost" id="removeCancel">Cancel</button><button type="button" class="btn danger-fill" id="removeGo">Remove member</button></div>
+</dialog>
+
+<dialog id="idleDlg" class="sheet" aria-labelledby="idleTitle" style="width:min(92vw,420px)">
+  <div class="sheet-head"><h2 id="idleTitle">Still there?</h2></div>
+  <div class="sheet-body"><p style="margin:0">For privacy, you’ll be signed out in <b id="idleLeft">1:00</b> because there’s been no activity.</p></div>
+  <div class="sheet-foot"><button type="button" class="btn ghost" id="idleOut">Sign out now</button><button type="button" class="btn primary" id="idleStay">Stay signed in</button></div>
 </dialog>
 
 <dialog id="ask" class="sheet">
@@ -994,6 +1009,107 @@ const sb = window.supabase.createClient(CONFIG.url, CONFIG.key, {
 });
 const bucket = () => sb.storage.from(CONFIG.bucket);
 
+/* ---------- sign-in session rules (set by the admin in Members → Settings) ----------
+   - Sign out after N minutes with no activity, with a one-minute "Still there?" warning.
+     Activity in any open tab of the site counts, and uploads in progress count too.
+   - Optionally no "Keep me signed in": the session lives only in this browser session,
+     so closing the browser means signing in again.
+   These run in the browser. Supabase's server-side session limits need a paid plan. */
+const POLICY_KEY = 'photoshare:policy', ACTIVE_KEY = 'photoshare:lastActive', SEEN_KEY = 'photoshare:seen', END_KEY = 'photoshare:ended';
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const policy = () => { try { return JSON.parse(lsGet(POLICY_KEY)) || {}; } catch { return {}; } };
+const idleLabel = m => m >= 60 ? plural(m / 60, 'hour') : plural(m, 'minute');
+function setPolicy(s) {
+  lsSet(POLICY_KEY, JSON.stringify({ idle: s.idle_timeout_minutes ?? null, remember: s.allow_remember !== false }));
+  applyPolicy();
+}
+function applyPolicy() {
+  const p = policy();
+  $('rememberRow').hidden = p.remember === false;
+  if (p.remember === false && remember()) { // "Keep me signed in" no longer allowed: move this browser's session
+    store.set(REMEMBER_KEY, '0', true);
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (/^sb-.*-auth-token/.test(k)) { sessionStorage.setItem(k, localStorage.getItem(k)); localStorage.removeItem(k); }
+      }
+    } catch {}
+  }
+}
+applyPolicy();
+// Visitors can read just these two rules, so the sign-in form is right before anyone signs in.
+sb.from('album_settings').select('idle_timeout_minutes,allow_remember').eq('id', 1).maybeSingle()
+  .then(({ data }) => { if (data) setPolicy(data); }, () => {});
+
+const idle = { last: Date.now(), wrote: 0, warned: false, ending: false };
+const lastActive = () => Math.max(idle.last, +lsGet(ACTIVE_KEY) || 0);
+function markActive(force = false) {
+  idle.last = Date.now();
+  if (force || idle.last - idle.wrote > 5000) { idle.wrote = idle.last; lsSet(ACTIVE_KEY, String(idle.last)); }
+}
+// Real input counts. While the warning is up, only its buttons (or Esc) answer it.
+for (const ev of ['pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll', 'mousemove']) {
+  let t = 0;
+  addEventListener(ev, () => {
+    if (!state.session || document.hidden || idle.warned) return;
+    if (ev === 'mousemove' || ev === 'scroll') { const n = Date.now(); if (n - t < 3000) return; t = n; }
+    markActive();
+  }, { capture: true, passive: true });
+}
+// "Seen" heartbeat: tells a reopened browser whether the site was open moments ago.
+setInterval(() => { if (state.session) lsSet(SEEN_KEY, String(Date.now())); }, 30000);
+addEventListener('pagehide', () => { if (state.session) lsSet(SEEN_KEY, String(Date.now())); });
+
+// When a saved session is found on page load, decide whether it may still be used.
+function staleSession() {
+  const p = policy(), now = Date.now();
+  const last = +lsGet(ACTIVE_KEY) || 0;
+  if (p.idle && last && now - last > p.idle * 60000) return 'idle';
+  // Session-only sign-in that a browser restored after being closed for a while.
+  const seen = +lsGet(SEEN_KEY) || 0;
+  if (!remember() && seen && now - seen > 10 * 60000) return 'closed';
+  return null;
+}
+function hideAuthNote() { $('authNote').hidden = true; }
+function showEndNote() { // also shown in other tabs that were signed out at the same moment
+  let e; try { e = JSON.parse(lsGet(END_KEY)); } catch {}
+  if (!e || Date.now() - e.at > 15000) return;
+  $('authNoteText').textContent = e.why === 'idle'
+    ? `You were signed out after ${idleLabel(e.mins || policy().idle || 15)} without activity. Sign in again to continue.`
+    : 'Your session ended when the browser was closed. Sign in again to continue.';
+  $('authNote').hidden = false;
+}
+async function endSession(why) {
+  if (idle.ending) return; idle.ending = true;
+  closeIdleWarning();
+  document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  state.queue.length = 0;
+  lsSet(END_KEY, JSON.stringify({ why, mins: policy().idle, at: Date.now() }));
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+  try { localStorage.removeItem(ACTIVE_KEY); } catch {}
+  state.session = null;
+  showAuth('in'); showEndNote();
+  idle.ending = false;
+}
+function closeIdleWarning() { idle.warned = false; if ($('idleDlg').open) $('idleDlg').close(); }
+function idleTick() {
+  const mins = policy().idle;
+  if (!state.session || !mins || state.recovering || idle.ending) { if (idle.warned) closeIdleWarning(); return; }
+  if (state.uploading) { markActive(); return; }
+  const left = mins * 60000 - (Date.now() - lastActive());
+  if (left <= 0) { endSession('idle'); return; }
+  if (left <= 60000) {
+    const s = Math.ceil(left / 1000);
+    $('idleLeft').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+    if (!idle.warned) { idle.warned = true; $('idleDlg').showModal(); $('idleStay').focus(); }
+  } else if (idle.warned) closeIdleWarning(); // activity in another tab
+}
+setInterval(idleTick, 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) idleTick(); }); // e.g. laptop woke from sleep
+$('idleStay').onclick = () => { markActive(true); closeIdleWarning(); };
+$('idleDlg').addEventListener('cancel', e => { e.preventDefault(); markActive(true); closeIdleWarning(); }); // Esc = stay
+$('idleOut').onclick = () => { closeIdleWarning(); signOut(); };
+
 /* ---------- password fields ---------- */
 function addEye(input) { // show/hide toggle on every password box
   const wrap = el('div', 'pw');
@@ -1075,7 +1191,12 @@ async function onAuth(event, session) {
     if (!session) { state.recovering = false; showAuth('forgot'); $('fgErr').textContent = 'That reset link has expired. Request a new one.'; }
     return;
   }
-  if (!session) { state.session = null; showAuth('in'); return; }
+  if (!session) { state.session = null; showAuth('in'); showEndNote(); return; }
+  if (event === 'INITIAL_SESSION') { // page opened with a saved session: is it still allowed?
+    const why = staleSession();
+    if (why) { await endSession(why); return; }
+  } else if (event === 'SIGNED_IN' && !state.session) markActive(true);
+  hideAuthNote();
   const sameUser = state.session?.user?.id === session.user.id && state.profile;
   state.session = session;
   if (!sameUser) await loadProfile();
@@ -1084,6 +1205,7 @@ async function onAuth(event, session) {
 async function loadSettings() {
   const { data } = await sb.from('album_settings').select('*').eq('id', 1).maybeSingle(); // '*' so older databases without newer columns still load
   state.settings = data || {};
+  if (data && 'idle_timeout_minutes' in data) setPolicy(data);
   return state.settings;
 }
 
@@ -1179,7 +1301,8 @@ $('inForm').onsubmit = async e => {
   e.preventDefault();
   const email = $('inEmail').value.trim(), password = $('inPass').value;
   if (!validEmail(email) || !password) { $('inErr').textContent = 'Enter your email and password.'; return; }
-  store.set(REMEMBER_KEY, $('remember').checked ? '1' : '0', true);
+  store.set(REMEMBER_KEY, policy().remember !== false && $('remember').checked ? '1' : '0', true);
+  hideAuthNote();
   $('inBtn').disabled = true; $('inErr').textContent = '';
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
@@ -1193,6 +1316,7 @@ $('upForm').onsubmit = async e => {
   e.preventDefault();
   const name = $('upName').value.trim(), email = $('upEmail').value.trim(), password = $('upPass').value;
   $('upErr').textContent = ''; $('upOk').textContent = '';
+  if (policy().remember === false) store.set(REMEMBER_KEY, '0', true);
   if (!name) return void ($('upErr').textContent = 'Enter your name.');
   if (!validEmail(email)) return void ($('upErr').textContent = 'Enter a valid email address.');
   const pwProblem = upRules.check();
@@ -1246,7 +1370,7 @@ $('resetSkip').onclick = () => finishRecovery(); // the reset link already prove
 $('resetBack').onclick = async () => { // end the link's session and show the normal sign-in form
   state.recovering = false;
   history.replaceState(null, '', siteUrl());
-  await sb.auth.signOut().catch(() => {});
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {});
   showAuth('in');
 };
 
@@ -1254,7 +1378,7 @@ async function signOut() {
   if (state.uploading && !(await ask('Uploads are still running.', 'Signing out now stops them.', 'Sign out'))) return;
   state.queue.length = 0;
   $('toasts').replaceChildren();
-  await sb.auth.signOut().catch(() => {});
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {}); // this device only, not every device they're signed in on
   state.session = null;
   showAuth('in');
 }
@@ -2489,6 +2613,7 @@ async function openMembers() {
   $('memberList').replaceChildren(el('li', 'm-empty', 'Loading…'));
   loadSettings().then(s => {
     $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
+    $('setIdle').value = String(s.idle_timeout_minutes || ''); $('setRemember').value = String(s.allow_remember !== false);
   }).catch(() => {});
   await reloadMembers();
 }
@@ -2747,13 +2872,16 @@ $('settingsForm').onsubmit = async e => {
   const email = $('setEmail').value.trim();
   if (email && !validEmail(email)) return void ($('setErr').textContent = 'That email doesn’t look right.');
   $('setSave').disabled = true;
+  const rules = { idle_timeout_minutes: $('setIdle').value ? +$('setIdle').value : null, allow_remember: $('setRemember').value === 'true' };
   const { error } = await sb.from('album_settings').update({
-    owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null
+    owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null, ...rules
   }).eq('id', 1);
   $('setSave').disabled = false;
   if (error) { $('setErr').textContent = errMsg(error); return; } // stay open so the problem can be fixed
+  state.settings = { ...state.settings, ...rules };
+  setPolicy(rules);
   $('members').close();
-  toast('Album settings saved.');
+  toast('Settings saved.');
 };
 $('membersBtn').onclick = openMembers;
 $('mRefresh').onclick = () => reloadMembers();
