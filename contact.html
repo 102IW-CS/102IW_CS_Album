@@ -49,8 +49,11 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background
 header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 .brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:var(--ink)}
 .brand svg{width:26px;height:26px;color:var(--accent);flex:none}
-.brand span{font-family:var(--display);font-size:24px;font-weight:600}
+.brand{min-width:0}
+.brand span{font-family:var(--display);font-size:24px;font-weight:600;line-height:1;white-space:nowrap}
 @media (max-width:560px){.brand span{font-size:21px}}
+.btn .short{display:none}
+@media (max-width:380px){.btn .long{display:none}.btn .short{display:inline}}
 
 .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 18px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;text-decoration:none;transition:border-color .15s,background .15s}
 .btn:hover{border-color:var(--muted)}
@@ -190,7 +193,7 @@ td:first-child{font-weight:600;white-space:nowrap}
 <header class="top"><div class="wrap">
   <a class="brand" href="./" aria-label="Photo Share, open the album"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost icon" id="themeBtn" type="button"></button>
-  <a class="btn" href="./">Open the album</a>
+  <a class="btn" href="./"><span class="long">Open the album</span><span class="short">Album</span></a>
 </div></header>
 
 <main>

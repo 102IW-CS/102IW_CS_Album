@@ -55,9 +55,20 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background
 header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 .brand{display:flex;align-items:center;gap:10px;margin-right:auto;text-decoration:none;color:var(--ink)}
 .brand svg{width:26px;height:26px;color:var(--accent);flex:none}
-.brand span{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.01em}
+.brand{min-width:0}
+.brand span{font-family:var(--display);font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1;white-space:nowrap}
 .who{font-size:13px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:560px){.who{display:none}.brand span{font-size:21px}}
+/* header buttons: text on wide screens, icons (with badges) on phones */
+.btn.nav svg{display:none}
+@media (max-width:720px){
+  .who{display:none}
+  .btn.nav{position:relative;padding:8px 9px}
+  .btn.nav .lbl{display:none}
+  .btn.nav svg{display:block;width:21px;height:21px}
+  .btn.nav .badge{position:absolute;top:1px;right:0;min-width:16px;line-height:16px;font-size:10px;padding:0 4px}
+}
+@media (max-width:560px){.brand span{font-size:21px}header.top .wrap{gap:2px}}
+@media (max-width:360px){.brand span{font-size:19px}.brand{gap:7px}}
 
 /* ---------- buttons & fields ---------- */
 .btn{text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 16px;display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;font-weight:600;font-size:14px;transition:border-color .15s,background .15s}
@@ -341,17 +352,19 @@ body>main{flex:1 0 auto;width:100%}
   <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.4 3.4-5.5 6.5-5.5s5.7 2.1 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c1.8.7 3 2.6 3.5 5.2"/></symbol>
   <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></symbol>
 </svg>
 
 <header class="top"><div class="wrap">
   <a class="brand" href="#albums" aria-label="Photo Share, all albums"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost icon" id="themeBtn" type="button"></button>
-  <button class="btn ghost" id="inboxBtn" hidden>Inbox <span class="badge" id="inboxBadge" hidden></span></button>
-  <button class="btn ghost" id="requestsBtn" hidden>Requests <span class="badge" id="requestsBadge"></span></button>
-  <button class="btn ghost" id="membersBtn" hidden>Members <span class="badge" id="pendingBadge" hidden></span></button>
+  <button class="btn ghost nav" id="inboxBtn" aria-label="Inbox" title="Inbox" hidden><svg><use href="#i-mail"/></svg><span class="lbl">Inbox</span><span class="badge" id="inboxBadge" hidden></span></button>
+  <button class="btn ghost nav" id="requestsBtn" aria-label="Removal requests" title="Removal requests" hidden><svg><use href="#i-flag"/></svg><span class="lbl">Requests</span><span class="badge" id="requestsBadge"></span></button>
+  <button class="btn ghost nav" id="membersBtn" aria-label="Members" title="Members" hidden><svg><use href="#i-users"/></svg><span class="lbl">Members</span><span class="badge" id="pendingBadge" hidden></span></button>
   <span class="who" id="meName" hidden></span>
-  <button class="btn ghost" id="signOutBtn" hidden>Sign out</button>
+  <button class="btn ghost nav" id="signOutBtn" aria-label="Sign out" title="Sign out" hidden><svg><use href="#i-logout"/></svg><span class="lbl">Sign out</span></button>
 </div></header>
 
 <main class="wrap">
