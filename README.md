@@ -26,11 +26,20 @@ A private photo album for friends and colleagues. People create an account on th
 
 ## Albums and sharing
 
-- Members create their own albums; those are **private** (only the member and admins see them). Photos added outside an album land in **Unsorted**, also private.
-- Only an admin can make an album **Shared**: open it and tap **Share with everyone** (or tick the box when creating it). Every member can then see it and add their own photos, which become visible to everyone in it. **Make private** undoes it.
-- **Move to…** files your own photos into one of your albums or a shared one (admins can move any photo).
-- **Delete:** members can delete any photo they can see. Albums can be deleted from the album page or the trash button on its card, by the album's creator (private albums) or an admin (any). The dialog lets you keep the photos (they go to Unsorted) or delete them too to free space.
-- Each album has its own link (`…/#a-<id>`), so you can send someone straight to it.
+- Members create albums and add photos. Everything starts **private** (only the owner and admins see it). Photos added outside an album land in **Unsorted**.
+- **Share** (on an album, or on a single photo in the viewer) — whoever created it, or an admin:
+  - **Everyone:** every approved member can see it.
+  - **Specific members:** pick people by name.
+  - **Invite link:** for non-members. Opening it leads to sign in / create account; after admin approval the item appears for them. Links last 30 days and can be turned off.
+- People who can see an album can add their own photos to it. Single photos shared with you appear under **Shared with you**.
+- **Deleting:** only the person who added a photo (or created an album), or an admin. Others use **Request removal**; owners see a **Requests** badge and choose **Delete it** or **Keep it**. Deleting an album can keep its photos (they go to Unsorted) or delete your own photos in it.
+- Each album has its own link (`…/#a-<id>`).
+
+## Roles
+
+- **Admin:** sees everything, manages all albums, members and roles. The first account is the admin.
+- **Moderator:** approves, declines and turns off member accounts; doesn't see others' private photos; can't change roles or act on admins/moderators.
+- Change roles in **Members**. Nobody can change their own role, so there's always an admin.
 
 ## Everyday use
 
@@ -42,4 +51,4 @@ A private photo album for friends and colleagues. People create an account on th
 
 ## Features
 
-Private and shared albums · light/dark theme (dark by default) · justified gallery layout · Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.
+Private albums with sharing to everyone, named members or invite links · removal requests · moderator and admin roles · light/dark theme (dark by default) · justified gallery layout · Drag and drop, file picker or paste to upload · automatic resize and GPS removal · thumbnails · live updates when others add photos · search and sort · full-screen viewer with swipe · download one or a ZIP of many · password reset · works on phones.

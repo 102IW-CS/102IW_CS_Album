@@ -102,12 +102,13 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
 .intro h1{font-size:clamp(46px,7vw,92px);font-weight:500;margin:14px 0 18px}
 .intro h1 em{font-style:italic;color:var(--accent)}
 .intro p{max-width:46ch;color:var(--muted);font-size:16px;margin:0}
-.frames{display:flex;gap:10px;margin-top:34px}
-.frames span{flex:1;max-width:120px;aspect-ratio:3/4;border-radius:4px;border:1px solid var(--line);background:linear-gradient(160deg,var(--surface-2),var(--surface));position:relative;overflow:hidden}
-.frames span:nth-child(2){aspect-ratio:4/5;margin-top:22px}
-.frames span:nth-child(3){aspect-ratio:1}
-.frames span::after{content:"";position:absolute;inset:auto 0 0;height:55%;background:linear-gradient(transparent,color-mix(in srgb,var(--accent) 22%,transparent))}
-@media (max-width:860px){.intro h1{font-size:52px;margin:10px 0 12px}.frames{display:none}}
+.frames{display:flex;gap:12px;margin-top:34px;align-items:flex-start}
+.frames figure{margin:0;flex:1;max-width:150px}
+.frames figure:nth-child(2){margin-top:26px}
+.frames canvas{display:block;width:100%;aspect-ratio:3/4;border-radius:3px;background:var(--surface-2);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent),0 12px 28px rgba(0,0,0,.28)}
+.frames figure:nth-child(2) canvas{aspect-ratio:4/5}
+.frames figcaption{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+@media (max-width:860px){.intro h1{font-size:52px;margin:10px 0 12px}.frames{margin-top:22px;gap:8px}.frames figure:nth-child(2){margin-top:14px}.frames figcaption{display:none}}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:30px;box-shadow:var(--shadow)}
 @media (max-width:560px){.panel{padding:22px}}
 .panel h2{font-size:30px;margin-bottom:4px}
@@ -223,6 +224,34 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .sheet-body{padding:4px 20px 20px;overflow:auto;display:grid;gap:14px}
 .sheet-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
 #ask{width:min(92vw,420px)}
+.invite-note{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:8px;padding:10px 12px;margin:0 0 18px;font-size:14px}
+.invite-note svg{width:18px;height:18px;color:var(--accent);flex:none;margin-top:2px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px}
+.toggle-row b{display:block;font-size:14px}
+.toggle-row small{color:var(--muted);font-size:13px}
+.switch{position:relative;width:44px;height:26px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);transition:.15s;pointer-events:none}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.15s}
+.switch input:checked+span{background:var(--accent);border-color:var(--accent)}
+.switch input:checked+span::after{left:21px;background:var(--accent-ink)}
+.switch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.people{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.people li{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+.people li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.people .empty{color:var(--muted);border-style:dashed;justify-content:center}
+.pick{display:flex;gap:8px}
+.pick select{flex:1;min-width:0}
+.linkbox{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px}
+.linkbox input{font-family:var(--mono);font-size:12px;padding:8px 10px}
+.linkbox .row{justify-content:space-between}
+#reqList{list-style:none;margin:0;padding:0}
+#reqList li{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
+#reqList li:last-child{border-bottom:0}
+#reqList .rq{flex:1;min-width:180px}
+#reqList .rq b{display:block}
+#reqList .rq small{color:var(--muted);display:block}
+#reqList .rq q{display:block;margin-top:4px;font-style:italic;color:var(--ink)}
 #ask p{margin:0;font-weight:700;font-size:16px}
 #ask small{color:var(--muted);font-size:14px}
 .section-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 0 -4px}
@@ -237,6 +266,9 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 .chip.approved{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
 .chip.blocked{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
 .chip.admin{background:var(--accent-soft);color:var(--accent)}
+.chip.moderator{background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.role{width:auto;padding:7px 10px;font-size:13px}
+.m-legend{font-size:13px;color:var(--muted);margin:0}
 #moveList{display:grid;gap:6px}
 #moveList label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
 #moveList label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
@@ -290,6 +322,7 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 <header class="top"><div class="wrap">
   <a class="brand" href="#albums" aria-label="Photo Share, all albums"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost icon" id="themeBtn" type="button"></button>
+  <button class="btn ghost" id="requestsBtn" hidden>Requests <span class="badge" id="requestsBadge"></span></button>
   <button class="btn ghost" id="membersBtn" hidden>Members <span class="badge" id="pendingBadge" hidden></span></button>
   <span class="who" id="meName" hidden></span>
   <button class="btn ghost" id="signOutBtn" hidden>Sign out</button>
@@ -304,10 +337,15 @@ dialog.sheet[open]{display:flex;flex-direction:column}
       <div class="eyebrow">Private album · members only</div>
       <h1>Photo <em>Share</em></h1>
       <p>A private collection for friends and colleagues. Every account is approved by the album owner before it can see a single frame.</p>
-      <div class="frames" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="frames" aria-hidden="true">
+        <figure><canvas data-scene="0"></canvas><figcaption>Ridge, 18:42</figcaption></figure>
+        <figure><canvas data-scene="1"></canvas><figcaption>Lake, 6:10 am</figcaption></figure>
+        <figure><canvas data-scene="2"></canvas><figcaption>Night sky, ISO 3200</figcaption></figure>
+      </div>
     </div>
 
     <div class="panel">
+      <p class="invite-note" id="inviteNote" hidden><svg><use href="#i-users"/></svg><span id="inviteNoteText">Someone shared photos with you. Create an account (or sign in if you already have one) to open the invite.</span></p>
       <h2 id="authTitle">Welcome back</h2>
       <p class="lead" id="authLead">Sign in to see and share photos.</p>
       <div class="tabs" role="tablist" id="tabs">
@@ -374,6 +412,7 @@ dialog.sheet[open]{display:flex;flex-direction:column}
     <div class="eyebrow" id="pendingEyebrow">Account pending</div>
     <h2 id="pendingTitle">Almost in</h2>
     <p class="lead" id="pendingText"></p>
+    <p class="invite-note" id="pendingInvite" hidden><svg><use href="#i-users"/></svg><span id="pendingInviteText"></span></p>
     <div class="row"><button class="btn primary" id="recheckBtn">Check again</button><button class="btn ghost" id="pendingOut">Sign out</button></div>
     <div class="contact" id="contactBox" hidden>
       <h3 id="contactTitle">Contact the album owner</h3>
@@ -411,7 +450,8 @@ dialog.sheet[open]{display:flex;flex-direction:column}
           <div class="meta-line" id="albumMeta"></div>
         </div>
         <div class="actions">
-          <button class="btn" id="shareBtn" hidden></button>
+          <button class="btn accent" id="shareBtn" hidden><svg><use href="#i-users"/></svg>Share</button>
+          <button class="btn" id="requestAlbumBtn" hidden>Request removal</button>
           <button class="btn" id="editAlbumBtn" hidden>Rename</button>
           <button class="btn danger" id="deleteAlbumBtn" hidden>Delete album</button>
         </div>
@@ -464,9 +504,11 @@ dialog.sheet[open]{display:flex;flex-direction:column}
   <div class="v-foot">
     <div id="vExif"></div>
     <button class="btn" id="vCover" hidden>Set as cover</button>
+    <button class="btn" id="vShare"><svg><use href="#i-users"/></svg>Share</button>
     <button class="btn" id="vMove">Move</button>
     <button class="btn" id="vDl"><svg><use href="#i-down"/></svg>Download</button>
     <button class="btn danger" id="vDel">Delete</button>
+    <button class="btn" id="vRequest">Request removal</button>
   </div>
 </dialog>
 
@@ -476,7 +518,7 @@ dialog.sheet[open]{display:flex;flex-direction:column}
     <div class="sheet-body">
       <div><label class="field" for="albumName">Name</label><input id="albumName" type="text" maxlength="80" required placeholder="e.g. Holiday party 2026"></div>
       <div><label class="field" for="albumDescIn">Description <span class="hint">(optional)</span></label><textarea id="albumDescIn" maxlength="300" placeholder="What's in this album?"></textarea></div>
-      <label class="check" id="albumSharedRow" hidden style="align-items:flex-start"><input type="checkbox" id="albumShared" style="margin-top:3px"><span>Share with all members: everyone can see it and add photos</span></label>
+      <label class="check" id="albumSharedRow" hidden style="align-items:flex-start"><input type="checkbox" id="albumShared" style="margin-top:3px"><span>Share with all members: everyone can see it and add photos (you can also share with specific people later)</span></label>
       <p class="err" id="albumErr" role="alert"></p>
     </div>
     <div class="sheet-foot"><button type="button" class="btn ghost" id="albumCancel">Cancel</button><button class="btn primary" id="albumSave">Create album</button></div>
@@ -493,6 +535,41 @@ dialog.sheet[open]{display:flex;flex-direction:column}
   <div class="sheet-foot"><button type="button" class="btn ghost" id="delAlbumCancel">Cancel</button><button type="button" class="btn danger-fill" id="delAlbumGo">Delete album</button></div>
 </dialog>
 
+<dialog id="shareDlg" class="sheet" aria-labelledby="shareTitle" style="width:min(94vw,560px)">
+  <div class="sheet-head"><h2 id="shareTitle">Share</h2><button type="button" class="btn primary" id="shareDone">Done</button></div>
+  <div class="sheet-body">
+    <p class="hint" id="shareWhat" style="margin:0"></p>
+    <div class="section-label">Everyone</div>
+    <div class="toggle-row"><div><b>All members</b><small id="shareEveryoneHint"></small></div>
+      <label class="switch"><input type="checkbox" id="shareEveryone" aria-label="Share with all members"><span></span></label></div>
+    <div class="section-label">Specific members</div>
+    <ul class="people" id="sharePeople"></ul>
+    <div class="pick"><select id="sharePick" aria-label="Choose a member"></select><button type="button" class="btn" id="shareAdd">Add</button></div>
+    <div class="section-label">Invite link</div>
+    <p class="hint" style="margin:0">For people who aren't members yet. Opening the link takes them to sign in or create an account; once the admin approves them, this appears for them. Links work for 30 days.</p>
+    <div id="shareLinks" style="display:grid;gap:8px"></div>
+    <button type="button" class="btn" id="shareNewLink" style="justify-self:start">Create invite link</button>
+    <p class="err" id="shareErr" role="alert"></p>
+  </div>
+</dialog>
+
+<dialog id="requestDlg" class="sheet" aria-labelledby="requestTitle">
+  <form id="requestForm" novalidate style="display:contents">
+    <div class="sheet-head"><h2 id="requestTitle">Request removal</h2></div>
+    <div class="sheet-body">
+      <p class="hint" id="requestWhat" style="margin:0"></p>
+      <div><label class="field" for="requestReason">Reason <span class="hint">(optional)</span></label><textarea id="requestReason" maxlength="300" placeholder="e.g. I'd rather this photo of me wasn't shared"></textarea></div>
+      <p class="err" id="requestErr" role="alert"></p>
+    </div>
+    <div class="sheet-foot"><button type="button" class="btn ghost" id="requestCancel">Cancel</button><button class="btn primary" id="requestSend">Send request</button></div>
+  </form>
+</dialog>
+
+<dialog id="requestsDlg" class="sheet" aria-labelledby="requestsTitle" style="width:min(94vw,600px)">
+  <div class="sheet-head"><h2 id="requestsTitle">Removal requests</h2><button type="button" class="btn" id="requestsClose">Close</button></div>
+  <div class="sheet-body"><ul id="reqList"></ul></div>
+</dialog>
+
 <dialog id="moveDlg" class="sheet" aria-labelledby="moveTitle">
   <div class="sheet-head"><h2 id="moveTitle">Move to album</h2></div>
   <div class="sheet-body">
@@ -507,9 +584,10 @@ dialog.sheet[open]{display:flex;flex-direction:column}
 <dialog id="members" class="sheet" aria-labelledby="membersTitle" style="width:min(94vw,600px)">
   <div class="sheet-head"><h2 id="membersTitle">Members</h2><button class="btn ghost icon" id="mRefresh" aria-label="Refresh"><svg><use href="#i-refresh"/></svg></button><button class="btn" id="mClose">Close</button></div>
   <div class="sheet-body">
+    <p class="m-legend admin-only"><b>Moderators</b> approve and manage member accounts. <b>Admins</b> also see every photo and can change roles.</p>
     <ul id="memberList"></ul>
-    <div class="section-label">Album settings · shown to people waiting for approval</div>
-    <form id="settingsForm" class="stack" novalidate>
+    <div class="section-label admin-only">Album settings · shown to people waiting for approval</div>
+    <form id="settingsForm" class="stack admin-only" novalidate>
       <div><label class="field" for="setOwner">Owner name</label><input id="setOwner" type="text" maxlength="80"></div>
       <div class="row" style="align-items:flex-start">
         <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
@@ -569,7 +647,8 @@ const state = {
   photos: [], albums: [], view: [], route: { kind: 'index' }, bytes: 0,
   selected: new Set(), selecting: false, queue: [], uploading: false, busy: 0,
   loading: false, reloadPending: false, loadedOnce: false, channel: null, pollTimer: null,
-  urls: new Map(), vi: -1, vToken: 0, recovering: false, editingAlbum: null, moveIds: []
+  urls: new Map(), vi: -1, vToken: 0, recovering: false, editingAlbum: null, moveIds: [],
+  shares: [], requests: [], names: new Map(), invite: null
 };
 
 /* ---------- small helpers ---------- */
@@ -613,6 +692,7 @@ const net = limiter(4);
 const siteUrl = () => location.origin + location.pathname;
 const uid = () => state.session?.user.id;
 const isAdmin = () => !!state.profile?.is_admin;
+const isModerator = () => isAdmin() || !!state.profile?.is_moderator; // can approve members
 
 function toast(msg, kind = '') {
   const t = el('div', `toast ${kind}`, msg);
@@ -653,6 +733,13 @@ const authStorage = { // "keep me signed in" → localStorage, otherwise until t
   setItem: (k, v) => store.set(k, v, remember()),
   removeItem: k => store.del(k)
 };
+// Invite links look like …/#join-<token>. Keep the token until the person is signed in.
+const INVITE_KEY = 'photoshare:invite';
+if (location.hash.startsWith('#join-')) {
+  const tok = location.hash.slice(6);
+  if (/^[a-f0-9]{64}$/.test(tok)) store.set(INVITE_KEY, tok, true);
+  history.replaceState(null, '', location.pathname + location.search);
+}
 // Links from emails land here with details in the URL hash.
 const hashInfo = new URLSearchParams(location.hash.slice(1));
 if (hashInfo.get('type') === 'recovery') state.recovering = true;
@@ -715,7 +802,7 @@ function show(which) {
   const inside = which === 'app' || which === 'pending';
   $('signOutBtn').hidden = !inside;
   $('meName').hidden = which !== 'app';
-  $('membersBtn').hidden = !(which === 'app' && isAdmin());
+  $('membersBtn').hidden = !(which === 'app' && isModerator());
 }
 function authMode(mode) {
   $('tabIn').setAttribute('aria-selected', mode === 'in');
@@ -728,7 +815,14 @@ function authMode(mode) {
   for (const id of ['inErr', 'upErr', 'upOk', 'fgErr', 'fgOk', 'resetErr']) $(id).textContent = '';
   upRules.reset(); resetRules.reset();
 }
-function showAuth(mode = 'in') { teardown(); state.profile = null; authMode(mode); show('auth'); }
+function showAuth(mode = 'in') {
+  teardown(); state.profile = null;
+  const invited = !!store.get(INVITE_KEY);
+  $('inviteNote').hidden = !invited;
+  authMode(invited && mode === 'in' && !state.shownInviteTab ? 'up' : mode);
+  if (invited) state.shownInviteTab = true;
+  show('auth');
+}
 
 /* ---------- auth flow ---------- */
 // Supabase warns against awaiting its own calls inside this callback, so defer the work.
@@ -753,7 +847,7 @@ async function loadSettings() {
 }
 
 async function loadProfile() {
-  const { data, error } = await sb.from('profiles').select('id,display_name,email,status,is_admin').eq('id', uid()).maybeSingle();
+  const { data, error } = await sb.from('profiles').select('id,display_name,email,status,is_admin,is_moderator').eq('id', uid()).maybeSingle();
   if (state.recovering) return;
   if (error) { toast(errMsg(error), 'error'); showAuth('in'); return; }
   if (!data) {
@@ -762,16 +856,33 @@ async function loadProfile() {
     $('contactBox').hidden = true; show('pending'); return;
   }
   state.profile = data;
+  if (data.status !== 'blocked') await redeemInvite();
   if (data.status === 'approved') {
     $('meName').textContent = data.display_name;
     show('app');
     await loadAll();
     startLive();
-    if (data.is_admin) refreshPendingCount();
+    if (isModerator()) refreshPendingCount();
+    const inv = state.invite;
+    if (inv) { // just opened an invite: take them straight to it
+      state.invite = null;
+      toast(`${inv.from || 'Someone'} shared \u201c${inv.name || 'photos'}\u201d with you.`);
+      if (inv.kind === 'album') location.hash = 'a-' + inv.id;
+      else { location.hash = 'shared'; setTimeout(() => { const i = state.view.findIndex(p => p.id === inv.id); if (i >= 0) openViewer(i); }, 300); }
+    }
   } else {
     teardown();
     await showPending(data);
   }
+}
+
+async function redeemInvite() {
+  const tok = store.get(INVITE_KEY);
+  if (!tok) return;
+  store.del(INVITE_KEY);
+  const { data, error } = await sb.rpc('redeem_share_link', { link_token: tok });
+  if (error) { toast(errMsg(error), 'error'); return; }
+  state.invite = data;
 }
 
 async function showPending(p) {
@@ -784,6 +895,9 @@ async function showPending(p) {
     ? `The album owner${s.owner_name ? `, ${s.owner_name},` : ''} has turned off access for this account. If you think that's a mistake, get in touch.`
     : `Thanks for joining. Your account is waiting for ${owner} to approve it. You'll get in as soon as they do; tap Check again anytime.`;
   $('recheckBtn').hidden = blocked;
+  const inv = state.invite;
+  $('pendingInvite').hidden = !inv || blocked;
+  if (inv) $('pendingInviteText').textContent = `${inv.from || 'Someone'} shared ${inv.kind === 'album' ? 'the album' : 'a photo,'} \u201c${inv.name || ''}\u201d with you. You'll see it as soon as your account is approved.`;
   // contact card (phone/email come from the database, not the page code)
   const phone = (s.contact_phone || '').trim(), email = (s.contact_email || '').trim();
   $('contactTitle').textContent = s.owner_name ? `Contact ${s.owner_name}` : 'Contact the album owner';
@@ -806,7 +920,8 @@ document.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => {
 function teardown() {
   if (state.channel) { sb.removeChannel(state.channel); state.channel = null; }
   clearInterval(state.pollTimer); state.pollTimer = null;
-  Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map() });
+  Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map(), shares: [], requests: [] });
+  $('requestsBtn').hidden = true;
   $('grid').replaceChildren(); $('albumGrid').replaceChildren();
   $('queue').replaceChildren(); $('queueBar').hidden = true;
   setSelecting(false);
@@ -909,7 +1024,7 @@ $('recheckBtn').onclick = () => loadProfile();
 function toPhoto(r) {
   const ext = extOf(r.file_name) || extOf(r.path);
   return { id: r.id, path: r.path, thumbPath: r.thumb_path, display: r.file_name, size: r.size_bytes || 0,
-    w: r.width || 0, h: r.height || 0, albumId: r.album_id || null,
+    w: r.width || 0, h: r.height || 0, albumId: r.album_id || null, shared: !!r.shared,
     type: r.content_type || MIME[ext] || 'application/octet-stream', ext,
     uploaderId: r.uploader, uploader: r.uploader_name || 'Former member', date: new Date(r.created_at) };
 }
@@ -917,7 +1032,7 @@ async function fetchAllPhotos() {
   const rows = [];
   for (let from = 0; ; from += 1000) { // the API returns at most 1000 rows per request
     const { data, error } = await sb.from('photos')
-      .select('id,path,thumb_path,file_name,content_type,size_bytes,width,height,album_id,uploader,uploader_name,created_at')
+      .select('id,path,thumb_path,file_name,content_type,size_bytes,width,height,album_id,shared,uploader,uploader_name,created_at')
       .order('created_at', { ascending: false }).range(from, from + 999);
     if (error) throw error;
     rows.push(...data);
@@ -936,7 +1051,13 @@ async function loadAll(quiet = false) {
   state.loading = true;
   if (!quiet) setStatus('Loading…');
   try {
-    const [rows, albums] = await Promise.all([fetchAllPhotos(), fetchAlbums()]);
+    const [rows, albums, sh, rq, names] = await Promise.all([fetchAllPhotos(), fetchAlbums(),
+      sb.from('shares').select('id,album_id,photo_id,member,created_by'),
+      sb.from('removal_requests').select('id,album_id,photo_id,requested_by,requested_by_name,reason,created_at').order('created_at', { ascending: false }),
+      sb.rpc('list_members_for_sharing')]);
+    for (const r of [sh, rq, names]) if (r.error) throw r.error;
+    state.shares = sh.data; state.requests = rq.data;
+    state.names = new Map(names.data.map(m => [m.id, m.display_name]));
     const photos = rows.map(toPhoto);
     if (state.loadedOnce) { // tell people when someone else added photos
       const before = new Set(state.photos.map(p => p.id));
@@ -946,6 +1067,7 @@ async function loadAll(quiet = false) {
     state.loadedOnce = true;
     state.photos = photos;
     state.albums = albums;
+    updateRequestsBadge();
     state.bytes = photos.reduce((s, p) => s + p.size + (p.thumbPath ? 40000 : 0), 0); // thumbnails ≈ 40 KB each
     route();
   } catch (e) {
@@ -965,12 +1087,14 @@ function startLive() {
   state.channel = sb.channel('album-feed')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'photos' }, kick)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'albums' }, kick)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'shares' }, kick)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'removal_requests' }, kick)
     .subscribe();
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(() => {
     if (document.visibilityState !== 'visible' || state.uploading || state.busy) return;
     loadAll(true);
-    if (isAdmin()) refreshPendingCount();
+    if (isModerator()) refreshPendingCount();
   }, CONFIG.pollSeconds * 1000);
 }
 document.addEventListener('visibilitychange', () => {
@@ -1036,6 +1160,7 @@ function parseRoute() {
   const h = location.hash.slice(1);
   if (h === 'all') return { kind: 'all' };
   if (h === 'unsorted') return { kind: 'unsorted' };
+  if (h === 'shared') return { kind: 'shared' };
   if (h.startsWith('a-')) return { kind: 'album', id: h.slice(2) };
   return { kind: 'index' };
 }
@@ -1055,9 +1180,27 @@ function route() {
 }
 
 const albumPhotos = id => state.photos.filter(p => p.albumId === id);
-const canEditAlbum = a => !!a && (isAdmin() || (a.created_by === uid() && !a.shared)); // rename, cover, delete
-const canChange = () => state.profile?.status === 'approved'; // delete anything you can see
-const canMove = p => p.uploaderId === uid() || isAdmin();
+const albumById = id => state.albums.find(a => a.id === id);
+// Mirror of the database rules (the database is what actually enforces them).
+const canEditAlbum = a => !!a && (isAdmin() || a.created_by === uid()); // rename, cover, share, delete
+const canDelete = p => isAdmin() || p.uploaderId === uid();              // only the uploader or an admin
+const canMove = p => isAdmin() || p.uploaderId === uid();
+const canManagePhoto = canMove;
+// Photos someone shared with you one by one (not through an album you can see)
+const sharedWithMe = () => isAdmin() ? [] : state.photos.filter(p => p.uploaderId !== uid() && !(p.albumId && albumById(p.albumId)));
+const myUnsorted = () => state.photos.filter(p => !p.albumId && (isAdmin() || p.uploaderId === uid()));
+const myRequest = (kind, id) => state.requests.find(r => r.requested_by === uid() && r[kind + '_id'] === id);
+const peopleNames = (kind, id) => state.shares.filter(s => s[kind + '_id'] === id && s.member !== uid()).map(s => state.names.get(s.member) || 'a member');
+function accessLabel(kind, item) { // short tag + longer sentence
+  const owner = kind === 'album' ? item.created_by : item.uploaderId;
+  const ownerName = kind === 'album' ? item.created_by_name : item.uploader;
+  if (owner !== uid() && !isAdmin()) return ['i-users', `From ${ownerName || 'a member'}`, item.shared ? `Shared with everyone by ${ownerName}` : `Shared with you by ${ownerName || 'a member'}`];
+  const people = peopleNames(kind, item.id);
+  const by = owner !== uid() ? ` · ${ownerName || 'member'}` : '';
+  if (item.shared) return ['i-users', 'Everyone' + by, 'Shared with all members' + (people.length ? ` (and named: ${people.join(', ')})` : '')];
+  if (people.length) return ['i-users', (people.length === 1 ? '1 person' : `${people.length} people`) + by, `Shared with ${people.join(', ')}`];
+  return ['i-lock', 'Private' + by, owner === uid() ? (isAdmin() ? 'Private: only you' : 'Private: only you and the admin') : `Private: ${ownerName || 'a member'} and admins`];
+}
 function coverOf(a) {
   const list = albumPhotos(a.id);
   return list.find(p => p.id === a.cover_photo_id) || list[0] || null;
@@ -1073,7 +1216,8 @@ function albumCard({ href, name, count, date, cover, special, album }) {
   c.append(ph, el('span', 'stack'));
   if (album) {
     const v = el('span', 'vis');
-    v.append(svgIcon(album.shared ? 'i-users' : 'i-lock'), document.createTextNode(album.shared ? 'Shared' : (album.created_by === uid() ? 'Private' : `Private · ${album.created_by_name || 'member'}`)));
+    const [icon, tag] = accessLabel('album', album);
+    v.append(svgIcon(icon), document.createTextNode(tag));
     c.append(v);
     if (canEditAlbum(album)) {
       const d = el('button', 'del'); d.type = 'button'; d.setAttribute('aria-label', `Delete album ${album.name}`); d.title = 'Delete album';
@@ -1094,7 +1238,9 @@ function renderIndex() {
     const list = albumPhotos(a.id);
     cards.push(albumCard({ href: '#a-' + a.id, name: a.name, count: list.length, date: list[0]?.date || new Date(a.created_at), cover: coverOf(a), album: a }));
   }
-  const unsorted = albumPhotos(null);
+  const swm = sharedWithMe();
+  if (swm.length) cards.push(albumCard({ href: '#shared', name: 'Shared with you', count: swm.length, date: swm[0].date, cover: swm[0], special: true }));
+  const unsorted = myUnsorted();
   if (unsorted.length) cards.push(albumCard({ href: '#unsorted', name: 'Unsorted', count: unsorted.length, date: unsorted[0].date, cover: unsorted[0], special: true }));
   const add = el('a', 'album new'); add.href = '#albums';
   const c = el('div', 'cover'); const s = el('span'); s.append(svgIcon('i-plus'), document.createTextNode('New album')); c.append(s);
@@ -1114,7 +1260,8 @@ function currentAlbum() { return state.route.kind === 'album' ? state.albums.fin
 function routePhotos() {
   const r = state.route;
   if (r.kind === 'all') return state.photos;
-  if (r.kind === 'unsorted') return albumPhotos(null);
+  if (r.kind === 'unsorted') return myUnsorted();
+  if (r.kind === 'shared') return sharedWithMe();
   return albumPhotos(r.id);
 }
 function visiblePhotos() {
@@ -1127,23 +1274,27 @@ function visiblePhotos() {
 function renderAlbum() {
   const r = state.route, a = currentAlbum();
   const all = routePhotos();
-  const title = r.kind === 'all' ? 'All photos' : r.kind === 'unsorted' ? 'Unsorted' : a?.name || '';
+  const title = r.kind === 'all' ? 'All photos' : r.kind === 'unsorted' ? 'Unsorted' : r.kind === 'shared' ? 'Shared with you' : a?.name || '';
   $('albumTitle').textContent = title;
   $('albumTitle').style.fontStyle = r.kind === 'album' ? '' : 'italic';
   $('albumDesc').textContent = r.kind === 'album' ? (a?.description || '')
     : r.kind === 'unsorted' ? (isAdmin() ? 'Photos from every member that aren\u2019t in an album yet.' : 'Your photos that aren\u2019t in an album yet. Only you and the admin can see them.')
-    : (isAdmin() ? 'Every photo from every member.' : 'Your photos, plus everything in shared albums.');
+    : r.kind === 'shared' ? 'Single photos other members shared with you.'
+    : (isAdmin() ? 'Every photo from every member.' : 'Your photos, plus everything shared with you.');
   $('albumDesc').hidden = !$('albumDesc').textContent;
   const meta = [plural(all.length, 'photograph')];
-  if (a) meta.push(a.shared ? 'Shared with all members' : (a.created_by === uid() ? (isAdmin() ? 'Private: only you' : 'Private: only you and the admin') : `Private: ${a.created_by_name || 'a member'} and admins`));
-  if (a?.created_by_name && a.created_by !== uid()) meta.push(`by ${a.created_by_name}`);
+  if (a) meta.push(accessLabel('album', a)[2]);
+  if (a?.created_by_name && a.created_by !== uid() && isAdmin()) meta.push(`by ${a.created_by_name}`);
   if (a) meta.push(`started ${fmtDate(new Date(a.created_at))}`);
   $('albumMeta').textContent = meta.join(' · ');
   $('editAlbumBtn').hidden = $('deleteAlbumBtn').hidden = !canEditAlbum(a);
-  $('shareBtn').hidden = !(a && isAdmin());
-  if (a) $('shareBtn').replaceChildren(svgIcon(a.shared ? 'i-lock' : 'i-users'), document.createTextNode(a.shared ? 'Make private' : 'Share with everyone'));
+  $('shareBtn').hidden = !canEditAlbum(a);
+  const req = a && myRequest('album', a.id);
+  $('requestAlbumBtn').hidden = !a || canEditAlbum(a);
+  $('requestAlbumBtn').textContent = req ? 'Removal requested \u2713' : 'Request removal';
+  $('drop').hidden = r.kind === 'shared';
   $('dropText').textContent = r.kind === 'album'
-    ? `Drop photos here to add them to \u201c${a?.name}\u201d${a?.shared ? ' (all members will see them)' : ''}, paste them, or`
+    ? `Drop photos here to add them to \u201c${a?.name}\u201d${a && (a.shared || a.created_by !== uid() || peopleNames('album', a.id).length) ? ' (everyone who can see this album will see them)' : ''}, paste them, or`
     : 'Drop photos here (they\u2019ll go to Unsorted, seen only by you and the admin), paste them, or';
   $('dlAllLbl').textContent = r.kind === 'album' ? 'Download album' : 'Download all';
   renderGrid();
@@ -1217,7 +1368,7 @@ function updateSelBar() {
   const sel = selectedPhotos();
   $('selCount').textContent = `${sel.length} selected`;
   $('selDl').disabled = !sel.length;
-  $('selDel').disabled = !sel.some(canChange);
+  $('selDel').disabled = !sel.some(canDelete);
   $('selMove').disabled = !sel.some(canMove);
 }
 
@@ -1228,8 +1379,8 @@ function openAlbumDlg(album = null) {
   $('albumSave').textContent = album ? 'Save' : 'Create album';
   $('albumName').value = album?.name || '';
   $('albumDescIn').value = album?.description || '';
-  $('albumSharedRow').hidden = !isAdmin();
-  $('albumShared').checked = album ? !!album.shared : true;
+  $('albumSharedRow').hidden = !!album; // when renaming, sharing lives in the Share button
+  $('albumShared').checked = isAdmin();
   $('albumErr').textContent = '';
   $('albumDlg').showModal();
   $('albumName').focus();
@@ -1239,7 +1390,7 @@ $('albumForm').onsubmit = async e => {
   e.preventDefault();
   const name = $('albumName').value.trim(), description = $('albumDescIn').value.trim() || null;
   const fields = { name, description };
-  if (isAdmin()) fields.shared = $('albumShared').checked;
+  if (!state.editingAlbum) fields.shared = $('albumShared').checked;
   if (!name) return void ($('albumErr').textContent = 'Give the album a name.');
   $('albumSave').disabled = true;
   try {
@@ -1269,9 +1420,9 @@ $('deleteAlbumBtn').onclick = () => { const a = currentAlbum(); if (a) openDelet
 let delAlbum = null;
 function openDeleteAlbum(a) {
   delAlbum = a;
-  const n = albumPhotos(a.id).length;
+  const n = albumPhotos(a.id).filter(canDelete).length, others = albumPhotos(a.id).length - n;
   $('delAlbumTitle').textContent = `Delete \u201c${a.name}\u201d?`;
-  $('delAlbumText').textContent = n ? `It has ${plural(n, 'photo')}. Unless you tick the box, they move to Unsorted and nothing is lost.` : 'This album is empty.';
+  $('delAlbumText').textContent = (n + others) ? `It has ${plural(n + others, 'photo')}. Unless you tick the box, they move to Unsorted and nothing is lost.` + (others ? ` ${plural(others, 'photo')} added by others always go back to the people who added them.` : '') : 'This album is empty.';
   $('delAlbumPhotosRow').hidden = !n;
   $('delAlbumPhotos').checked = false;
   $('delAlbumPhotosLbl').textContent = `Also delete the ${plural(n, 'photo')} for everyone. Frees up space; can\u2019t be undone.`;
@@ -1286,7 +1437,7 @@ $('delAlbumGo').onclick = async () => {
   $('delAlbumGo').disabled = true; $('delAlbumErr').textContent = '';
   try {
     let removed = 0;
-    if ($('delAlbumPhotos').checked) removed = await removePhotos(albumPhotos(a.id));
+    if ($('delAlbumPhotos').checked) removed = await removePhotos(albumPhotos(a.id).filter(canDelete));
     const { data, error } = await sb.from('albums').delete().eq('id', a.id).select('id');
     if (error) throw error;
     if (!data.length) throw new Error("You don't have permission to delete this album.");
@@ -1298,14 +1449,162 @@ $('delAlbumGo').onclick = async () => {
   finally { $('delAlbumGo').disabled = false; }
 };
 
-$('shareBtn').onclick = async () => {
-  const a = currentAlbum(); if (!a || !isAdmin()) return;
-  if (!a.shared && !(await ask(`Share \u201c${a.name}\u201d with all members?`, 'Every approved member will see its photos and can add their own.', 'Share'))) return;
-  const { error } = await sb.from('albums').update({ shared: !a.shared }).eq('id', a.id);
-  if (error) return toast(errMsg(error), 'error');
-  toast(a.shared ? 'Album is private again.' : 'Album shared with all members.');
-  await loadAll(true);
+$('shareBtn').onclick = () => { const a = currentAlbum(); if (a) openShare('album', a); };
+$('vShare').onclick = () => vPhoto() && openShare('photo', vPhoto());
+
+/* ---------- share dialog: everyone / specific members / invite link ---------- */
+let shareTarget = null; // { kind: 'album' | 'photo', id, name }
+function openShare(kind, item) {
+  shareTarget = { kind, id: item.id, name: kind === 'album' ? item.name : item.display };
+  $('shareTitle').textContent = `Share \u201c${shareTarget.name}\u201d`;
+  $('shareWhat').textContent = kind === 'album'
+    ? 'People you share an album with can see it and add their own photos. Only you (and the admin) can delete it.'
+    : 'People you share this photo with can view and download it. Only you (and the admin) can delete it.';
+  $('shareEveryoneHint').textContent = kind === 'album' ? 'Every approved member can see this album' : 'Every approved member can see this photo';
+  $('shareErr').textContent = '';
+  if (!$('shareDlg').open) $('shareDlg').showModal();
+  renderShare();
+}
+const col = () => shareTarget.kind + '_id';
+const shareItem = () => shareTarget.kind === 'album' ? albumById(shareTarget.id) : state.photos.find(p => p.id === shareTarget.id);
+async function renderShare() {
+  const t = shareTarget, item = shareItem();
+  if (!item) { $('shareDlg').close(); return; }
+  $('shareEveryone').checked = !!item.shared;
+  const [{ data: sh, error: e1 }, { data: links, error: e2 }, { data: names }] = await Promise.all([
+    sb.from('shares').select('id,member').eq(col(), t.id),
+    sb.from('share_links').select('token,created_at,expires_at,revoked').eq(col(), t.id).eq('revoked', false).order('created_at', { ascending: false }),
+    sb.rpc('list_members_for_sharing') // fresh, so newly approved members show up
+  ]);
+  if (e1 || e2) { $('shareErr').textContent = errMsg(e1 || e2); return; }
+  if (names) state.names = new Map(names.map(m => [m.id, m.display_name]));
+  const owner = t.kind === 'album' ? item.created_by : item.uploaderId;
+  const taken = new Set([owner, ...sh.map(x => x.member)]);
+  $('sharePeople').replaceChildren(...(sh.length ? sh.map(x => {
+    const li = el('li'); li.append(el('span', '', state.names.get(x.member) || 'Member (waiting for approval)'));
+    const b = el('button', 'btn ghost', 'Remove'); b.type = 'button';
+    b.onclick = async () => { b.disabled = true; const { error } = await sb.from('shares').delete().eq('id', x.id); if (error) $('shareErr').textContent = errMsg(error); renderShare(); };
+    li.append(b); return li;
+  }) : [el('li', 'empty', 'Not shared with anyone by name yet')]));
+  const options = [...state.names].filter(([id]) => !taken.has(id)).sort((a, b) => a[1].localeCompare(b[1]));
+  const ph = el('option', '', options.length ? 'Choose a member\u2026' : 'Everyone is already added'); ph.value = '';
+  $('sharePick').replaceChildren(ph, ...options.map(([id, name]) => { const o = el('option', '', name); o.value = id; return o; }));
+  $('sharePick').disabled = $('shareAdd').disabled = !options.length;
+  const valid = links.filter(l => new Date(l.expires_at) > new Date());
+  $('shareLinks').replaceChildren(...valid.map(l => {
+    const url = siteUrl() + '#join-' + l.token;
+    const box = el('div', 'linkbox');
+    const inp = el('input'); inp.type = 'text'; inp.readOnly = true; inp.value = url; inp.setAttribute('aria-label', 'Invite link'); inp.onfocus = () => inp.select();
+    const row = el('div', 'row');
+    row.append(el('small', 'hint', `Works until ${fmtDate(new Date(l.expires_at))}`));
+    const btns = el('div', 'row');
+    const copy = el('button', 'btn', 'Copy'); copy.type = 'button';
+    copy.onclick = async () => { try { await navigator.clipboard.writeText(url); copy.textContent = 'Copied'; } catch { inp.focus(); inp.select(); copy.textContent = 'Selected'; } setTimeout(() => { copy.textContent = 'Copy'; }, 1800); };
+    btns.append(copy);
+    if (navigator.share) { const sh2 = el('button', 'btn', 'Send\u2026'); sh2.type = 'button'; sh2.onclick = () => navigator.share({ title: 'Photo Share invite', text: `I shared \u201c${t.name}\u201d with you on Photo Share.`, url }).catch(() => {}); btns.append(sh2); }
+    const off = el('button', 'btn ghost danger', 'Turn off'); off.type = 'button';
+    off.onclick = async () => { off.disabled = true; const { error } = await sb.from('share_links').update({ revoked: true }).eq('token', l.token); if (error) $('shareErr').textContent = errMsg(error); renderShare(); };
+    btns.append(off); row.append(btns);
+    box.append(inp, row); return box;
+  }));
+  $('shareNewLink').textContent = valid.length ? 'Create another link' : 'Create invite link';
+}
+$('shareEveryone').onchange = async () => {
+  const on = $('shareEveryone').checked;
+  const { error } = await sb.from(shareTarget.kind === 'album' ? 'albums' : 'photos').update({ shared: on }).eq('id', shareTarget.id);
+  if (error) { $('shareErr').textContent = errMsg(error); $('shareEveryone').checked = !on; return; }
+  const item = shareItem(); if (item) item.shared = on;
+  toast(on ? 'Shared with all members.' : 'No longer shared with everyone.');
 };
+$('shareAdd').onclick = async () => {
+  const member = $('sharePick').value; if (!member) return;
+  $('shareAdd').disabled = true;
+  const { error } = await sb.from('shares').insert({ [col()]: shareTarget.id, member });
+  if (error) $('shareErr').textContent = errMsg(error);
+  else { state.shares.push({ [col()]: shareTarget.id, member }); toast(`Shared with ${state.names.get(member)}.`); }
+  renderShare();
+};
+$('shareNewLink').onclick = async () => {
+  $('shareNewLink').disabled = true;
+  const { error } = await sb.from('share_links').insert({ [col()]: shareTarget.id });
+  $('shareNewLink').disabled = false;
+  if (error) { $('shareErr').textContent = errMsg(error); return; }
+  renderShare();
+};
+$('shareDone').onclick = () => $('shareDlg').close();
+$('shareDlg').addEventListener('close', () => loadAll(true));
+
+/* ---------- removal requests ---------- */
+let requestTarget = null;
+function openRequest(kind, item) {
+  const existing = myRequest(kind, item.id);
+  if (existing) { // tapping again withdraws it
+    ask('Withdraw your removal request?', 'The owner will no longer see it.', 'Withdraw').then(async ok => {
+      if (!ok) return;
+      const { error } = await sb.from('removal_requests').delete().eq('id', existing.id);
+      if (error) return toast(errMsg(error), 'error');
+      toast('Request withdrawn.'); await loadAll(true); if ($('viewer').open) showInViewer();
+    });
+    return;
+  }
+  requestTarget = { kind, id: item.id };
+  const owner = kind === 'album' ? item.created_by_name : item.uploader;
+  $('requestWhat').textContent = `${owner || 'The owner'} (and the admin) will be asked to remove ${kind === 'album' ? 'the album' : 'this photo'} \u201c${kind === 'album' ? item.name : item.display}\u201d. Only they can delete it.`;
+  $('requestReason').value = ''; $('requestErr').textContent = '';
+  $('requestDlg').showModal();
+}
+$('requestAlbumBtn').onclick = () => { const a = currentAlbum(); if (a) openRequest('album', a); };
+$('vRequest').onclick = () => vPhoto() && openRequest('photo', vPhoto());
+$('requestCancel').onclick = () => $('requestDlg').close();
+$('requestForm').onsubmit = async e => {
+  e.preventDefault();
+  $('requestSend').disabled = true;
+  const { error } = await sb.from('removal_requests').insert({ [requestTarget.kind + '_id']: requestTarget.id, reason: $('requestReason').value.trim() || null });
+  $('requestSend').disabled = false;
+  if (error) return void ($('requestErr').textContent = errMsg(error));
+  $('requestDlg').close();
+  toast('Request sent. The owner will see it next time they open the album.');
+  await loadAll(true);
+  if ($('viewer').open) showInViewer();
+};
+const incomingRequests = () => state.requests.filter(r => r.requested_by !== uid());
+function updateRequestsBadge() {
+  const n = incomingRequests().length;
+  $('requestsBtn').hidden = !n;
+  $('requestsBadge').textContent = n;
+  if ($('requestsDlg').open) renderRequests();
+}
+function renderRequests() {
+  const list = incomingRequests();
+  if (!list.length) { $('reqList').replaceChildren(el('li', 'hint', 'No requests right now.')); return; }
+  $('reqList').replaceChildren(...list.map(r => {
+    const li = el('li');
+    const item = r.album_id ? albumById(r.album_id) : state.photos.find(p => p.id === r.photo_id);
+    const name = r.album_id ? `Album \u201c${item?.name || 'unknown'}\u201d` : `Photo \u201c${item?.display || 'unknown'}\u201d`;
+    const info = el('div', 'rq');
+    info.append(el('b', '', name), el('small', '', `${r.requested_by_name || 'A member'} asked ${fmtDate(new Date(r.created_at))}`));
+    if (r.reason) info.append(el('q', '', r.reason));
+    const view = el('button', 'btn ghost', 'View'); view.type = 'button';
+    view.onclick = () => {
+      $('requestsDlg').close();
+      if (r.album_id) location.hash = 'a-' + r.album_id;
+      else { location.hash = 'all'; setTimeout(() => { const i = state.view.findIndex(p => p.id === r.photo_id); if (i >= 0) openViewer(i); }, 300); }
+    };
+    const keep = el('button', 'btn', 'Keep it'); keep.type = 'button';
+    keep.onclick = async () => { keep.disabled = true; const { error } = await sb.from('removal_requests').delete().eq('id', r.id); if (error) toast(errMsg(error), 'error'); else toast('Request dismissed; nothing was deleted.'); await loadAll(true); };
+    const del = el('button', 'btn danger-fill', 'Delete it'); del.type = 'button';
+    del.onclick = async () => {
+      if (!item) { await sb.from('removal_requests').delete().eq('id', r.id); return loadAll(true); }
+      if (r.album_id) { $('requestsDlg').close(); openDeleteAlbum(item); return; }
+      if (!(await ask(`Delete \u201c${item.display}\u201d for everyone?`, 'This can\u2019t be undone.', 'Delete'))) return;
+      try { await removePhotos([item]); toast('Photo deleted.'); } catch (e2) { toast(errMsg(e2), 'error'); }
+      await loadAll(true);
+    };
+    li.append(info, view, keep, del); return li;
+  }));
+}
+$('requestsBtn').onclick = () => { renderRequests(); $('requestsDlg').showModal(); };
+$('requestsClose').onclick = () => $('requestsDlg').close();
 
 function openMove(ids) {
   const list = state.photos.filter(p => ids.includes(p.id) && canMove(p));
@@ -1319,7 +1618,7 @@ function openMove(ids) {
     r.checked = value === (cur || ''); l.append(r, el('span', '', label)); return l;
   };
   const albums = state.albums.slice().sort((x, y) => x.name.localeCompare(y.name));
-  $('moveList').replaceChildren(...albums.map(a => opt(a.id, a.name + (a.shared ? '  (shared)' : ''))), opt('', 'Unsorted (no album)'));
+  $('moveList').replaceChildren(...albums.map(a => opt(a.id, a.name + (accessLabel('album', a)[0] === 'i-users' ? `  (${accessLabel('album', a)[1].toLowerCase()})` : ''))), opt('', 'Unsorted (no album)'));
   $('moveNew').value = ''; $('moveErr').textContent = '';
   $('moveDlg').showModal();
 }
@@ -1504,11 +1803,12 @@ async function removePhotos(list) {
   return n;
 }
 async function deletePhotos(list) {
-  const mine = list.filter(canChange);
-  if (!mine.length) return;
+  const mine = list.filter(canDelete);
+  if (!mine.length) return toast('You can only delete photos you added. Open a photo to request its removal.', 'error');
+  const skipped = list.length - mine.length;
   const n = mine.length, others = mine.filter(p => p.uploaderId !== uid()).length;
   const sub = (others ? `${others === n ? (n === 1 ? 'It was' : 'They were') : `${others} of them were`} added by someone else. ` : '') + 'This removes them for everyone and can\u2019t be undone.';
-  if (!(await ask(`Delete ${plural(n, 'photo')} for everyone?`, sub, 'Delete'))) return;
+  if (!(await ask(`Delete ${plural(n, 'photo')} for everyone?`, sub + (skipped ? ` ${plural(skipped, 'photo')} added by others will be kept.` : ''), 'Delete'))) return;
   busy(true); setStatus(`Deleting ${plural(n, 'photo')}\u2026`);
   try {
     const done = await removePhotos(mine);
@@ -1584,8 +1884,8 @@ function showInViewer() {
   const p = state.view[state.vi]; if (!p) return;
   const token = ++state.vToken;
   $('vName').textContent = p.display;
-  const album = p.albumId ? state.albums.find(a => a.id === p.albumId)?.name : 'Unsorted';
-  const bits = [p.w && p.h ? `<b>${p.w} × ${p.h}</b>` : '', fmtBytes(p.size), p.uploader, fmtDate(p.date), album].filter(Boolean);
+  const album = p.albumId ? (albumById(p.albumId)?.name || '') : (p.uploaderId === uid() || isAdmin() ? 'Unsorted' : '');
+  const bits = [p.w && p.h ? `<b>${p.w} × ${p.h}</b>` : '', fmtBytes(p.size), p.uploader, fmtDate(p.date), album, accessLabel('photo', p)[1]].filter(Boolean);
   $('vExif').replaceChildren(); // build safely: names come from users
   bits.forEach((b, i) => {
     if (i) $('vExif').append(document.createTextNode('  ·  '));
@@ -1593,8 +1893,11 @@ function showInViewer() {
   });
   $('vPrev').hidden = state.vi <= 0;
   $('vNext').hidden = state.vi >= state.view.length - 1;
-  $('vDel').hidden = !canChange(p);
+  $('vDel').hidden = !canDelete(p);
   $('vMove').hidden = !canMove(p);
+  $('vShare').hidden = !canManagePhoto(p);
+  $('vRequest').hidden = canDelete(p);
+  $('vRequest').textContent = myRequest('photo', p.id) ? 'Removal requested \u2713' : 'Request removal';
   const a = currentAlbum();
   $('vCover').hidden = !(a && canEditAlbum(a) && p.albumId === a.id);
   $('vCover').textContent = a?.cover_photo_id === p.id ? 'Album cover ✓' : 'Set as cover';
@@ -1623,6 +1926,7 @@ async function openMembers() {
   if (!$('members').open) $('members').showModal();
   $('memberList').replaceChildren(el('li', 'hint', 'Loading…'));
   $('setOk').textContent = ''; $('setErr').textContent = '';
+  document.querySelectorAll('#members .admin-only').forEach(e => { e.hidden = !isAdmin(); });
   const [{ data, error }, s] = await Promise.all([sb.rpc('admin_list_members'), loadSettings().catch(() => ({}))]);
   $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
   if (error) { $('memberList').replaceChildren(el('li', 'err', errMsg(error))); return; }
@@ -1634,25 +1938,44 @@ function memberRow(m) {
   const li = el('li');
   const who = el('div', 'm-who');
   const me = m.id === uid();
-  who.append(el('b', '', m.display_name + (me ? ' (you)' : '')), el('small', '', `${m.email || ''} · joined ${fmtDate(new Date(m.created_at))}`));
-  li.append(who, el('span', `chip ${m.is_admin ? 'admin' : m.status}`, m.is_admin ? 'admin' : m.status));
-  if (!me) {
-    const act = (label, status, cls = '') => {
-      const b = el('button', `btn ${cls}`, label);
-      b.onclick = async () => {
-        if (status === 'blocked' && !(await ask(`Turn off access for ${m.display_name}?`, 'They will no longer see or add photos. You can turn it back on later.', 'Turn off'))) return;
-        b.disabled = true;
-        const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: status });
-        if (error) { toast(errMsg(error), 'error'); b.disabled = false; return; }
-        toast(status === 'approved' ? `${m.display_name} can now use the album.` : `Access turned off for ${m.display_name}.`);
-        openMembers();
-      };
-      return b;
+  const role = m.is_admin ? 'admin' : m.is_moderator ? 'moderator' : 'member';
+  who.append(el('b', '', m.display_name + (me ? ' (you)' : '')), el('small', '', `${m.email || ''} · joined ${fmtDate(new Date(m.created_at))}${m.invited_by && m.status === 'pending' ? ` · invited by ${m.invited_by}` : ''}`));
+  li.append(who, el('span', `chip ${role !== 'member' ? role : m.status}`, role !== 'member' ? role : m.status));
+  if (me) return li;
+  // Moderators can manage regular members only; admins can manage everyone.
+  if (!isAdmin() && role !== 'member') return li;
+  if (isAdmin() && m.status === 'approved') {
+    const sel = el('select', 'role'); sel.setAttribute('aria-label', `Role for ${m.display_name}`);
+    for (const [v, t] of [['member', 'Member'], ['moderator', 'Moderator'], ['admin', 'Admin']]) { const o = el('option', '', t); o.value = v; o.selected = v === role; sel.append(o); }
+    sel.onchange = async () => {
+      const next = sel.value;
+      const sub = next === 'admin' ? 'Admins see every photo, manage all albums and members, and can change roles, including yours.'
+        : next === 'moderator' ? 'Moderators can approve, decline and turn off member accounts. They don\u2019t see other people\u2019s private photos.'
+        : 'They\u2019ll go back to being a regular member.';
+      if (!(await ask(`Make ${m.display_name} ${next === 'member' ? 'a member' : next === 'admin' ? 'an admin' : 'a moderator'}?`, sub, 'Change role'))) { sel.value = role; return; }
+      sel.disabled = true;
+      const { error } = await sb.rpc('set_member_role', { target: m.id, new_role: next });
+      if (error) { toast(errMsg(error), 'error'); sel.value = role; sel.disabled = false; return; }
+      toast(`${m.display_name} is now ${next === 'member' ? 'a member' : next === 'admin' ? 'an admin' : 'a moderator'}.`);
+      openMembers();
     };
-    if (m.status === 'pending') li.append(act('Approve', 'approved', 'primary'), act('Decline', 'blocked', 'danger'));
-    else if (m.status === 'approved') li.append(act('Turn off', 'blocked', 'danger'));
-    else li.append(act('Restore', 'approved'));
+    li.append(sel);
   }
+  const act = (label, status, cls = '') => {
+    const b = el('button', `btn ${cls}`, label);
+    b.onclick = async () => {
+      if (status === 'blocked' && !(await ask(`Turn off access for ${m.display_name}?`, 'They will no longer see or add photos. You can turn it back on later.', 'Turn off'))) return;
+      b.disabled = true;
+      const { error } = await sb.rpc('set_member_status', { target: m.id, new_status: status });
+      if (error) { toast(errMsg(error), 'error'); b.disabled = false; return; }
+      toast(status === 'approved' ? `${m.display_name} can now use the album.` : `Access turned off for ${m.display_name}.`);
+      openMembers();
+    };
+    return b;
+  };
+  if (m.status === 'pending') li.append(act('Approve', 'approved', 'primary'), act('Decline', 'blocked', 'danger'));
+  else if (m.status === 'approved') li.append(act('Turn off', 'blocked', 'danger'));
+  else li.append(act('Restore', 'approved'));
   return li;
 }
 $('settingsForm').onsubmit = async e => {
@@ -1719,6 +2042,87 @@ document.addEventListener('paste', e => {
   if (files.length) handleFiles(files);
 });
 window.addEventListener('beforeunload', e => { if (state.uploading || state.queue.length) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- painted scenery for the sign-in page (drawn in code, nothing downloaded) ---------- */
+const SCENES = [
+  { sky: ['#20234f', '#5b3f74', '#c76d6a', '#f2a46b', '#f8d394'], sun: [0.66, 0.6, 0.06, [255, 222, 160]],
+    layers: [{ y: .6, amp: .2, sharp: 1, c: ['#9c6a86', '#c99087'], mist: 'rgba(248,200,140,.45)' },
+             { y: .72, amp: .1, c: ['#5d3e63', '#7b5468'], mist: 'rgba(230,150,120,.25)' },
+             { y: .86, amp: .05, c: ['#2b1d31', '#1b1220'] }], trees: 16, treeY: 1, treeH: [.1, .2], treeC: '#120b15' },
+  { sky: ['#8fb6cc', '#c3d9df', '#ece5d2', '#f5e2c4'], sun: [0.28, 0.36, 0.035, [255, 249, 230]],
+    layers: [{ y: .47, amp: .13, sharp: 1, c: ['#93aab6', '#b2c3c7'], mist: 'rgba(242,240,232,.55)' },
+             { y: .56, amp: .06, c: ['#5f7d86', '#6e8b91'], mist: 'rgba(235,236,228,.45)' }],
+    trees: 26, treeY: .6, treeH: [.04, .08], treeC: '#34514f', lake: .6, water: ['#7d9fae', '#3f6070'] },
+  { sky: ['#03061a', '#0d1540', '#232a66', '#4c3f78'], stars: 240, milky: 1, sun: [0.76, 0.2, 0.028, [246, 240, 222]],
+    layers: [{ y: .68, amp: .17, sharp: 1, c: ['#1d2250', '#272c5a'], mist: 'rgba(90,80,140,.25)' },
+             { y: .83, amp: .06, c: ['#0e1029', '#080918'] }], trees: 12, treeY: 1, treeH: [.12, .24], treeC: '#04050e' }
+];
+function paintScene(cv, k) {
+  const S = SCENES[k], w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  let seed = 97 + k * 131; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const sky = x.createLinearGradient(0, 0, 0, h); S.sky.forEach((c, i) => sky.addColorStop(i / (S.sky.length - 1), c));
+  x.fillStyle = sky; x.fillRect(0, 0, w, h);
+  if (S.milky) { // faint band of stars across the sky
+    x.save(); x.translate(w * .5, h * .3); x.rotate(-0.55);
+    const band = x.createLinearGradient(0, -h * .12, 0, h * .12);
+    band.addColorStop(0, 'rgba(160,150,220,0)'); band.addColorStop(.5, 'rgba(170,160,230,.22)'); band.addColorStop(1, 'rgba(160,150,220,0)');
+    x.fillStyle = band; x.fillRect(-w, -h * .12, w * 2, h * .24);
+    for (let i = 0; i < 260; i++) { x.globalAlpha = rnd() * .7; x.fillStyle = '#fff'; x.fillRect((rnd() - .5) * w * 2, (rnd() - .5) * h * .2, .8, .8); }
+    x.restore(); x.globalAlpha = 1;
+  }
+  for (let i = 0; i < (S.stars || 0); i++) { x.globalAlpha = .25 + rnd() * .75; x.fillStyle = '#fff'; x.beginPath(); x.arc(rnd() * w, rnd() * h * .7, rnd() * .9 + .2, 0, 7); x.fill(); }
+  x.globalAlpha = 1;
+  if (S.sun) {
+    const [sx, sy, sr, [r, g, b]] = S.sun, cx = w * sx, cy = h * sy, R0 = Math.max(w, h) * sr;
+    const glow = x.createRadialGradient(cx, cy, 0, cx, cy, R0 * 9);
+    glow.addColorStop(0, `rgba(${r},${g},${b},.75)`); glow.addColorStop(.18, `rgba(${r},${g},${b},.3)`); glow.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    x.fillStyle = glow; x.fillRect(0, 0, w, h);
+    x.fillStyle = `rgb(${r},${g},${b})`; x.beginPath(); x.arc(cx, cy, R0, 0, 7); x.fill();
+  }
+  for (const L of S.layers) { // ridges, back to front, with haze in between
+    const base = h * L.y, amp = h * L.amp, ph = [rnd() * 6, rnd() * 6, rnd() * 6, rnd() * 6];
+    x.beginPath(); x.moveTo(0, h);
+    for (let px = 0; px <= w + 2; px += 1.5) {
+      const t = px / w;
+      let y = Math.sin(t * 2.7 + ph[0]) * .5 + Math.sin(t * 6.1 + ph[1]) * .28 + Math.sin(t * 13.3 + ph[2]) * .14 + Math.sin(t * 31 + ph[3]) * .05;
+      if (L.sharp) y = .9 - Math.abs(y) * 1.6;
+      x.lineTo(px, base - y * amp);
+    }
+    x.lineTo(w, h); x.closePath();
+    const fill = x.createLinearGradient(0, base - amp, 0, h); fill.addColorStop(0, L.c[0]); fill.addColorStop(1, L.c[1]);
+    x.fillStyle = fill; x.fill();
+    if (L.mist) { const m = x.createLinearGradient(0, base - amp * .1, 0, base + amp * 1.2); m.addColorStop(0, 'rgba(255,255,255,0)'); m.addColorStop(1, L.mist); x.fillStyle = m; x.fillRect(0, base - amp * .1, w, amp * 1.3); }
+  }
+  const pine = (tx, ty, th, c) => {
+    x.fillStyle = c; const tiers = 4;
+    for (let i = 0; i < tiers; i++) {
+      const top = ty - th + th * i * .2, bw = th * (.16 + i * .07);
+      x.beginPath(); x.moveTo(tx, top); x.lineTo(tx - bw, top + th * .34); x.lineTo(tx + bw, top + th * .34); x.closePath(); x.fill();
+    }
+    x.fillRect(tx - th * .02, ty - th * .12, th * .04, th * .12);
+  };
+  const trees = [];
+  for (let i = 0; i < (S.trees || 0); i++) trees.push([rnd() * w, h * (S.treeH[0] + rnd() * (S.treeH[1] - S.treeH[0]))]);
+  trees.sort((a, b) => a[1] - b[1]).forEach(([tx, th]) => pine(tx, h * S.treeY + 1, th, S.treeC));
+  if (S.lake) { // mirror the scene above the shoreline into the water
+    const ly = h * S.lake;
+    x.save(); x.globalAlpha = .55; x.translate(0, ly * 2); x.scale(1, -1);
+    x.drawImage(cv, 0, Math.max(0, (2 * ly - h) * dpr), cv.width, Math.min(ly, h - ly) * dpr, 0, Math.max(0, 2 * ly - h), w, Math.min(ly, h - ly));
+    x.restore();
+    const water = x.createLinearGradient(0, ly, 0, h); water.addColorStop(0, S.water[0] + '88'); water.addColorStop(1, S.water[1] + 'ee');
+    x.fillStyle = water; x.fillRect(0, ly, w, h - ly);
+    x.fillStyle = 'rgba(255,255,255,.22)';
+    for (let i = 0; i < 46; i++) { const ry = ly + 3 + rnd() * (h - ly); x.fillRect(rnd() * w, ry, w * (.04 + rnd() * .12), .7); }
+  }
+  const vig = x.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .35, w / 2, h / 2, Math.max(w, h) * .75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.28)');
+  x.fillStyle = vig; x.fillRect(0, 0, w, h);
+}
+const frameObserver = new ResizeObserver(entries => entries.forEach(e => paintScene(e.target, +e.target.dataset.scene)));
+document.querySelectorAll('.frames canvas').forEach(cv => frameObserver.observe(cv));
 
 /* ---------- theme: dark by default; light only when someone picks it ---------- */
 const THEME_KEY = 'photoshare:theme';
