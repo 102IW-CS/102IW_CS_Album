@@ -4,6 +4,12 @@ Every change to this site, newest first, in plain words. Database changes are in
 
 The personal copy of this site (https://b4anjan.github.io/PhotoShare/) has its own change log. Since Oct 30, 2026 the two have the same features, except that the personal site also has **Share outside**.
 
+## 2026-10-30 (night): sign-in pictures copied from the personal site
+
+- The 26 sign-in pictures from the personal site were copied here, so both sign-in pages show the same set. Each site keeps its own copy, so adding or removing one later on one site doesn't change the other.
+- Rotation speed set to match the personal site: one card changes every 3 seconds (Members → Settings → Sign-in pictures).
+- The message-cleanup functions are installed, so automatic deletion of old messages and the admin "delete old messages" button work.
+
 ## 2026-10-30 (evening): same features as the personal site
 
 **Private messages (new)**
