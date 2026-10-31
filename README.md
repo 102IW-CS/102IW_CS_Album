@@ -7,6 +7,8 @@ A private photo album for friends and colleagues. People create an account on th
 - **Terms of Service and Privacy Policy:** `terms.html` and `privacy.html` (shared `legal.css` / `legal.js`). New accounts must tick “I agree”; the accepted version and time are saved with the account. Members who signed up earlier are asked once. To publish a revised version, update both pages' version line and `TERMS_VERSION` in `index.html`, and everyone is asked to accept again.
 - **Contact page:** `contact.html` — design & development inquiries, plus a plain-language explanation of how the site works and keeps photos private
 
+Every change to the site is listed in [CHANGELOG.md](CHANGELOG.md), newest first.
+
 ## How it's put together
 
 - The page is static, so it can't keep secrets. It only contains Supabase's **publishable** key, which is meant to be public.
@@ -47,6 +49,9 @@ A private photo album for friends and colleagues. People create an account on th
 ## Everyday use
 
 - **Owner contact:** Members → **Settings** sets the name, phone and email shown to people waiting for approval. They're stored in the database (visible only to signed-in people), not in this public repo.
+- **Private messages:** the **Messages** button lets any member chat one-to-one with any other approved member. Only the two people can read a conversation; the database refuses everyone else, admins included. Admins see totals under Members → Settings → *Private messages*, choose how long messages are kept (members see the rule in their Messages window), and can delete old messages to free space. *Delete* on a conversation removes it for you only. Taking messages back: **Undo** for 5 seconds after Send (it hasn't left your device yet); tap a message to **Unsend** it for both people (yours, within 24 hours; the text is erased) or **Delete for me**. Finding people: search by name or email as you type, best matches first, A–Z when empty; members only ever see a shortened email (e.g. `b•••@gmail.com`), and email matching needs 3+ characters.
+- **Sign-in pictures (admins):** Members → Settings → *Sign-in pictures*. Add up to 40 pictures (resized to 1200 px, location data removed) with an optional caption and credit. They're public, in their own `site` bucket, apart from members' photos. Each visit starts with 3 at random, then one card changes at the speed you pick there (3 seconds to 1 minute, or not at all; 8 seconds by default). They hold still while a mouse is over them. Until at least 3 are shown, drawn scenes fill in. Use only pictures you took or have the right to use, and fill in the credit when the license asks for it.
+- **Sign-in box:** glows amber when the mouse is over it and while someone types in it.
 - **My account** (your name or the person icon in the header): change your name (updates it on all your photos and albums), change your password (asks for the current one first), download all your photos as a ZIP, see when you accepted the Terms, and delete your account (optionally with your photos and albums; type DELETE to confirm; the last admin can't delete themselves).
 - **Terms status:** Members shows a *Terms not accepted* filter, and each person's details say when they accepted.
 - **Sign-in sessions:** Members → **Settings** → *Sign out after no activity* (5 min to 4 hours, or never; a “Still there?” warning comes a minute before) and *When the browser is closed* (sign in again, or let people tick “Keep me signed in”). The site enforces these in each browser; Supabase’s server-side session limits need a paid plan. Signing out only signs out that device.

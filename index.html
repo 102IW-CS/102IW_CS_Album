@@ -61,6 +61,91 @@ header.top .wrap{display:flex;align-items:center;gap:8px;height:62px}
 @media (min-width:721px){#meBtn .who{display:inline-block}}
 #meBtn .who{font-weight:600;color:var(--muted)}
 #meBtn:hover .who{color:var(--ink)}
+/* Private messages: conversation list + chat; on phones one pane at a time */
+#dmDlg{width:min(96vw,900px);height:min(90vh,780px)}
+#dmDlg .sheet-head{padding-bottom:10px;border-bottom:1px solid var(--line)}
+.dm-wrap{display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0}
+.dm-side{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--line)}
+.dm-side-tools{display:flex;gap:8px;padding:12px}
+.dm-side-tools .m-search{flex:1}
+#dmList{list-style:none;margin:0;padding:0 6px 10px;overflow:auto;flex:1;min-height:0;overscroll-behavior:contain}
+#dmList li{display:flex;gap:10px;align-items:center;padding:9px 8px;border-radius:9px;cursor:pointer}
+#dmList li:hover{background:var(--surface-2)}
+#dmList li.on{background:var(--accent-soft)}
+#dmList li.m-empty{cursor:default;justify-content:center;color:var(--muted);padding:28px 8px;text-align:center}
+#dmList li.m-empty:hover{background:none}
+.dm-li{flex:1;min-width:0}
+.dm-li .top{display:flex;gap:8px;align-items:baseline}
+.dm-li b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dm-li time{font-size:12px;color:var(--muted);white-space:nowrap}
+.dm-li p{margin:1px 0 0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dmList li.unread b{font-weight:800}
+#dmList li.unread p{color:var(--ink)}
+.dm-dot{min-width:20px;height:20px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 6px}
+.dm-main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.dm-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);min-height:58px}
+.dm-head .who-b{flex:1;min-width:0}
+.dm-head .who-b b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-head .who-b small{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px;min-width:0}
+.dm-head .who-b small span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dm-head .who-b small svg{flex:none}
+.dm-head .who-b small svg{width:13px;height:13px}
+#dmBack{display:none}
+#dmThread{flex:1;min-height:0;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:4px;overscroll-behavior:contain}
+.dm-day{align-self:center;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
+.dm-msg{max-width:min(78%,520px);padding:8px 12px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.45;position:relative}
+.dm-msg.them{align-self:flex-start;background:var(--surface-2);border-bottom-left-radius:5px}
+.dm-msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px}
+.dm-msg time{display:block;font-size:10.5px;opacity:.7;margin-top:3px;text-align:right}
+.dm-msg{cursor:pointer}
+.dm-msg.pending{cursor:default;opacity:.9}
+.dm-msg.sel{outline:2px solid var(--accent);outline-offset:2px}
+.dm-msg.them.sel{outline-color:color-mix(in srgb,var(--accent) 70%,var(--muted))}
+.dm-msg.unsent{background:transparent;border:1px dashed var(--line);color:var(--muted);font-style:italic}
+.dm-acts{display:flex;gap:6px;margin:2px 0 8px;flex-wrap:wrap}
+.dm-acts.me{align-self:flex-end;justify-content:flex-end}
+.dm-acts.them{align-self:flex-start}
+.dm-acts .btn{padding:4px 11px;font-size:12.5px}
+.dm-undo{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:12px;font-style:normal}
+.dm-undo button{border:0;background:var(--accent-ink);color:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700;font-size:12px;cursor:pointer}
+.dm-undo .bar{flex:1;min-width:40px;height:3px;border-radius:2px;background:color-mix(in srgb,var(--accent-ink) 25%,transparent);overflow:hidden}
+.dm-undo .bar i{display:block;height:100%;background:var(--accent-ink);animation:dmUndo 5s linear forwards}
+@keyframes dmUndo{from{width:100%}to{width:0}}
+@media (prefers-reduced-motion:reduce){.dm-undo .bar i{animation:none;width:50%}}
+.dm-seen{align-self:flex-end;font-size:11.5px;color:var(--muted);margin:2px 4px 0}
+.dm-older{align-self:center;margin-bottom:6px}
+.dm-compose{display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.dm-compose textarea{flex:1;min-height:44px;max-height:160px;resize:none;padding:11px 13px;line-height:1.4}
+.dm-compose .btn{height:44px}
+.dm-count{font-size:11.5px;color:var(--muted);padding:0 14px 6px;text-align:right}
+.dm-count:empty{display:none}
+.dm-empty{flex:1;display:grid;place-items:center;text-align:center;color:var(--muted);padding:30px}
+.dm-empty svg{width:42px;height:42px;color:var(--accent);margin-bottom:8px}
+.dm-empty h3{font-size:26px;color:var(--ink);margin:0 0 4px}
+.dm-rule{font-size:12px;color:var(--muted);text-align:center;padding:8px 16px 0}
+.dm-pick{padding:12px 16px;display:grid;gap:10px;min-height:0;overflow:auto}
+.dm-pick ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.dm-pick li button{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);text-align:left;font-weight:600}
+.dm-pick li button:hover,.dm-pick li button.active{border-color:var(--accent)}
+.dm-pick li button.active{background:var(--accent-soft)}
+.dm-pick .who-p{flex:1;min-width:0;display:grid}
+.dm-pick .who-p b,.dm-pick .who-p small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-pick .who-p small{font-weight:400;color:var(--muted);font-size:12.5px}
+.dm-pick mark,#dmList mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.dm-pick .tag{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);flex:none}
+.dm-letter{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--accent);padding:8px 4px 2px;border-bottom:1px solid var(--line)}
+.dm-pick-count{font-size:12.5px;color:var(--muted);margin:0}
+#dmList li.dm-sec{cursor:default;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 8px 4px}
+#dmList li.dm-sec:hover{background:none}
+#dmList li.dm-start .dm-li p{color:var(--accent)}
+@media (max-width:640px){
+  .dm-wrap{grid-template-columns:1fr}
+  .dm-side{border-right:0}
+  .dm-wrap.thread .dm-side{display:none}
+  .dm-wrap:not(.thread) .dm-main{display:none}
+  #dmBack{display:inline-flex}
+  .dm-msg{max-width:86%}
+}
 /* My account */
 #acctDlg{width:min(94vw,560px)}
 .acct-id{display:flex;align-items:center;gap:12px}
@@ -156,14 +241,40 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
 .privacy-link a{font-weight:600;text-decoration:none}
 .privacy-link a:hover{text-decoration:underline}
 .frames{display:flex;gap:12px;margin-top:34px;align-items:flex-start}
-.frames figure{margin:0;flex:1;max-width:150px}
+.frames figure{margin:0;flex:1;max-width:150px;min-width:0}
 .frames figure:nth-child(2){margin-top:26px}
-.frames canvas{display:block;width:100%;aspect-ratio:3/4;border-radius:3px;background:var(--surface-2);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent),0 12px 28px rgba(0,0,0,.28)}
-.frames figure:nth-child(2) canvas{aspect-ratio:4/5}
-.frames figcaption{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
-@media (max-width:860px){.intro h1{font-size:52px;margin:10px 0 12px}.frames{margin-top:22px;gap:8px}.frames figure:nth-child(2){margin-top:14px}.frames figcaption{display:none}}
+.frames .slot{position:relative;aspect-ratio:3/4;border-radius:3px;overflow:hidden;background:var(--surface-2);box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent),0 12px 28px rgba(0,0,0,.28)}
+.frames figure:nth-child(2) .slot{aspect-ratio:4/5}
+.frames .slot>canvas,.frames .slot>img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;opacity:0;transition:opacity 1.4s ease}
+.frames .slot>.on{opacity:1}
+.frames figcaption{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px;min-height:1.4em}
+.frames figcaption .cap{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.frames .credit{display:block;font-family:var(--ui);text-transform:none;letter-spacing:0;font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.frames a.credit{text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--muted) 50%,transparent)}
+.frames a.credit:hover{color:var(--ink)}
+@media (max-width:860px){.intro h1{font-size:52px;margin:10px 0 12px}.frames{margin-top:22px;gap:8px}.frames figure:nth-child(2){margin-top:14px}.frames figcaption{margin-top:4px;min-height:0}.frames figcaption .cap{display:none}}
+/* sign-in pictures manager (admins) */
+.sp{display:grid;gap:12px;margin-top:18px}
+.sp .hint{margin:0}
+.sp-speed{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}.sp-speed .field{margin:0}.sp-speed select{width:auto;min-width:200px}
+.sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.sp-grid:empty{display:none}
+.sp-card{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:8px;align-content:start;min-width:0}
+.sp-card img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;background:var(--surface-2);display:block}
+.sp-card.off img{opacity:.35;filter:grayscale(.7)}
+.sp-f{display:grid;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+.sp-f input[type=text]{font-size:13px;padding:7px 9px}
+.sp-foot{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.sp-foot .check{font-size:12.5px}
+.sp-foot .btn{padding:5px 9px;font-size:12.5px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:30px;box-shadow:var(--shadow)}
 @media (max-width:560px){.panel{padding:22px}}
+/* sign-in / create-account box: warm amber edge and glow on hover, and while someone is typing in it */
+#auth .panel{--glow:245,176,46;transition:border-color .35s ease,box-shadow .35s ease}
+[data-theme=light] #auth .panel{--glow:214,140,20}
+@media (hover:hover){#auth .panel:hover{border-color:rgb(var(--glow));box-shadow:0 0 0 1px rgba(var(--glow),.35),0 0 28px rgba(var(--glow),.16),0 22px 56px -14px rgba(var(--glow),.42)}}
+#auth .panel:focus-within{border-color:rgb(var(--glow));box-shadow:0 0 0 1px rgba(var(--glow),.35),0 0 28px rgba(var(--glow),.16),0 22px 56px -14px rgba(var(--glow),.42)}
+@media (prefers-reduced-motion:reduce){#auth .panel{transition:none}}
 .panel h2{font-size:30px;margin-bottom:4px}
 .panel .lead{color:var(--muted);margin:0 0 22px;font-size:14px}
 .tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px;margin:0 0 22px}
@@ -492,6 +603,8 @@ body>main{flex:1 0 auto;width:100%}
   <symbol id="i-aperture" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12.00 8.25L21.81 13.92M15.25 10.12L15.25 21.46M15.25 13.88L5.43 19.54M12.00 15.75L2.19 10.08M8.75 13.88L8.75 2.54M8.75 10.12L18.57 4.46"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3l18 18M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7c1.8 0 3.3-.5 4.6-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 6-6 6 6 6"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></symbol>
@@ -515,6 +628,7 @@ body>main{flex:1 0 auto;width:100%}
 <header class="top"><div class="wrap">
   <a class="brand" href="#albums" aria-label="Photo Share, all albums"><svg><use href="#i-aperture"/></svg><span>Photo Share</span></a>
   <button class="btn ghost icon" id="themeBtn" type="button"></button>
+  <button class="btn ghost nav" id="dmBtn" aria-label="Messages" title="Messages" hidden><svg><use href="#i-chat"/></svg><span class="lbl">Messages</span><span class="badge" id="dmBadge" hidden></span></button>
   <button class="btn ghost nav" id="inboxBtn" aria-label="Inbox" title="Inbox" hidden><svg><use href="#i-mail"/></svg><span class="lbl">Inbox</span><span class="badge" id="inboxBadge" hidden></span></button>
   <button class="btn ghost nav" id="requestsBtn" aria-label="Removal requests" title="Removal requests" hidden><svg><use href="#i-flag"/></svg><span class="lbl">Requests</span><span class="badge" id="requestsBadge"></span></button>
   <button class="btn ghost nav" id="membersBtn" aria-label="Members" title="Members" hidden><svg><use href="#i-users"/></svg><span class="lbl">Members</span><span class="badge" id="pendingBadge" hidden></span></button>
@@ -532,10 +646,10 @@ body>main{flex:1 0 auto;width:100%}
       <h1>Photo <em>Share</em></h1>
       <p>A private collection for friends and colleagues. <span id="introApproval">Every account is approved by the album owner before it can see a single frame.</span></p>
       <p class="privacy-link"><a href="contact.html#how-it-works">How your photos are kept private &rarr;</a></p>
-      <div class="frames" aria-hidden="true">
-        <figure><canvas data-scene="0"></canvas><figcaption>Ridge, 18:42</figcaption></figure>
-        <figure><canvas data-scene="1"></canvas><figcaption>Lake, 6:10 am</figcaption></figure>
-        <figure><canvas data-scene="2"></canvas><figcaption>Night sky, ISO 3200</figcaption></figure>
+      <div class="frames" id="frames">
+        <figure><div class="slot"></div><figcaption></figcaption></figure>
+        <figure><div class="slot"></div><figcaption></figcaption></figure>
+        <figure><div class="slot"></div><figcaption></figcaption></figure>
       </div>
     </div>
 
@@ -868,6 +982,15 @@ body>main{flex:1 0 auto;width:100%}
         <div style="flex:1;min-width:180px"><label class="field" for="setPhone">Phone</label><input id="setPhone" type="tel" maxlength="40"></div>
         <div style="flex:1.4;min-width:200px"><label class="field" for="setEmail">Email</label><input id="setEmail" type="email" maxlength="120"></div>
       </div>
+      <div class="section-label" style="margin:6px 0 0">Private messages · admins can't read them</div>
+      <p class="hint" style="margin:0" id="setDmStats"></p>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:1;min-width:200px"><label class="field" for="setDmKeep">Delete messages automatically</label>
+          <select id="setDmKeep"><option value="">Never</option><option value="30">After 30 days</option><option value="60">After 60 days</option><option value="90">After 90 days</option><option value="180">After 6 months</option><option value="365">After 1 year</option></select></div>
+        <div style="flex:1.2;min-width:220px"><label class="field" for="setDmPurgeAge">Free up space now</label>
+          <div style="display:flex;gap:8px"><select id="setDmPurgeAge" style="flex:1"><option value="365">Messages older than 1 year</option><option value="180">Messages older than 6 months</option><option value="90">Messages older than 90 days</option><option value="30">Messages older than 30 days</option><option value="0">All messages</option></select><button type="button" class="btn danger" id="setDmPurge">Delete</button></div></div>
+      </div>
+      <p class="hint" style="margin:0">Members see the auto-delete rule in their Messages window. To free photo space, open any photo or album: admins can delete them.</p>
       <div class="section-label" style="margin:6px 0 0">New accounts</div>
       <div><label class="field" for="setApprove">Approval</label>
         <select id="setApprove"><option value="false">An admin or moderator approves each account</option><option value="true">Approve automatically once the email is confirmed</option></select></div>
@@ -885,6 +1008,16 @@ body>main{flex:1 0 auto;width:100%}
       <p class="hint" style="margin:0">A minute before the time runs out, people see a “Still there?” warning. Uploads in progress count as activity. The site applies these rules in each browser; Supabase’s own server-side session limits need a paid plan.</p>
       <div class="split"><p class="ok" id="setOk" role="status"></p><p class="err" id="setErr" role="alert"></p><button class="btn primary" id="setSave" style="margin-left:auto">Save settings</button></div>
     </form>
+    <section class="sp" id="spSection" aria-labelledby="spTitle">
+      <div class="section-label" style="margin:0" id="spTitle">Sign-in pictures · public, seen before anyone signs in</div>
+      <p class="hint" id="spCount"></p>
+      <div class="sp-speed"><label class="field" for="spSpeed">Change a picture every</label>
+        <select id="spSpeed"><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="0">Don’t change (3 at random per visit)</option></select>
+        <span class="hint" id="spSpeedNote"></span></div>
+      <div class="sp-grid" id="spGrid"></div>
+      <div><button type="button" class="btn" id="spAdd"><svg><use href="#i-plus"/></svg>Add pictures</button><input type="file" id="spFile" accept="image/*" multiple hidden></div>
+      <p class="hint">Use pictures you took or have the right to use. Many free stock pictures ask for credit (Vecteezy’s free license does): put it in <b>Credit</b> and it shows under the picture. Pictures are resized to 1200 px and their location data is removed. Changes here save right away.</p>
+    </section>
   </div>
 </dialog>
 
@@ -897,6 +1030,40 @@ body>main{flex:1 0 auto;width:100%}
     <p class="err" id="removeErr" role="alert"></p>
   </div>
   <div class="sheet-foot"><button type="button" class="btn ghost" id="removeCancel">Cancel</button><button type="button" class="btn danger-fill" id="removeGo">Remove member</button></div>
+</dialog>
+
+<dialog id="dmDlg" class="sheet" aria-labelledby="dmTitle">
+  <div class="sheet-head"><h2 id="dmTitle">Messages</h2><button type="button" class="btn primary" id="dmNew"><svg><use href="#i-plus"/></svg>New</button><button type="button" class="btn" id="dmClose">Close</button></div>
+  <div class="dm-wrap" id="dmWrap">
+    <aside class="dm-side">
+      <div class="dm-side-tools"><div class="m-search"><svg><use href="#i-search"/></svg><input type="search" id="dmSearch" placeholder="Search name or email" autocomplete="off" spellcheck="false" aria-label="Search conversations and members"><button type="button" class="m-clear" id="dmSearchClear" aria-label="Clear search">&times;</button></div></div>
+      <ul id="dmList" aria-label="Conversations"></ul>
+    </aside>
+    <section class="dm-main" aria-live="polite">
+      <div class="dm-empty" id="dmEmpty"><div><svg><use href="#i-chat"/></svg><h3>Private messages</h3><p style="margin:0">Pick a conversation, or start a new one.<br>Only you and the other person can read it.</p></div></div>
+      <div class="dm-pick" id="dmPick" hidden>
+        <div style="display:flex;align-items:center;gap:8px"><button type="button" class="btn ghost icon" id="dmPickBack" aria-label="Back"><svg><use href="#i-back"/></svg></button><b>New message to…</b></div>
+        <div class="m-search"><svg><use href="#i-search"/></svg><input type="search" id="dmPickSearch" placeholder="Name or email" autocomplete="off" spellcheck="false" aria-label="Search members by name or email"></div>
+        <p class="dm-pick-count" id="dmPickCount" aria-live="polite"></p>
+        <ul id="dmPickList" role="listbox" aria-label="Members"></ul>
+      </div>
+      <div id="dmConv" hidden style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div class="dm-head">
+          <button type="button" class="btn ghost icon" id="dmBack" aria-label="Back to conversations"><svg><use href="#i-back"/></svg></button>
+          <span class="m-av" id="dmAv" aria-hidden="true"></span>
+          <div class="who-b"><b id="dmWho"></b><small><svg><use href="#i-lock"/></svg><span id="dmPrivacy">Private: only the two of you can read this</span></small></div>
+          <button type="button" class="btn ghost danger" id="dmHide" title="Remove this conversation from your messages">Delete</button>
+        </div>
+        <div id="dmThread"></div>
+        <p class="dm-rule" id="dmRule" hidden></p>
+        <form class="dm-compose" id="dmForm" novalidate>
+          <textarea id="dmText" rows="1" maxlength="2000" placeholder="Write a message…" aria-label="Message"></textarea>
+          <button class="btn primary" id="dmSend" aria-label="Send">Send</button>
+        </form>
+        <p class="dm-count" id="dmCount"></p>
+      </div>
+    </section>
+  </div>
 </dialog>
 
 <dialog id="acctDlg" class="sheet" aria-labelledby="acctTitle">
@@ -1217,6 +1384,7 @@ async function endSession(why) {
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   state.queue.length = 0;
   lsSet(END_KEY, JSON.stringify({ why, mins: policy().idle, at: Date.now() }));
+  await flushOutbox().catch(() => {});
   await sb.auth.signOut({ scope: 'local' }).catch(() => {});
   try { localStorage.removeItem(ACTIVE_KEY); } catch {}
   state.session = null;
@@ -1361,6 +1529,378 @@ $('vfResend').onclick = async () => {
 };
 $('vfBack').onclick = () => { clearInterval(verify.timer); authMode('up'); $('upEmail').value = verify.email; $('upEmail').focus(); };
 $('vfSignIn').onclick = () => { clearInterval(verify.timer); authMode('in'); $('inEmail').value = verify.email; $('inPass').focus(); };
+
+/* ---------- private messages ----------
+   One-to-one conversations between approved members. The database only ever returns a
+   message to its sender or recipient: admins can't read them. Admins see totals and can
+   set auto-delete timing or delete old messages (Members → Settings → Private messages). */
+const dm = { convs: [], other: null, otherName: '', msgs: [], more: false, members: null, timer: null, loading: false };
+const DM_KEEP = { 30: '30 days', 60: '60 days', 90: '90 days', 180: '6 months', 365: '1 year' };
+async function refreshDmBadge() {
+  if (state.profile?.status !== 'approved') return;
+  const { data, error } = await sb.rpc('dm_unread_count');
+  if (error) return;
+  $('dmBadge').textContent = data; $('dmBadge').hidden = !data;
+}
+function dmWhen(d) {
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (now - d < 6 * 864e5 && d < now) return d.toLocaleDateString(undefined, { weekday: 'short' });
+  return d.toLocaleDateString(undefined, d.getFullYear() === now.getFullYear() ? { month: 'short', day: 'numeric' } : { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function dmRuleText() {
+  const d = state.settings?.dm_retention_days;
+  return d ? `Messages are deleted automatically after ${DM_KEEP[d] || d + ' days'}.` : '';
+}
+function dmView(which) { // 'empty' | 'pick' | 'conv'
+  $('dmEmpty').hidden = which !== 'empty'; $('dmPick').hidden = which !== 'pick'; $('dmConv').hidden = which !== 'conv';
+  $('dmConv').style.display = which === 'conv' ? 'flex' : 'none';
+  $('dmWrap').classList.toggle('thread', which !== 'empty');
+}
+async function openDm(otherId, otherName) {
+  if (!$('dmDlg').open) $('dmDlg').showModal();
+  loadSettings().catch(() => {});
+  if (!otherId) { dm.other = null; dmView('empty'); }
+  await loadConvs();
+  if (otherId) openConv(otherId, otherName);
+  else if (matchMedia('(pointer:fine)').matches) $('dmSearch').focus();
+}
+async function loadConvs() {
+  const { data, error } = await sb.rpc('my_conversations');
+  if (error) { $('dmList').replaceChildren(el('li', 'm-empty err', errMsg(error))); return; }
+  dm.convs = data || [];
+  renderConvs();
+  const unread = dm.convs.reduce((s, c) => s + (c.unread || 0), 0);
+  $('dmBadge').textContent = unread; $('dmBadge').hidden = !unread;
+}
+function convItem(c, q) {
+  const li = el('li', (c.unread ? 'unread' : '') + (c.other === dm.other ? ' on' : ''));
+  li.tabIndex = 0; li.setAttribute('role', 'button');
+  const av = el('span', 'm-av', initials(c.other_name)); av.setAttribute('aria-hidden', 'true');
+  const box = el('div', 'dm-li'); const top = el('div', 'top');
+  top.append(highlighted('b', c.other_name, q), el('time', '', dmWhen(new Date(c.last_at))));
+  box.append(top, el('p', '', (c.last_from_me ? 'You: ' : '') + c.last_body));
+  li.append(av, box);
+  if (c.unread) li.append(el('span', 'dm-dot', c.unread > 99 ? '99+' : c.unread));
+  li.onclick = () => openConv(c.other, c.other_name);
+  li.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openConv(c.other, c.other_name); } };
+  return li;
+}
+// The list: your conversations (filtered by what's typed), then other members you could
+// start a chat with, found by name or email on the server.
+function renderConvs() {
+  const raw = $('dmSearch').value.trim(), q = fold(raw);
+  const list = dm.convs.filter(c => !q || fold(c.other_name).includes(q));
+  const items = list.map(c => convItem(c, raw));
+  if (q && dm.found?.q === raw) {
+    const inConv = new Set(dm.convs.map(c => c.other));
+    const more = dm.found.rows.filter(m => !inConv.has(m.id)).slice(0, 12);
+    if (more.length) {
+      items.push(el('li', 'dm-sec', list.length ? 'Start a new chat' : 'Members'));
+      for (const m of more) {
+        const li = el('li', 'dm-start'); li.tabIndex = 0; li.setAttribute('role', 'button');
+        const av = el('span', 'm-av', initials(m.display_name)); av.setAttribute('aria-hidden', 'true');
+        const box = el('div', 'dm-li'); const top = el('div', 'top');
+        top.append(highlighted('b', m.display_name, raw));
+        box.append(top, el('p', '', m.matched === 'email' ? `Email matches · ${m.email_hint || ''}` : 'Start a chat'));
+        li.append(av, box);
+        li.onclick = () => openConv(m.id, m.display_name);
+        li.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openConv(m.id, m.display_name); } };
+        items.push(li);
+      }
+    }
+  }
+  if (!items.length) {
+    $('dmList').replaceChildren(el('li', 'm-empty', q ? (dm.found?.q === raw ? 'No one matches.' : 'Searching…') : 'No messages yet. Tap New to start one.'));
+    return;
+  }
+  $('dmList').replaceChildren(...items);
+}
+// Server search: name or email (email needs 3+ characters), best matches first, then A to Z.
+// Only a short email hint comes back, never the full address.
+async function searchMembers(q) {
+  let { data, error } = await sb.rpc('search_members', { q });
+  if (error && /search_members|could not find the function|schema cache/i.test(String(error.message))) { // older database
+    const r = await sb.rpc('list_members_for_sharing');
+    const f = fold(q);
+    data = (r.data || []).filter(m => m.id !== uid() && (!f || fold(m.display_name).includes(f)))
+      .map(m => ({ ...m, email_hint: null, matched: f ? 'name' : null }))
+      .sort((a, b) => a.display_name.localeCompare(b.display_name, undefined, { sensitivity: 'base' }));
+    error = r.error;
+  }
+  return error ? [] : data;
+}
+let dmSearchTimer, dmPickTimer, dmPickSeq = 0;
+$('dmSearch').oninput = () => {
+  renderConvs(); // conversations filter instantly
+  clearTimeout(dmSearchTimer);
+  const raw = $('dmSearch').value.trim();
+  if (!raw) { dm.found = null; return; }
+  dmSearchTimer = setTimeout(async () => {
+    const rows = await searchMembers(raw);
+    if ($('dmSearch').value.trim() !== raw) return; // typed more meanwhile
+    dm.found = { q: raw, rows }; renderConvs();
+  }, 150);
+};
+async function openConv(otherId, name) {
+  flushOutbox(); // anything waiting in its undo window goes now
+  dm.sel = null;
+  dm.other = otherId; dm.otherName = name || dm.convs.find(c => c.other === otherId)?.other_name || 'Member';
+  dm.msgs = []; dm.more = false;
+  $('dmWho').textContent = dm.otherName; $('dmAv').textContent = initials(dm.otherName);
+  $('dmPrivacy').textContent = `Private: only you and ${dm.otherName} can read this`;
+  const rule = dmRuleText(); $('dmRule').textContent = rule; $('dmRule').hidden = !rule;
+  dmView('conv'); renderConvs();
+  $('dmThread').replaceChildren(el('div', 'dm-day', 'Loading…'));
+  await loadThread();
+  if (matchMedia('(pointer:fine)').matches) $('dmText').focus();
+}
+async function loadThread(older = false) {
+  if (!dm.other || dm.loading) return;
+  dm.loading = true;
+  const other = dm.other;
+  const before = older && dm.msgs.length ? dm.msgs[0].created_at : null;
+  const { data, error } = await sb.rpc('dm_thread', { other, before, lim: 50 });
+  dm.loading = false;
+  if (other !== dm.other) return; // switched conversations meanwhile
+  if (error) { $('dmThread').replaceChildren(el('div', 'dm-day err', errMsg(error))); return; }
+  const rows = (data || []).slice().reverse();
+  dm.more = (data || []).length === 50;
+  const box = $('dmThread'), fromBottom = box.scrollHeight - box.scrollTop;
+  const waiting = dm.outbox.filter(o => o.other === other).map(o => o.msg); // keep messages still in their undo window
+  dm.msgs = (older ? rows.concat(dm.msgs.filter(m => !m.pending)) : rows).concat(waiting);
+  renderThread();
+  box.scrollTop = older ? box.scrollHeight - fromBottom : box.scrollHeight;
+  if (!older && rows.some(m => m.recipient === uid() && !m.read_at)) {
+    await sb.rpc('mark_conversation_read', { other });
+    loadConvs();
+  }
+}
+const DM_UNDO_MS = 5000, DM_UNSEND_MS = 24 * 3600e3;
+function renderThread() {
+  const box = $('dmThread'); const out = [];
+  if (dm.more) {
+    const b = el('button', 'btn dm-older', 'Show earlier messages'); b.type = 'button';
+    b.onclick = () => loadThread(true); out.push(b);
+  }
+  if (!dm.msgs.length) out.push(el('div', 'dm-day', `Say hello to ${dm.otherName}`));
+  let day = '';
+  for (const m of dm.msgs) {
+    const d = new Date(m.created_at), key = d.toDateString();
+    if (key !== day) { day = key; out.push(el('div', 'dm-day', d.toDateString() === new Date().toDateString() ? 'Today' : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' }))); }
+    const mine = m.sender === uid();
+    const b = el('div', 'dm-msg ' + (mine ? 'me' : 'them') + (m.pending ? ' pending' : '') + (m.unsent_at ? ' unsent' : '') + (dm.sel === m.id ? ' sel' : ''));
+    b.append(document.createTextNode(m.unsent_at ? (mine ? 'You unsent a message' : `${dm.otherName} unsent a message`) : m.body));
+    if (m.pending) { // still on this device: Undo puts it back in the box
+      const u = el('div', 'dm-undo'), btn = el('button', '', 'Undo'), bar = el('span', 'bar'), fill = el('i');
+      btn.type = 'button'; btn.onclick = ev => { ev.stopPropagation(); undoSend(m.id); };
+      fill.style.animationDelay = `-${Math.max(0, DM_UNDO_MS - (m.sendAt - Date.now()))}ms`; // keep the countdown where it was
+      bar.append(fill); u.append(el('span', '', 'Sending…'), bar, btn); b.append(u);
+    } else {
+      b.append(el('time', '', d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })));
+      b.tabIndex = 0; b.setAttribute('role', 'button'); b.setAttribute('aria-label', 'Message options');
+      b.onclick = ev => { ev.stopPropagation(); dm.sel = dm.sel === m.id ? null : m.id; renderThread(); };
+      b.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); b.click(); } };
+    }
+    out.push(b);
+    if (dm.sel === m.id && !m.pending) out.push(messageActions(m, mine));
+  }
+  const last = dm.msgs.filter(m => !m.pending).at(-1);
+  if (last && last.sender === uid() && last.read_at && !last.unsent_at) out.push(el('div', 'dm-seen', 'Seen ' + dmWhen(new Date(last.read_at))));
+  box.replaceChildren(...out);
+}
+// Tap a message: Copy, Unsend (yours, within 24 hours), Delete for me.
+function messageActions(m, mine) {
+  const row = el('div', 'dm-acts ' + (mine ? 'me' : 'them'));
+  const add = (label, cls, fn) => { const b = el('button', 'btn ' + cls, label); b.type = 'button'; b.onclick = ev => { ev.stopPropagation(); fn(); }; row.append(b); };
+  if (!m.unsent_at) add('Copy', '', async () => {
+    try { await navigator.clipboard.writeText(m.body); toast('Copied.'); } catch { toast('Couldn’t copy on this device.', 'error'); }
+    dm.sel = null; renderThread();
+  });
+  if (mine && !m.unsent_at && Date.now() - new Date(m.created_at) < DM_UNSEND_MS) add('Unsend', 'danger', async () => {
+    if (!(await ask('Unsend this message?', `It’s removed for both of you and replaced with “You unsent a message”. ${dm.otherName} may have already seen it.`, 'Unsend'))) return;
+    const { error } = await sb.rpc('unsend_message', { msg: m.id });
+    if (error) return toast(/unsend_message|could not find the function|schema cache/i.test(String(error.message)) ? 'Unsend isn’t switched on yet.' : errMsg(error), 'error');
+    dm.sel = null; await loadThread(); loadConvs(); toast('Message unsent.');
+  });
+  add('Delete for me', mine ? 'ghost' : 'ghost', async () => {
+    if (!(await ask('Delete this message for you?', `It’s removed from your view only. ${dm.otherName} keeps their copy${m.unsent_at ? '' : '; to remove it for both of you, use Unsend'}.`, 'Delete'))) return;
+    const { error } = await sb.rpc('hide_message', { msg: m.id });
+    if (error) return toast(errMsg(error), 'error');
+    dm.sel = null; dm.msgs = dm.msgs.filter(x => x.id !== m.id); renderThread(); loadConvs();
+  });
+  return row;
+}
+$('dmThread').addEventListener('click', () => { if (dm.sel) { dm.sel = null; renderThread(); } });
+// Esc first hides a message's options; a second Esc closes the window.
+$('dmDlg').addEventListener('cancel', e => { if (dm.sel) { e.preventDefault(); dm.sel = null; renderThread(); } });
+
+// Sending waits a few seconds so a wrong message can be taken back before it leaves the device.
+dm.outbox = [];
+function undoSend(tmpId) {
+  const i = dm.outbox.findIndex(o => o.msg.id === tmpId); if (i < 0) return;
+  const [o] = dm.outbox.splice(i, 1); clearTimeout(o.timer);
+  dm.msgs = dm.msgs.filter(m => m.id !== tmpId); renderThread();
+  const t = $('dmText'); t.value = t.value.trim() ? o.msg.body + '\n' + t.value : o.msg.body; sizeDmText(); t.focus();
+  toast('Not sent. Your message is back in the box.');
+}
+async function sendNow(o) {
+  const i = dm.outbox.indexOf(o); if (i < 0) return; // already sent or undone
+  dm.outbox.splice(i, 1); clearTimeout(o.timer);
+  const { error } = await sb.from('dm_messages').insert({ recipient: o.other, body: o.msg.body });
+  if (error) {
+    dm.msgs = dm.msgs.filter(m => m.id !== o.msg.id);
+    if (o.other === dm.other) { renderThread(); if (!$('dmText').value.trim()) { $('dmText').value = o.msg.body; sizeDmText(); } }
+    toast(/row-level security|violates/i.test(String(error.message)) ? 'This person can’t receive messages right now.' : errMsg(error), 'error');
+    return;
+  }
+  if (o.other === dm.other) await loadThread();
+  loadConvs();
+}
+function flushOutbox() { return Promise.all(dm.outbox.slice().map(sendNow)); }
+addEventListener('beforeunload', e => { if (dm.outbox.length) { flushOutbox(); e.preventDefault(); e.returnValue = ''; } });
+addEventListener('pagehide', () => { if (dm.outbox.length) flushOutbox(); });
+function sizeDmText() {
+  const t = $('dmText'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px';
+  const n = t.value.length; $('dmCount').textContent = n > 1800 ? `${n} / 2000` : '';
+}
+$('dmText').addEventListener('input', sizeDmText);
+$('dmText').addEventListener('keydown', e => {
+  // Enter sends on a computer; on phones Enter adds a new line and the Send button sends.
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && matchMedia('(pointer:fine)').matches) { e.preventDefault(); $('dmForm').requestSubmit(); }
+});
+$('dmForm').onsubmit = e => {
+  e.preventDefault();
+  const body = $('dmText').value.trim();
+  if (!body || !dm.other) return;
+  $('dmText').value = ''; sizeDmText();
+  const msg = { id: 'tmp' + Date.now() + Math.random().toString(36).slice(2, 6), sender: uid(), recipient: dm.other, body,
+    created_at: new Date().toISOString(), pending: true, sendAt: Date.now() + DM_UNDO_MS };
+  const o = { msg, other: dm.other };
+  o.timer = setTimeout(() => sendNow(o), DM_UNDO_MS);
+  dm.outbox.push(o); dm.msgs.push(msg); dm.sel = null;
+  renderThread(); $('dmThread').scrollTop = $('dmThread').scrollHeight;
+};
+// Start a new conversation: pick any approved member.
+async function openPicker() {
+  dmView('pick'); $('dmPickSearch').value = ''; dm.pickActive = 0;
+  $('dmPickList').replaceChildren(el('li', 'hint', 'Loading…'));
+  await runPicker('');
+  $('dmPickSearch').focus();
+}
+async function runPicker(raw) {
+  const seq = ++dmPickSeq;
+  const rows = await searchMembers(raw);
+  if (seq !== dmPickSeq) return; // a newer search is on its way
+  dm.pick = { q: raw, rows }; dm.pickActive = 0;
+  renderPicker();
+}
+function renderPicker() {
+  const { q, rows } = dm.pick || { q: '', rows: [] };
+  $('dmPickCount').textContent = rows.length
+    ? (q ? `${rows.length === 1 ? '1 match' : rows.length + ' matches'}, best first` : `${plural(rows.length, 'member')}, A–Z`) : '';
+  if (!rows.length) {
+    $('dmPickList').replaceChildren(el('li', 'hint', q ? 'No one matches. Try part of their name or email (3+ letters for email).' : 'There are no other members yet.'));
+    return;
+  }
+  const out = []; let letter = '';
+  rows.forEach((m, i) => {
+    if (!q) { // A–Z headings when browsing everyone
+      const L = (fold(m.display_name).match(/[a-z0-9]/) || ['#'])[0].toUpperCase();
+      if (L !== letter) { letter = L; out.push(el('li', 'dm-letter', /\d/.test(L) ? '#' : L)); }
+    }
+    const li = el('li'), b = el('button', i === dm.pickActive ? 'active' : ''); b.type = 'button';
+    b.setAttribute('role', 'option'); b.setAttribute('aria-selected', i === dm.pickActive); b.dataset.i = i;
+    const av = el('span', 'm-av', initials(m.display_name)); av.setAttribute('aria-hidden', 'true');
+    const who = el('span', 'who-p'); who.append(highlighted('b', m.display_name, q));
+    if (m.email_hint) who.append(m.matched === 'email' ? highlightedHint(m.email_hint, q) : el('small', '', m.email_hint));
+    b.append(av, who);
+    if (m.matched === 'email') b.append(el('span', 'tag', 'email'));
+    b.onclick = () => openConv(m.id, m.display_name);
+    b.onmouseenter = () => setPickActive(i, false);
+    li.append(b); out.push(li);
+  });
+  $('dmPickList').replaceChildren(...out);
+}
+// The hint only shows the domain, so highlight just that part when the match is there.
+function highlightedHint(hint, q) {
+  const dom = hint.split('@')[1] || '';
+  return fold(dom).includes(fold(q)) ? (() => { const sm = el('small'); sm.append(hint.split('@')[0] + '@', highlighted('span', dom, q)); return sm; })() : el('small', '', hint);
+}
+function setPickActive(i, scroll = true) {
+  const btns = [...$('dmPickList').querySelectorAll('button[data-i]')];
+  if (!btns.length) return;
+  dm.pickActive = Math.max(0, Math.min(i, btns.length - 1));
+  btns.forEach((b, k) => { b.classList.toggle('active', k === dm.pickActive); b.setAttribute('aria-selected', k === dm.pickActive); });
+  if (scroll) btns[dm.pickActive].scrollIntoView({ block: 'nearest' });
+}
+$('dmPickSearch').oninput = () => {
+  clearTimeout(dmPickTimer);
+  const raw = $('dmPickSearch').value.trim();
+  dmPickTimer = setTimeout(() => runPicker(raw), 120);
+};
+$('dmPickSearch').onkeydown = e => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); setPickActive(dm.pickActive + 1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); setPickActive(dm.pickActive - 1); }
+  else if (e.key === 'Enter') {
+    e.preventDefault();
+    const m = dm.pick?.rows?.[dm.pickActive];
+    if (m && dm.pick.q === $('dmPickSearch').value.trim()) openConv(m.id, m.display_name);
+  }
+};
+$('dmNew').onclick = openPicker;
+$('dmPickBack').onclick = () => { dmView(dm.other ? 'conv' : 'empty'); if (!dm.other) $('dmWrap').classList.remove('thread'); };
+$('dmBack').onclick = () => { flushOutbox(); dm.other = null; dm.sel = null; dmView('empty'); renderConvs(); };
+$('dmSearchClear').onclick = () => { $('dmSearch').value = ''; dm.found = null; renderConvs(); $('dmSearch').focus(); };
+$('dmHide').onclick = async () => {
+  if (!dm.other) return;
+  if (!(await ask(`Delete your conversation with ${dm.otherName}?`, `It's removed from your messages. ${dm.otherName} keeps their copy. If you both delete it, it's gone for good.`, 'Delete'))) return;
+  const { error } = await sb.rpc('hide_conversation', { other: dm.other });
+  if (error) return toast(errMsg(error), 'error');
+  dm.other = null; dmView('empty'); await loadConvs();
+  toast('Conversation deleted.');
+};
+$('dmBtn').onclick = () => openDm();
+$('dmClose').onclick = () => $('dmDlg').close();
+$('dmDlg').addEventListener('close', () => { flushOutbox(); dm.sel = null; });
+// New messages and read receipts arrive live (the database only sends your own conversations).
+function onDmChange(payload) {
+  clearTimeout(dm.timer);
+  dm.timer = setTimeout(async () => {
+    refreshDmBadge();
+    if (!$('dmDlg').open) {
+      const m = payload?.new;
+      if (payload?.eventType === 'INSERT' && m?.recipient === uid()) toast('New message' + (m.body ? `: ${String(m.body).slice(0, 60)}` : ''));
+      return;
+    }
+    await loadConvs();
+    if (dm.other) loadThread();
+  }, 400);
+}
+
+/* Admins: message totals and cleanup (never the text). */
+async function loadDmStats() {
+  const { data, error } = await sb.rpc('admin_message_stats');
+  if (error || !data?.length) { $('setDmStats').textContent = ''; return; }
+  const s = data[0];
+  $('setDmStats').textContent = s.total
+    ? `${plural(s.total, 'message')} between ${s.people} people (${fmtBytes(Number(s.total_bytes))}), oldest from ${fmtDate(new Date(s.oldest))}. Older than 90 days: ${s.older_90}. Admins can't read messages.`
+    : 'No messages yet. Admins can’t read messages; they can only see totals and delete old ones.';
+  dm.stats = s;
+}
+$('setDmPurge').onclick = async () => {
+  const days = +$('setDmPurgeAge').value;
+  const s = dm.stats || {};
+  const n = days === 0 ? s.total : days >= 365 ? s.older_365 : days >= 180 ? s.older_180 : days >= 90 ? s.older_90 : days >= 30 ? s.older_30 : null;
+  const label = $('setDmPurgeAge').selectedOptions[0].textContent.replace(/^./, c => c.toLowerCase());
+  if (!(await ask(`Delete ${label}${n != null ? ` (${plural(n, 'message')})` : ''}?`, 'They’re removed for everyone and can’t be recovered. Nobody reads them first.', 'Delete'))) return;
+  $('setDmPurge').disabled = true;
+  const { data, error } = await sb.rpc('admin_purge_messages', { older_than_days: days });
+  $('setDmPurge').disabled = false;
+  if (error) return toast(/admin_purge_messages|could not find the function|schema cache/i.test(String(error.message)) ? 'Message cleanup isn’t switched on yet: run the last setup step in Supabase.' : errMsg(error), 'error');
+  toast(`Deleted ${plural(data || 0, 'message')}.`);
+  loadDmStats();
+};
 
 /* ---------- My account: name, password, download everything, delete account ---------- */
 const acPwRules = rulesChecker('acNew', 'acNew2', 'acRules', 'acMatch');
@@ -1525,6 +2065,7 @@ function show(which) {
   const inside = which === 'app' || which === 'pending';
   $('signOutBtn').hidden = !inside;
   $('meBtn').hidden = which !== 'app';
+  $('dmBtn').hidden = which !== 'app';
   $('membersBtn').hidden = !(which === 'app' && isModerator());
 }
 function authMode(mode) {
@@ -1594,6 +2135,7 @@ async function loadProfile() {
     await loadAll();
     startLive();
     if (isModerator()) refreshPendingCount();
+    refreshDmBadge();
     const inv = state.invite;
     if (inv) { // just opened an invite: take them straight to it
       state.invite = null;
@@ -1654,6 +2196,8 @@ function teardown() {
   Object.assign(state, { photos: [], albums: [], view: [], loadedOnce: false, selected: new Set(), urls: new Map(), shares: [], requests: [] });
   $('requestsBtn').hidden = true;
   $('inboxBtn').hidden = true; state.inboxCounts = { total: 0, unread: 0 };
+  if ($('dmDlg').open) $('dmDlg').close();
+  Object.assign(dm, { convs: [], other: null, msgs: [], members: null }); $('dmBadge').hidden = true;
   $('grid').replaceChildren(); $('albumGrid').replaceChildren();
   $('queue').replaceChildren(); $('queueBar').hidden = true;
   setSelecting(false);
@@ -1755,6 +2299,7 @@ async function signOut() {
   if (state.uploading && !(await ask('Uploads are still running.', 'Signing out now stops them.', 'Sign out'))) return;
   state.queue.length = 0;
   $('toasts').replaceChildren();
+  await flushOutbox().catch(() => {}); // messages in their undo window go before signing out
   await sb.auth.signOut({ scope: 'local' }).catch(() => {}); // this device only, not every device they're signed in on
   state.session = null;
   showAuth('in');
@@ -1838,12 +2383,14 @@ function startLive() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shares' }, kick)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'removal_requests' }, kick)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_messages' }, kick)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'dm_messages' }, onDmChange)
     .subscribe();
   clearInterval(state.pollTimer);
   state.pollTimer = setInterval(() => {
     if (document.visibilityState !== 'visible' || state.uploading || state.busy) return;
     loadAll(true);
     if (isModerator()) refreshPendingCount();
+    if ($('dmDlg').open) onDmChange(); else refreshDmBadge(); // backup for live updates
   }, CONFIG.pollSeconds * 1000);
 }
 document.addEventListener('visibilitychange', () => {
@@ -2993,7 +3540,10 @@ async function openMembers() {
     $('setOwner').value = s.owner_name || ''; $('setPhone').value = s.contact_phone || ''; $('setEmail').value = s.contact_email || '';
     $('setIdle').value = String(s.idle_timeout_minutes || ''); $('setRemember').value = String(s.allow_remember !== false);
     $('setApprove').value = String(!!s.auto_approve); $('setDomains').value = s.auto_approve_domains || ''; syncApproveUI();
+    $('setDmKeep').value = String(s.dm_retention_days || ''); loadDmStats();
+    if (isAdmin()) spShowSpeed();
   }).catch(() => {});
+  if (isAdmin()) { loadSignInPictures(); spShowSpeed(); }
   await reloadMembers();
 }
 async function reloadMembers() {
@@ -3273,14 +3823,15 @@ $('settingsForm').onsubmit = async e => {
   const rules = { idle_timeout_minutes: $('setIdle').value ? +$('setIdle').value : null, allow_remember: $('setRemember').value === 'true' };
   const auto = $('setApprove').value === 'true';
   const domains = cleanDomains($('setDomains').value);
-  const approval = { auto_approve: auto, auto_approve_domains: domains || null }; // kept while off, so switching back on remembers it
+  const approval = { auto_approve: auto, auto_approve_domains: domains || null, // kept while off, so switching back on remembers it
+    dm_retention_days: $('setDmKeep').value ? +$('setDmKeep').value : null };
   const wasAuto = !!state.settings?.auto_approve;
   const { error } = await sb.from('album_settings').update({
     owner_name: $('setOwner').value.trim() || null, contact_phone: $('setPhone').value.trim() || null, contact_email: email || null, ...rules, ...approval
   }).eq('id', 1);
   $('setSave').disabled = false;
   if (error) { // stay open so the problem can be fixed
-    $('setErr').textContent = /auto_approve/i.test(String(error.message)) ? 'Automatic approval isn\u2019t switched on in the database yet.' : errMsg(error);
+    $('setErr').textContent = /auto_approve|dm_retention/i.test(String(error.message)) ? 'Part of these settings isn\u2019t switched on in the database yet.' : errMsg(error);
     return;
   }
   state.settings = { ...state.settings, ...rules, ...approval };
@@ -3377,14 +3928,34 @@ const SCENES = [
   { sky: ['#20234f', '#5b3f74', '#c76d6a', '#f2a46b', '#f8d394'], sun: [0.66, 0.6, 0.06, [255, 222, 160]],
     layers: [{ y: .6, amp: .2, sharp: 1, c: ['#9c6a86', '#c99087'], mist: 'rgba(248,200,140,.45)' },
              { y: .72, amp: .1, c: ['#5d3e63', '#7b5468'], mist: 'rgba(230,150,120,.25)' },
-             { y: .86, amp: .05, c: ['#2b1d31', '#1b1220'] }], trees: 16, treeY: 1, treeH: [.1, .2], treeC: '#120b15' },
+             { y: .86, amp: .05, c: ['#2b1d31', '#1b1220'] }], trees: 16, treeY: 1, treeH: [.1, .2], treeC: '#120b15', cap: 'Ridge, 18:42' },
   { sky: ['#8fb6cc', '#c3d9df', '#ece5d2', '#f5e2c4'], sun: [0.28, 0.36, 0.035, [255, 249, 230]],
     layers: [{ y: .47, amp: .13, sharp: 1, c: ['#93aab6', '#b2c3c7'], mist: 'rgba(242,240,232,.55)' },
              { y: .56, amp: .06, c: ['#5f7d86', '#6e8b91'], mist: 'rgba(235,236,228,.45)' }],
-    trees: 26, treeY: .6, treeH: [.04, .08], treeC: '#34514f', lake: .6, water: ['#7d9fae', '#3f6070'] },
+    trees: 26, treeY: .6, treeH: [.04, .08], treeC: '#34514f', lake: .6, water: ['#7d9fae', '#3f6070'], cap: 'Lake, 6:10 am' },
   { sky: ['#03061a', '#0d1540', '#232a66', '#4c3f78'], stars: 240, milky: 1, sun: [0.76, 0.2, 0.028, [246, 240, 222]],
     layers: [{ y: .68, amp: .17, sharp: 1, c: ['#1d2250', '#272c5a'], mist: 'rgba(90,80,140,.25)' },
-             { y: .83, amp: .06, c: ['#0e1029', '#080918'] }], trees: 12, treeY: 1, treeH: [.12, .24], treeC: '#04050e' }
+             { y: .83, amp: .06, c: ['#0e1029', '#080918'] }], trees: 12, treeY: 1, treeH: [.12, .24], treeC: '#04050e', cap: 'Night sky, ISO 3200' },
+  { sky: ['#5d7fa6', '#a7b8c9', '#f0c9a8', '#f7b98a'], sun: [0.5, 0.6, 0.05, [255, 236, 200]],
+    layers: [{ y: .56, amp: .18, sharp: 1, c: ['#8a9bb4', '#a3aebf'], mist: 'rgba(250,220,190,.5)' },
+             { y: .7, amp: .08, c: ['#46635f', '#3c5552'], mist: 'rgba(240,215,190,.3)' },
+             { y: .86, amp: .05, c: ['#22362f', '#16241f'] }], trees: 22, treeY: 1, treeH: [.1, .22], treeC: '#13201c', cap: 'Pines, 7:05 am' },
+  { sky: ['#1d3557', '#45678f', '#a9bcd3', '#e4d7cf'], sun: [0.3, 0.26, 0.025, [255, 246, 232]],
+    layers: [{ y: .52, amp: .27, sharp: 1, snow: 1, c: ['#8fa6bf', '#6f87a3'], mist: 'rgba(225,232,242,.4)' },
+             { y: .7, amp: .1, c: ['#4a6382', '#2f4560'], mist: 'rgba(200,215,235,.2)' },
+             { y: .86, amp: .05, c: ['#16233a', '#0d1626'] }], trees: 18, treeY: 1, treeH: [.1, .2], treeC: '#0a1220', cap: 'Snowline, 16:50' },
+  { sky: ['#020814', '#06172a', '#0b2a3a', '#123a44'], stars: 160, aurora: 1,
+    layers: [{ y: .7, amp: .14, sharp: 1, c: ['#0f2a33', '#0b1f27'], mist: 'rgba(80,200,160,.12)' },
+             { y: .85, amp: .05, c: ['#060f14', '#03080b'] }], trees: 14, treeY: 1, treeH: [.1, .22], treeC: '#02060a', cap: 'Aurora, 23:10' },
+  { sky: ['#c9d3d6', '#dfe3df', '#ece9df'], sun: [0.7, 0.28, 0.03, [255, 253, 245]],
+    layers: [{ y: .5, amp: .08, c: ['#aab8b8', '#b8c4c2'], mist: 'rgba(240,240,235,.6)' },
+             { y: .6, amp: .07, c: ['#8a9e9b', '#97a9a5'], mist: 'rgba(236,238,232,.55)' },
+             { y: .72, amp: .06, c: ['#60787a', '#6c8384'], mist: 'rgba(230,234,228,.45)' },
+             { y: .86, amp: .05, c: ['#2f4446', '#253739'] }], trees: 20, treeY: 1, treeH: [.08, .18], treeC: '#1d2e30', cap: 'Fog, 5:40 am' },
+  { sky: ['#2a2350', '#7a4a72', '#e0846a', '#f6c27a'], sun: [0.62, 0.48, 0.045, [255, 214, 150]],
+    layers: [{ y: .46, amp: .14, sharp: 1, c: ['#6d4a6e', '#8e6175'], mist: 'rgba(250,190,140,.35)' },
+             { y: .55, amp: .05, c: ['#3c2a45', '#4a3350'] }],
+    trees: 24, treeY: .58, treeH: [.04, .09], treeC: '#22172b', lake: .58, water: ['#c98a74', '#3a2a46'], cap: 'Lake, 19:30' }
 ];
 function paintScene(cv, k) {
   const S = SCENES[k], w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
@@ -3404,6 +3975,20 @@ function paintScene(cv, k) {
   }
   for (let i = 0; i < (S.stars || 0); i++) { x.globalAlpha = .25 + rnd() * .75; x.fillStyle = '#fff'; x.beginPath(); x.arc(rnd() * w, rnd() * h * .7, rnd() * .9 + .2, 0, 7); x.fill(); }
   x.globalAlpha = 1;
+  if (S.aurora) { // soft curtains of light
+    x.save(); x.globalCompositeOperation = 'lighter';
+    [[.16, '90,255,170', .3], [.24, '120,200,255', .2], [.12, '170,120,255', .14]].forEach(([yy, rgb, a], j) => {
+      const top = [], th = h * .22;
+      for (let px = 0; px <= w + 4; px += 4) top.push([px, h * yy + Math.sin(px / w * 5 + j * 2) * h * .05 + Math.sin(px / w * 13 + j) * h * .015]);
+      const g = x.createLinearGradient(0, h * (yy - .07), 0, h * (yy + .07) + th);
+      g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(.3, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+      x.fillStyle = g; x.beginPath(); x.moveTo(top[0][0], top[0][1]);
+      top.forEach(([a1, b1]) => x.lineTo(a1, b1));
+      for (let i = top.length - 1; i >= 0; i--) x.lineTo(top[i][0], top[i][1] + th);
+      x.closePath(); x.fill();
+    });
+    x.restore();
+  }
   if (S.sun) {
     const [sx, sy, sr, [r, g, b]] = S.sun, cx = w * sx, cy = h * sy, R0 = Math.max(w, h) * sr;
     const glow = x.createRadialGradient(cx, cy, 0, cx, cy, R0 * 9);
@@ -3423,6 +4008,12 @@ function paintScene(cv, k) {
     x.lineTo(w, h); x.closePath();
     const fill = x.createLinearGradient(0, base - amp, 0, h); fill.addColorStop(0, L.c[0]); fill.addColorStop(1, L.c[1]);
     x.fillStyle = fill; x.fill();
+    if (L.snow) { // snow on the peaks
+      x.save(); x.clip();
+      const sg = x.createLinearGradient(0, base - amp, 0, base - amp * .3);
+      sg.addColorStop(0, 'rgba(250,252,255,.95)'); sg.addColorStop(1, 'rgba(250,252,255,0)');
+      x.fillStyle = sg; x.fillRect(0, base - amp * 1.2, w, amp); x.restore();
+    }
     if (L.mist) { const m = x.createLinearGradient(0, base - amp * .1, 0, base + amp * 1.2); m.addColorStop(0, 'rgba(255,255,255,0)'); m.addColorStop(1, L.mist); x.fillStyle = m; x.fillRect(0, base - amp * .1, w, amp * 1.3); }
   }
   const pine = (tx, ty, th, c) => {
@@ -3451,7 +4042,191 @@ function paintScene(cv, k) {
   x.fillStyle = vig; x.fillRect(0, 0, w, h);
 }
 const frameObserver = new ResizeObserver(entries => entries.forEach(e => paintScene(e.target, +e.target.dataset.scene)));
-document.querySelectorAll('.frames canvas').forEach(cv => frameObserver.observe(cv));
+
+/* ---------- sign-in pictures: a random set of 3 on each visit, then the cards take turns ----------
+   Admins choose the pictures (Members → Settings). They're public on purpose, in their own bucket.
+   Until at least 3 are shown, drawn scenes fill the empty cards. */
+const ART_TURN_DEFAULT = 8; // seconds between changes; each card changes every 3 turns. Admins pick it (0 = hold still).
+const SP_MAX = 40, SP_EDGE = 1200;
+const art = { pool: [], next: 0, turn: 0, turnS: ART_TURN_DEFAULT, hover: false, timer: 0, figs: [...document.querySelectorAll('#frames figure')] };
+const shuffled = list => { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sceneItems = () => shuffled(SCENES.map((S, i) => ({ key: 's' + i, scene: i, cap: S.cap })));
+const spUrl = path => sb.storage.from('site').getPublicUrl(path).data.publicUrl;
+async function artShow(fig, item, instant) {
+  const slot = fig.querySelector('.slot'); let node;
+  if (item.scene != null) {
+    node = document.createElement('canvas'); node.dataset.scene = item.scene; node.setAttribute('aria-hidden', 'true');
+    slot.append(node); paintScene(node, item.scene); frameObserver.observe(node);
+  } else {
+    node = new Image(); node.alt = ''; node.decoding = 'async'; node.src = item.src;
+    try { await node.decode(); } catch { art.pool = art.pool.filter(x => x !== item); return false; } // missing file: skip it
+    slot.append(node);
+  }
+  fig.dataset.key = item.key;
+  const cap = fig.querySelector('figcaption'); cap.replaceChildren();
+  if (item.cap) cap.append(el('span', 'cap', item.cap));
+  if (item.credit) {
+    const c = el(item.creditUrl ? 'a' : 'span', 'credit', item.credit);
+    if (item.creditUrl) { c.href = item.creditUrl; c.target = '_blank'; c.rel = 'noopener nofollow'; }
+    cap.append(c);
+  }
+  if (instant) node.classList.add('on');
+  else { node.getBoundingClientRect(); requestAnimationFrame(() => node.classList.add('on')); } // fade in over the old one
+  const old = [...slot.children].filter(n => n !== node);
+  setTimeout(() => old.forEach(n => { if (n.tagName === 'CANVAS') frameObserver.unobserve(n); n.remove(); }), instant ? 0 : 1600);
+  return true;
+}
+function artNext() { // the next picture in the shuffled pool that isn't already on a card
+  const showing = new Set(art.figs.map(f => f.dataset.key));
+  for (let i = 0; i < art.pool.length; i++) { const it = art.pool[art.next++ % art.pool.length]; if (!showing.has(it.key)) return it; }
+  return null;
+}
+async function artStart(pool, instant) {
+  art.pool = pool; art.next = 0;
+  for (const fig of art.figs) for (let tries = 0; tries < pool.length; tries++) { const it = artNext(); if (!it || await artShow(fig, it, instant)) break; }
+}
+async function artTick() {
+  if (!art.turnS || art.hover || document.hidden || $('auth').hidden || art.pool.length <= 3 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let tries = 0; tries < 3; tries++) { const it = artNext(); if (!it || await artShow(art.figs[art.turn % 3], it)) break; }
+  art.turn++;
+}
+async function refreshSigninArt() {
+  let pics = [];
+  try { const { data, error } = await sb.from('site_pictures').select('id,path,caption,credit,credit_url').eq('shown', true).limit(SP_MAX); if (!error) pics = data || []; } catch {}
+  const mine = shuffled(pics.map(p => ({ key: p.id, src: spUrl(p.path), cap: p.caption || '', credit: p.credit || '',
+    creditUrl: /^https:\/\/[^\s"<>]+$/.test(p.credit_url || '') ? p.credit_url : '' })));
+  const pool = mine.length >= 3 ? mine : [...mine, ...sceneItems()];
+  const keys = l => l.map(i => i.key + (i.cap || '') + (i.credit || '') + (i.creditUrl || '')).sort().join('|');
+  if (keys(pool) !== keys(art.pool)) await artStart(pool);
+}
+// The speed is read separately, so an older database without it still shows pictures at the default speed.
+async function refreshArtSpeed() {
+  try {
+    const { data, error } = await sb.from('album_settings').select('signin_turn_seconds').eq('id', 1).maybeSingle();
+    if (!error && data && Number.isInteger(data.signin_turn_seconds)) artSchedule(data.signin_turn_seconds);
+  } catch {}
+}
+function artSchedule(sec) {
+  art.turnS = sec; clearInterval(art.timer); art.timer = 0;
+  if (sec > 0) art.timer = setInterval(artTick, sec * 1000);
+}
+// Hold still while the pointer is over the cards, so a credit link doesn't change under a click.
+$('frames').addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') art.hover = true; });
+$('frames').addEventListener('pointerleave', () => { art.hover = false; });
+$('frames').addEventListener('focusin', () => { art.hover = true; });
+$('frames').addEventListener('focusout', () => { art.hover = false; });
+artStart(sceneItems(), true); // drawn scenes right away, then the admin's pictures fade in
+refreshSigninArt();
+artSchedule(ART_TURN_DEFAULT); refreshArtSpeed();
+
+/* Members → Settings: add, caption, credit, hide or remove sign-in pictures (admins). */
+let spList = [];
+async function loadSignInPictures() {
+  const { data, error } = await sb.from('site_pictures').select('id,path,caption,credit,credit_url,width,height,shown,created_at').order('created_at', { ascending: true });
+  if (error) {
+    $('spGrid').replaceChildren(); $('spAdd').disabled = true;
+    $('spCount').textContent = /site_pictures|schema cache|does not exist/i.test(String(error.message)) ? 'Sign-in pictures aren’t switched on in the database yet.' : errMsg(error);
+    return;
+  }
+  spList = data || [];
+  const shown = spList.filter(p => p.shown).length, hidden = spList.length - shown;
+  $('spCount').textContent = !spList.length ? 'No pictures yet, so the sign-in page shows drawn scenes. Add at least 3 to replace them.'
+    : `${plural(shown, 'picture')} shown${hidden ? `, ${hidden} hidden` : ''}. `
+      + (shown >= 3 ? 'Each visit starts with 3 at random, then the cards take turns.' : 'Drawn scenes fill in until at least 3 are shown.');
+  $('spAdd').disabled = spList.length >= SP_MAX;
+  $('spGrid').replaceChildren(...spList.map(spCard));
+}
+function spCard(p) {
+  const card = el('div', 'sp-card' + (p.shown ? '' : ' off'));
+  const img = el('img'); img.src = spUrl(p.path); img.alt = p.caption || 'Sign-in picture'; img.loading = 'lazy';
+  const field = (label, key, max, ph) => {
+    const l = el('label', 'sp-f'), i = el('input'); i.type = 'text'; i.maxLength = max; i.placeholder = ph; i.value = p[key] || '';
+    if (key === 'credit_url') { i.inputMode = 'url'; i.spellcheck = false; i.autocomplete = 'off'; }
+    i.onchange = () => spSave(p, key, i); l.append(el('span', '', label), i); return l;
+  };
+  const show = el('label', 'check'), cb = el('input'); cb.type = 'checkbox'; cb.checked = p.shown;
+  cb.onchange = () => spSave(p, 'shown', cb); show.append(cb, ' Show');
+  const rm = el('button', 'btn ghost danger', 'Remove'); rm.type = 'button'; rm.onclick = () => spRemove(p);
+  const foot = el('div', 'sp-foot'); foot.append(show, rm);
+  card.append(img, field('Caption', 'caption', 60, 'e.g. Ridge, 18:42'), field('Credit', 'credit', 120, 'e.g. Photo by Jane Doe'), field('Credit link', 'credit_url', 300, 'https://…'), foot);
+  return card;
+}
+async function spSave(p, key, input) {
+  let v = key === 'shown' ? input.checked : (input.value.trim() || null);
+  if (key === 'credit_url' && v) {
+    if (!/^https:\/\//i.test(v) && /^[\w-]+(\.[\w-]+)+(\/|$)/.test(v)) v = 'https://' + v; // "vecteezy.com/…" → https://vecteezy.com/…
+    if (!/^https:\/\/[^\s"<>]+$/.test(v)) { toast('The credit link must be a web address starting with https://', 'error'); input.value = p[key] || ''; return; }
+    input.value = v;
+  }
+  const { error } = await sb.from('site_pictures').update({ [key]: v }).eq('id', p.id);
+  if (error) { toast(errMsg(error), 'error'); if (key === 'shown') input.checked = p.shown; else input.value = p[key] || ''; return; }
+  p[key] = v;
+  if (key === 'shown') loadSignInPictures(); else toast('Saved.');
+  refreshSigninArt();
+}
+async function spRemove(p) {
+  if (!await ask('Remove this sign-in picture?', 'It leaves the sign-in page and its file is deleted. This can’t be undone.', 'Remove')) return;
+  const { error } = await sb.from('site_pictures').delete().eq('id', p.id);
+  if (error) return toast(errMsg(error), 'error');
+  await sb.storage.from('site').remove([p.path]);
+  toast('Picture removed.'); loadSignInPictures(); refreshSigninArt();
+}
+// Resize to at most 1200 px and re-save as JPEG, which also drops hidden details such as location.
+async function spPrepare(f) {
+  let bmp;
+  try { bmp = await createImageBitmap(f); } catch { throw new Error('This browser can’t read that picture. Try a JPEG or PNG.'); }
+  const k = Math.min(1, SP_EDGE / Math.max(bmp.width, bmp.height));
+  const w = Math.round(bmp.width * k), h = Math.round(bmp.height * k);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(bmp, 0, 0, w, h); bmp.close?.();
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.86)); c.width = c.height = 0;
+  if (!blob) throw new Error('Couldn’t prepare that picture.');
+  return { blob, width: w, height: h };
+}
+function spShowSpeed() {
+  const v = Number.isInteger(state.settings?.signin_turn_seconds) ? state.settings.signin_turn_seconds : art.turnS;
+  const sel = $('spSpeed');
+  if (![...sel.options].some(o => +o.value === v)) sel.append(new Option(`${v} seconds`, String(v)));
+  sel.value = String(v); spSpeedNote(v);
+}
+function spSpeedNote(v) {
+  $('spSpeedNote').textContent = v ? `So each of the 3 cards changes about every ${v * 3 >= 60 ? plural(Math.round(v * 3 / 60), 'minute') : (v * 3) + ' seconds'}.` : '';
+}
+$('spSpeed').onchange = async () => {
+  const sel = $('spSpeed'), v = +sel.value, before = art.turnS;
+  const { error } = await sb.from('album_settings').update({ signin_turn_seconds: v }).eq('id', 1);
+  if (error) {
+    sel.value = String(before); spSpeedNote(before);
+    return toast(/signin_turn/i.test(String(error.message)) ? 'The speed setting isn’t switched on in the database yet.' : errMsg(error), 'error');
+  }
+  state.settings = { ...state.settings, signin_turn_seconds: v };
+  artSchedule(v); spSpeedNote(v); toast('Saved.');
+};
+$('spAdd').onclick = () => $('spFile').click();
+$('spFile').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  if (!files.length) return;
+  const room = SP_MAX - spList.length;
+  if (files.length > room) toast(`Only ${plural(room, 'more picture')} fit (up to ${SP_MAX}). The rest were skipped.`, 'error');
+  let added = 0; $('spAdd').disabled = true; busy(true);
+  try {
+    for (const f of files.slice(0, room)) {
+      if (!/^image\//.test(f.type)) { toast(`${f.name} isn’t a picture.`, 'error'); continue; }
+      try {
+        const { blob, width, height } = await spPrepare(f);
+        const path = `signin/${crypto.randomUUID()}.jpg`;
+        const up = await sb.storage.from('site').upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000', upsert: false });
+        if (up.error) throw up.error;
+        const { error } = await sb.from('site_pictures').insert({ path, width, height });
+        if (error) { await sb.storage.from('site').remove([path]); throw error; }
+        added++;
+        if (Math.min(width, height) < 400) toast(`${f.name} is small (${width}×${height}), so it may look blurry.`);
+      } catch (err) { toast(`${f.name}: ${errMsg(err)}`, 'error'); }
+    }
+  } finally { busy(false); }
+  if (added) toast(`${plural(added, 'picture')} added. Add a caption or credit if you like.`);
+  await loadSignInPictures(); refreshSigninArt();
+};
 
 /* ---------- theme: dark by default; light only when someone picks it ---------- */
 const THEME_KEY = 'photoshare:theme';

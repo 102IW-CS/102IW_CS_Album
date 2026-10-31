@@ -913,3 +913,388 @@ do $$ begin
       for each row execute function private.auto_approve_on_confirm();
   end if;
 end $$;
+
+-- ====================================================================
+-- Added Oct 30, 2026: private messages, member search, unsend, sign-in pictures, rotation speed
+-- (same as the files in supabase/migrations with these names)
+-- ====================================================================
+
+-- ---- 2026-10-30k_messages.sql ----
+-- Private messages between members. (No drops, no deletes; the cleanup
+-- functions that delete are in 2026-10-30q_messages_cleanup.sql.)
+-- Only the sender and recipient can read a message. Admins can't read messages: they only see
+-- totals, set how long messages are kept, and delete old ones to free space.
+
+create table if not exists public.dm_messages (
+  id                  uuid primary key default gen_random_uuid(),
+  sender              uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  recipient           uuid not null references public.profiles (id) on delete cascade,
+  body                text not null check (char_length(trim(body)) between 1 and 2000),
+  created_at          timestamptz not null default now(),
+  read_at             timestamptz,
+  hidden_by_sender    boolean not null default false,  -- "delete conversation" removes it for that person only
+  hidden_by_recipient boolean not null default false,
+  check (sender <> recipient)
+);
+create index if not exists dm_pair_idx on public.dm_messages (least(sender, recipient), greatest(sender, recipient), created_at desc);
+create index if not exists dm_unread_idx on public.dm_messages (recipient) where read_at is null;
+create index if not exists dm_created_idx on public.dm_messages (created_at);
+alter table public.dm_messages enable row level security;
+
+-- Who sent it and when is stamped by the server; a gentle flood limit.
+create or replace function public.stamp_dm()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.id := gen_random_uuid();
+  new.sender := auth.uid();
+  new.created_at := now();
+  new.read_at := null;
+  new.hidden_by_sender := false;
+  new.hidden_by_recipient := false;
+  new.body := trim(new.body);
+  if (select count(*) from public.dm_messages where sender = new.sender and created_at > now() - interval '10 minutes') >= 60 then
+    raise exception 'You''re sending messages very quickly. Wait a few minutes and try again.';
+  end if;
+  if to_regprocedure('private.purge_old_dms()') is not null then perform private.purge_old_dms(); end if;
+  return new;
+end $$;
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'stamp_dm' and tgrelid = 'public.dm_messages'::regclass) then
+    create trigger stamp_dm before insert on public.dm_messages for each row execute function public.stamp_dm();
+  end if;
+end $$;
+
+-- Read: only your own conversations (and not ones you've removed). Nobody else, admins included.
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'dm_messages' and policyname = 'dm: only sender and recipient') then
+    create policy "dm: only sender and recipient" on public.dm_messages for select to authenticated
+      using ((sender = auth.uid() and not hidden_by_sender) or (recipient = auth.uid() and not hidden_by_recipient));
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'dm_messages' and policyname = 'dm: approved members send to approved members') then
+    create policy "dm: approved members send to approved members" on public.dm_messages for insert to authenticated
+      with check (private.is_approved() and sender = auth.uid() and recipient <> auth.uid() and private.is_approved_member(recipient));
+  end if;
+end $$;
+revoke update, delete on public.dm_messages from authenticated, anon;
+revoke select, insert on public.dm_messages from anon;
+revoke insert, truncate, references, trigger on public.dm_messages from authenticated; -- only the two columns below
+grant select on public.dm_messages to authenticated;
+grant insert (recipient, body) on public.dm_messages to authenticated;
+
+-- Your conversation list: the other person, the latest message, and how many are unread.
+create or replace function public.my_conversations()
+returns table (other uuid, other_name text, last_body text, last_at timestamptz, last_from_me boolean, unread int)
+language sql stable security definer set search_path = '' as $$
+  with mine as (
+    select m.*, case when m.sender = auth.uid() then m.recipient else m.sender end as other_id
+      from public.dm_messages m
+     where private.is_approved()
+       and ((m.sender = auth.uid() and not m.hidden_by_sender) or (m.recipient = auth.uid() and not m.hidden_by_recipient))
+  ), latest as (
+    select distinct on (other_id) other_id, body, created_at, sender = auth.uid() as from_me
+      from mine order by other_id, created_at desc
+  )
+  select l.other_id, coalesce(p.display_name, 'Former member'), left(l.body, 140), l.created_at, l.from_me,
+         (select count(*)::int from mine u where u.other_id = l.other_id and u.recipient = auth.uid() and u.read_at is null)
+    from latest l left join public.profiles p on p.id = l.other_id
+   order by l.created_at desc;
+$$;
+
+-- One conversation, newest first, in pages (the read rule above applies).
+create or replace function public.dm_thread(other uuid, before timestamptz default null, lim int default 50)
+returns setof public.dm_messages language sql stable security invoker set search_path = '' as $$
+  select * from public.dm_messages m
+   where ((m.sender = auth.uid() and m.recipient = other) or (m.sender = other and m.recipient = auth.uid()))
+     and (before is null or m.created_at < before)
+   order by m.created_at desc
+   limit least(greatest(coalesce(lim, 50), 1), 200);
+$$;
+
+create or replace function public.dm_unread_count()
+returns int language sql stable security definer set search_path = '' as $$
+  select count(*)::int from public.dm_messages
+   where recipient = auth.uid() and read_at is null and not hidden_by_recipient and private.is_approved();
+$$;
+
+create or replace function public.mark_conversation_read(other uuid)
+returns int language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  update public.dm_messages set read_at = now()
+   where recipient = auth.uid() and sender = other and read_at is null;
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+-- "Delete conversation": hides it for you; the other person keeps their copy.
+create or replace function public.hide_conversation(other uuid)
+returns int language plpgsql security definer set search_path = '' as $$
+declare a int; b int;
+begin
+  update public.dm_messages set hidden_by_sender = true where sender = auth.uid() and recipient = other;
+  get diagnostics a = row_count;
+  update public.dm_messages set hidden_by_recipient = true, read_at = coalesce(read_at, now()) where recipient = auth.uid() and sender = other;
+  get diagnostics b = row_count;
+  return a + b;
+end $$;
+
+-- How long messages are kept (admins choose; members are told in the Messages window).
+alter table public.album_settings add column if not exists dm_retention_days int
+  constraint album_settings_dm_retention_check check (dm_retention_days in (30, 60, 90, 180, 365));
+grant update (dm_retention_days) on public.album_settings to authenticated;
+
+-- Admins: totals only, never message text.
+create or replace function public.admin_message_stats()
+returns table (total int, total_bytes bigint, oldest timestamptz, older_30 int, older_90 int, older_180 int, older_365 int, people int)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not private.is_admin() then raise exception 'Only admins can see message totals'; end if;
+  return query select count(*)::int, coalesce(sum(octet_length(body)), 0)::bigint, min(created_at),
+    count(*) filter (where created_at < now() - interval '30 days')::int,
+    count(*) filter (where created_at < now() - interval '90 days')::int,
+    count(*) filter (where created_at < now() - interval '180 days')::int,
+    count(*) filter (where created_at < now() - interval '365 days')::int,
+    (select count(distinct x) from (select sender as x from public.dm_messages union select recipient from public.dm_messages) s)::int
+  from public.dm_messages;
+end $$;
+
+revoke execute on function public.stamp_dm() from public, anon, authenticated;
+revoke execute on function public.my_conversations(), public.dm_thread(uuid, timestamptz, int), public.dm_unread_count(),
+  public.mark_conversation_read(uuid), public.hide_conversation(uuid), public.admin_message_stats() from public, anon;
+grant execute on function public.my_conversations(), public.dm_thread(uuid, timestamptz, int), public.dm_unread_count(),
+  public.mark_conversation_read(uuid), public.hide_conversation(uuid), public.admin_message_stats() to authenticated;
+
+-- Live updates: new messages arrive without refreshing (the read rule above applies to these too).
+do $$ begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'dm_messages') then
+    alter publication supabase_realtime add table public.dm_messages;
+  end if;
+end $$;
+
+-- ---- 2026-10-30q_messages_cleanup.sql ----
+-- Private messages: cleanup functions (these contain DELETE, so they're kept in their own file).
+-- Removes messages both people have deleted, and messages older than the admin's setting.
+create or replace function private.purge_old_dms()
+returns integer language plpgsql security definer set search_path = '' as $$
+declare keep_days int; gone int;
+begin
+  select dm_retention_days into keep_days from public.album_settings where id = 1;
+  delete from public.dm_messages
+   where (hidden_by_sender and hidden_by_recipient)
+      or (keep_days is not null and created_at < now() - make_interval(days => keep_days));
+  get diagnostics gone = row_count;
+  return gone;
+end $$;
+revoke execute on function private.purge_old_dms() from public, anon, authenticated;
+
+-- Admins free up space: delete every message older than N days (they never see the text).
+create or replace function public.admin_purge_messages(older_than_days int)
+returns integer language plpgsql security definer set search_path = '' as $$
+declare gone int;
+begin
+  if not private.is_admin() then raise exception 'Only admins can delete messages'; end if;
+  if older_than_days is null or older_than_days < 0 then raise exception 'Choose how old'; end if;
+  delete from public.dm_messages where created_at < now() - make_interval(days => older_than_days);
+  get diagnostics gone = row_count;
+  return gone + private.purge_old_dms();
+end $$;
+revoke execute on function public.admin_purge_messages(int) from public, anon;
+grant execute on function public.admin_purge_messages(int) to authenticated;
+
+-- ---- 2026-10-30l_member_search.sql ----
+-- Member search for Messages: by name or email, best matches first. (No drops, no deletes.)
+-- Full email addresses are never returned to members: only a short hint like "b•••@gmail.com".
+-- Matching on email needs at least 3 characters, so addresses can't be guessed letter by letter.
+
+create or replace function private.mask_email(e text)
+returns text language sql immutable set search_path = '' as $$
+  select case when e is null or position('@' in e) = 0 then null
+              else left(split_part(e, '@', 1), 1) || '•••@' || split_part(e, '@', 2) end;
+$$;
+
+-- Lowercase and drop common accents, so "ange" finds "Ángela".
+create or replace function private.fold(x text)
+returns text language sql immutable set search_path = '' as $$
+  select translate(lower(coalesce(x, '')), 'áàâäãåāçčéèêëēěíìîïīñńóòôöõøōúùûüūůýÿžšř', 'aaaaaaacceeeeeeiiiiinnoooooooouuuuuuyyzsr');
+$$;
+
+create or replace function public.search_members(q text default '')
+returns table (id uuid, display_name text, email_hint text, matched text)
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  t text := private.fold(trim(coalesce(q, '')));
+  e text := replace(replace(replace(private.fold(trim(coalesce(q, ''))), '\', '\\'), '%', '\%'), '_', '\_'); -- typed text, LIKE-safe
+begin
+  if not private.is_approved() then raise exception 'Only approved members can search for people'; end if;
+  return query
+  select p.id, p.display_name, private.mask_email(p.email),
+         case when t = '' then null
+              when private.fold(p.display_name) like '%' || e || '%' then 'name'
+              else 'email' end
+    from public.profiles p
+   where p.status = 'approved' and p.id <> auth.uid()
+     and (t = '' or private.fold(p.display_name) like '%' || e || '%'
+          or (char_length(t) >= 3 and lower(p.email) like '%' || e || '%'))
+   order by case when t = '' then 0
+                 when private.fold(p.display_name) like e || '%' then 0                 -- name starts with it
+                 when private.fold(p.display_name) like '% ' || e || '%' then 1         -- a later word starts with it
+                 when lower(split_part(p.email, '@', 1)) like e || '%' then 2    -- email starts with it
+                 when private.fold(p.display_name) like '%' || e || '%' then 3          -- name contains it
+                 else 4 end,                                                     -- email contains it
+            private.fold(p.display_name)
+   limit 200;
+end $$;
+
+revoke execute on function private.mask_email(text), private.fold(text) from public, anon;
+grant execute on function private.fold(text) to authenticated;
+grant execute on function private.mask_email(text) to authenticated;
+revoke execute on function public.search_members(text) from public, anon;
+grant execute on function public.search_members(text) to authenticated;
+
+-- ---- 2026-10-30m_unsend_messages.sql ----
+-- Unsend (for everyone, within 24 hours) and delete-for-me for single messages. (No drops, no deletes.)
+-- Unsending wipes the text in the database; both people then see "… unsent a message".
+-- "Delete for me" hides one message for one person; it's removed for good once both have hidden it
+-- (the cleanup in 2026-10-30q_messages_cleanup.sql already deletes rows both people have hidden).
+
+alter table public.dm_messages add column if not exists unsent_at timestamptz;
+
+create or replace function public.unsend_message(msg uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+  update public.dm_messages
+     set body = 'Message unsent', unsent_at = now()
+   where id = msg and sender = auth.uid() and unsent_at is null
+     and created_at > now() - interval '24 hours';
+  get diagnostics n = row_count;
+  if n = 0 then raise exception 'You can unsend only your own messages, within 24 hours of sending them.'; end if;
+end $$;
+
+create or replace function public.hide_message(msg uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare n int; m int;
+begin
+  update public.dm_messages set hidden_by_sender = true where id = msg and sender = auth.uid();
+  get diagnostics n = row_count;
+  update public.dm_messages set hidden_by_recipient = true, read_at = coalesce(read_at, now()) where id = msg and recipient = auth.uid();
+  get diagnostics m = row_count;
+  if n + m = 0 then raise exception 'That message isn''t in your conversations.'; end if;
+end $$;
+
+-- New messages always start "not unsent", whatever the page sends.
+create or replace function public.stamp_dm()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.id := gen_random_uuid();
+  new.sender := auth.uid();
+  new.created_at := now();
+  new.read_at := null;
+  new.unsent_at := null;
+  new.hidden_by_sender := false;
+  new.hidden_by_recipient := false;
+  new.body := trim(new.body);
+  if (select count(*) from public.dm_messages where sender = new.sender and created_at > now() - interval '10 minutes') >= 60 then
+    raise exception 'You''re sending messages very quickly. Wait a few minutes and try again.';
+  end if;
+  if to_regprocedure('private.purge_old_dms()') is not null then perform private.purge_old_dms(); end if;
+  return new;
+end $$;
+
+revoke execute on function public.unsend_message(uuid), public.hide_message(uuid) from public, anon;
+grant execute on function public.unsend_message(uuid), public.hide_message(uuid) to authenticated;
+
+-- ---- 2026-10-30o_signin_pictures.sql ----
+-- Sign-in pictures. (No drops, no deletes.)
+-- Admins pick the pictures shown on the sign-in page. They are public on purpose: people see them
+-- before signing in. They live in their own bucket ("site"), apart from members' private photos.
+
+create table if not exists public.site_pictures (
+  id         uuid primary key default gen_random_uuid(),
+  path       text not null unique check (path ~ '^signin/[A-Za-z0-9._-]{1,120}$'),
+  caption    text check (char_length(caption) <= 60),
+  credit     text check (char_length(credit) <= 120),
+  credit_url text check (credit_url is null or (char_length(credit_url) <= 300 and credit_url ~ '^https://[^[:space:]"<>]+$')),
+  width      int check (width between 1 and 20000),
+  height     int check (height between 1 and 20000),
+  shown      boolean not null default true,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+alter table public.site_pictures enable row level security;
+
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'site_pictures' and policyname = 'site pictures: everyone sees shown ones') then
+    create policy "site pictures: everyone sees shown ones" on public.site_pictures for select to anon, authenticated
+      using (shown or private.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'site_pictures' and policyname = 'site pictures: admins add') then
+    create policy "site pictures: admins add" on public.site_pictures for insert to authenticated with check (private.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'site_pictures' and policyname = 'site pictures: admins edit') then
+    create policy "site pictures: admins edit" on public.site_pictures for update to authenticated
+      using (private.is_admin()) with check (private.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'site_pictures' and policyname = 'site pictures: admins remove') then
+    create policy "site pictures: admins remove" on public.site_pictures for delete to authenticated using (private.is_admin());
+  end if;
+end $$;
+
+revoke all on public.site_pictures from anon, authenticated;
+-- Visitors read only what the page needs (not who added each picture).
+grant select (id, path, caption, credit, credit_url, width, height, shown, created_at) on public.site_pictures to anon, authenticated;
+grant insert (path, caption, credit, credit_url, width, height, shown) on public.site_pictures to authenticated;
+grant update (caption, credit, credit_url, shown) on public.site_pictures to authenticated;
+grant delete on public.site_pictures to authenticated;
+grant usage on schema private to anon;
+grant execute on function private.is_admin() to anon;
+
+-- Who added it and when are set by the database; at most 40 pictures.
+create or replace function public.stamp_site_picture()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  new.created_by := auth.uid();
+  new.created_at := now();
+  if (select count(*) from public.site_pictures) >= 40 then
+    raise exception 'You can keep up to 40 sign-in pictures. Remove some first.';
+  end if;
+  return new;
+end $$;
+revoke execute on function public.stamp_site_picture() from public, anon, authenticated;
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'site_pictures_stamp') then
+    create trigger site_pictures_stamp before insert on public.site_pictures for each row execute function public.stamp_site_picture();
+  end if;
+end $$;
+
+-- Public bucket: anyone can view a file by its address; only admins can add or remove files.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('site', 'site', true, 3145728, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+do $$ begin
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'site: admins see files') then
+    create policy "site: admins see files" on storage.objects for select to authenticated
+      using (bucket_id = 'site' and private.is_admin());
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'site: admins add files') then
+    create policy "site: admins add files" on storage.objects for insert to authenticated
+      with check (bucket_id = 'site' and private.is_admin() and name ~ '^signin/[A-Za-z0-9._-]{1,120}$');
+  end if;
+  if not exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'site: admins remove files') then
+    create policy "site: admins remove files" on storage.objects for delete to authenticated
+      using (bucket_id = 'site' and private.is_admin());
+  end if;
+end $$;
+
+-- ---- 2026-10-30p_signin_speed.sql ----
+-- Sign-in pictures: how often a card changes (seconds). 0 = don't rotate. (No drops, no deletes.)
+alter table public.album_settings add column if not exists signin_turn_seconds int not null default 8;
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'album_settings_signin_turn_seconds_check') then
+    alter table public.album_settings add constraint album_settings_signin_turn_seconds_check
+      check (signin_turn_seconds = 0 or signin_turn_seconds between 3 and 120);
+  end if;
+end $$;
+grant select (signin_turn_seconds) on public.album_settings to anon, authenticated;  -- the sign-in page needs it
+grant update (signin_turn_seconds) on public.album_settings to authenticated;         -- admins only, by policy
